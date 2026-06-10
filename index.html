@@ -1206,13 +1206,9 @@ tr:hover td{background:var(--navy-l)}
     </div>
     <h2 class="m-h">Connexion</h2>
     <p class="m-s">Accédez à votre espace personnel</p>
-    <div class="tabs">
-      <div class="tab on" onclick="pt(this)">Étudiant</div>
-      <div class="tab" onclick="pt(this)">Enseignant</div>
-      <div class="tab" onclick="pt(this)">Administration</div>
-    </div>
-    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" placeholder="votre.email@ihbi.ci"></div>
-    <div class="fg"><label class="fl">Mot de passe</label><input class="fi" type="password" placeholder="••••••••"></div>
+    <div class="fg"><label class="fl">Email</label><input id="login-email" class="fi" type="email" placeholder="votre.email@ihbi.ci" onkeydown="if(event.key==='Enter')goDash()"></div>
+    <div class="fg"><label class="fl">Mot de passe</label><input id="login-password" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')goDash()"></div>
+    <div id="login-error" style="color:#CC1A27;font-size:13px;text-align:center;margin:-4px 0 8px;display:none">Email ou mot de passe incorrect.</div>
     <button class="btn-go" onclick="goDash()">Se connecter</button>
     <p class="m-foot">Mot de passe oublié ? <a href="#">Contacter l'administration</a></p>
   </div>
@@ -1246,8 +1242,8 @@ tr:hover td{background:var(--navy-l)}
 <!-- ══ TABLEAU DE BORD ══ -->
 <div id="ds-board" class="ds active">
   <div class="d-top">
-    <div><div class="d-hi">Bonjour, Kouassi Jean 👋</div><div class="d-sub">FCGE 2 · Finances Comptabilité Gestion des Entreprises — 2024–2025</div></div>
-    <div class="d-user"><div class="dav">KJ</div><div><div class="dun">Kouassi Jean</div><div class="dur">Étudiant · FCGE 2</div></div></div>
+    <div id="dash-greeting"><div class="d-hi">Bonjour 👋</div><div class="d-sub"></div></div>
+    <div class="d-user" id="dash-avatar"></div>
   </div>
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v">14.2<span style="font-size:15px;color:var(--g400)">/20</span></div><div class="kpi-s">Semestre 1 &nbsp;<span class="bdg bl">Admis</span></div></div>
@@ -1266,9 +1262,7 @@ tr:hover td{background:var(--navy-l)}
     <div class="bx-h"><span class="bx-t">Dernières notes</span><span class="bdg bg">Semestre 1</span></div>
     <table><thead><tr><th>Matière</th><th>Type</th><th>Note</th><th>Coeff.</th><th>Date</th></tr></thead>
     <tbody>
-      <tr><td>Comptabilité générale</td><td><span class="bdg bl">Devoir</span></td><td><strong>16/20</strong></td><td>4</td><td>12 jan.</td></tr>
-      <tr><td>Fiscalité des entreprises</td><td><span class="bdg bl">Devoir</span></td><td><strong>13/20</strong></td><td>3</td><td>15 jan.</td></tr>
-      <tr><td>Anglais des affaires</td><td><span class="bdg bg">Examen</span></td><td><strong>15/20</strong></td><td>2</td><td>18 jan.</td></tr>
+      <tr><td colspan="5" style="text-align:center;color:var(--g400)">Aucune note disponible.</td></tr>
     </tbody></table>
   </div>
 </div>
@@ -1312,33 +1306,21 @@ tr:hover td{background:var(--navy-l)}
   <div class="ds-title">Mes notes</div>
   <div class="ds-sub">Semestre 1 — Année académique 2024–2025</div>
   <div class="notes-kpi">
-    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v" style="color:var(--b600)">14.2<span style="font-size:16px;color:var(--g400)">/20</span></div><div class="kpi-s"><span class="bdg bl">Admis — Semestre 1</span></div></div>
-    <div class="kpi"><div class="kpi-l">Meilleure matière</div><div class="kpi-v" style="font-size:18px">Informatique</div><div class="kpi-s">17/20 — Coefficient 3</div></div>
-    <div class="kpi"><div class="kpi-l">Évaluations passées</div><div class="kpi-v">5</div><div class="kpi-s">Devoirs · Examens · TP</div></div>
+    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v" style="color:var(--g400)">—</div><div class="kpi-s">Aucune note</div></div>
+    <div class="kpi"><div class="kpi-l">Meilleure matière</div><div class="kpi-v" style="font-size:18px;color:var(--g400)">—</div><div class="kpi-s">Aucune note</div></div>
+    <div class="kpi"><div class="kpi-l">Évaluations passées</div><div class="kpi-v" style="color:var(--g400)">0</div><div class="kpi-s">Aucune évaluation</div></div>
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Moyennes par matière</span><span class="bdg bl">Semestre 1</span></div>
     <table>
       <thead><tr><th>Matière</th><th>Enseignant</th><th>Moyenne</th><th>Coeff.</th><th style="width:120px">Progression</th></tr></thead>
-      <tbody>
-        <tr><td>Comptabilité générale</td><td>M. Diallo</td><td><strong style="color:var(--b600)">16.0 / 20</strong></td><td>4</td><td><div class="avg-bar-wrap"><div class="avg-bar" style="width:80%;background:var(--b600)"></div></div></td></tr>
-        <tr><td>Fiscalité des entreprises</td><td>M. Koné</td><td><strong style="color:var(--b500)">13.0 / 20</strong></td><td>3</td><td><div class="avg-bar-wrap"><div class="avg-bar" style="width:65%;background:var(--b500)"></div></div></td></tr>
-        <tr><td>Anglais des affaires</td><td>Mme Traoré</td><td><strong style="color:var(--b600)">15.0 / 20</strong></td><td>2</td><td><div class="avg-bar-wrap"><div class="avg-bar" style="width:75%;background:var(--b600)"></div></div></td></tr>
-        <tr><td>Droit commercial</td><td>Mme Coulibaly</td><td><strong style="color:var(--b500)">14.0 / 20</strong></td><td>2</td><td><div class="avg-bar-wrap"><div class="avg-bar" style="width:70%;background:var(--b500)"></div></div></td></tr>
-        <tr><td>Informatique de gestion</td><td>M. Bamba</td><td><strong style="color:#15803D">17.0 / 20</strong></td><td>3</td><td><div class="avg-bar-wrap"><div class="avg-bar" style="width:85%;background:#15803D"></div></div></td></tr>
-      </tbody>
+      <tbody><tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune note disponible.</td></tr></tbody>
     </table>
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Détail de toutes les évaluations</span></div>
     <table><thead><tr><th>Date</th><th>Matière</th><th>Type</th><th>Note</th><th>Coeff.</th></tr></thead>
-    <tbody>
-      <tr><td>12 jan. 2025</td><td>Comptabilité générale</td><td><span class="bdg bl">Devoir</span></td><td><strong>16 / 20</strong></td><td>4</td></tr>
-      <tr><td>15 jan. 2025</td><td>Fiscalité des entreprises</td><td><span class="bdg bl">Devoir</span></td><td><strong>13 / 20</strong></td><td>3</td></tr>
-      <tr><td>18 jan. 2025</td><td>Anglais des affaires</td><td><span class="bdg bg">Examen</span></td><td><strong>15 / 20</strong></td><td>2</td></tr>
-      <tr><td>22 jan. 2025</td><td>Droit commercial</td><td><span class="bdg bl">TP</span></td><td><strong>14 / 20</strong></td><td>2</td></tr>
-      <tr><td>25 jan. 2025</td><td>Informatique de gestion</td><td><span class="bdg bg">Examen</span></td><td><strong>17 / 20</strong></td><td>3</td></tr>
-    </tbody></table>
+    <tbody><tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr></tbody></table>
   </div>
 </div>
 
@@ -1346,27 +1328,22 @@ tr:hover td{background:var(--navy-l)}
 <div id="ds-scol" class="ds">
   <div class="ds-title">Scolarité</div>
   <div class="ds-sub">Année académique 2024–2025 · BTS FCGE 2ème année</div>
-  <div class="payment-hero">
-    <div class="payment-status-icon">✓</div>
+  <div class="payment-hero" style="background:var(--g400)">
+    <div class="payment-status-icon" style="opacity:.5">—</div>
     <div>
       <div class="payment-status-label">Statut de paiement</div>
-      <div class="payment-status-val">À jour</div>
-      <div class="payment-status-sub">Prochaine échéance : 15 mars 2025</div>
+      <div class="payment-status-val">Non renseigné</div>
+      <div class="payment-status-sub">Contactez l'administration</div>
     </div>
     <div class="payment-meta">
       <div class="payment-meta-label">Montant réglé</div>
-      <div class="payment-meta-val">600 000 FCFA</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">sur 800 000 FCFA total</div>
+      <div class="payment-meta-val">— FCFA</div>
     </div>
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Échéancier de paiement</span><span class="bdg bl">2024–2025</span></div>
     <table><thead><tr><th>Tranche</th><th>Montant</th><th>Date limite</th><th>Statut</th><th>Date de paiement</th></tr></thead>
-    <tbody>
-      <tr><td>1ère tranche</td><td>300 000 FCFA</td><td>15 oct. 2024</td><td><span class="bdg bg">Payé</span></td><td>10 oct. 2024</td></tr>
-      <tr><td>2ème tranche</td><td>300 000 FCFA</td><td>15 jan. 2025</td><td><span class="bdg bg">Payé</span></td><td>12 jan. 2025</td></tr>
-      <tr><td>3ème tranche</td><td>200 000 FCFA</td><td>15 mars 2025</td><td><span class="bdg ba">À venir</span></td><td>—</td></tr>
-    </tbody></table>
+    <tbody><tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucun échéancier enregistré.</td></tr></tbody></table>
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Contact parent / tuteur</span></div>
@@ -1465,8 +1442,8 @@ tr:hover td{background:var(--navy-l)}
   <!-- ── TEACHER BOARD ── -->
   <div id="t-board" class="ds active">
     <div class="d-top">
-      <div><div class="d-hi">Bonjour, M. Diallo 👋</div><div class="d-sub">Enseignant · Comptabilité &amp; Gestion financière</div></div>
-      <div class="d-user"><div class="dav" style="background:#0A3D2D">MD</div><div><div class="dun">Mamadou Diallo</div><div class="dur">Enseignant</div></div></div>
+      <div id="teacher-greeting"><div class="d-hi">Bonjour 👋</div><div class="d-sub">Enseignant</div></div>
+      <div class="d-user" id="teacher-avatar"></div>
     </div>
     <div class="kpi-row">
       <div class="kpi" style="border-top-color:#0A3D2D"><div class="kpi-l">Mes classes</div><div class="kpi-v" style="color:#0A3D2D">2</div><div class="kpi-s">FCGE 1 · FCGE 2</div></div>
@@ -1715,20 +1692,12 @@ tr:hover td{background:var(--navy-l)}
     <div class="bx" style="border-top:3px solid var(--red);margin-bottom:16px">
       <div class="bx-h"><span class="bx-t" style="color:var(--red)">⚠ Alertes — Étudiants en retard de paiement</span><span onclick="showA('a-payments',document.querySelectorAll('#pg-admin .dsb-a')[4])" style="font-size:12px;font-weight:600;color:var(--red);cursor:pointer">Voir tout →</span></div>
       <table><thead><tr><th>Étudiant</th><th>Classe</th><th>Montant dû</th><th>Depuis</th><th>Email parent</th><th></th></tr></thead>
-      <tbody>
-        <tr><td><strong>Bamba Aminata</strong></td><td><span class="bdg bl">FCGE 2</span></td><td style="color:var(--red);font-weight:700">300 000 FCFA</td><td>15 jan. 2025</td><td>bamba.parent@email.com</td><td><button onclick="openEmailParent('Bamba Aminata','bamba.parent@email.com','300 000')" style="padding:5px 12px;background:var(--red);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">✉ Email parent</button></td></tr>
-        <tr><td><strong>Traoré Moussa</strong></td><td><span class="bdg bl">FCGE 2</span></td><td style="color:var(--red);font-weight:700">300 000 FCFA</td><td>15 oct. 2024</td><td>traore.parent@email.com</td><td><button onclick="openEmailParent('Traoré Moussa','traore.parent@email.com','300 000')" style="padding:5px 12px;background:var(--red);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">✉ Email parent</button></td></tr>
-      </tbody></table>
+      <tbody><tr><td colspan="6" style="text-align:center;color:var(--g400);padding:16px">Aucun retard de paiement.</td></tr></tbody></table>
     </div>
     <!-- Activité récente -->
     <div class="bx">
       <div class="bx-h"><span class="bx-t">Activité récente</span></div>
-      <div style="padding:0 18px">
-        <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><div style="width:7px;height:7px;border-radius:50%;background:#15803D;margin-top:6px;flex-shrink:0"></div><div><div style="font-size:13.5px;color:var(--b900);font-weight:500">Nouvelle inscription — <strong>Koné Fatoumata</strong></div><div style="font-size:12px;color:var(--g400)">IDA 1 · il y a 2 heures</div></div></div>
-        <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><div style="width:7px;height:7px;border-radius:50%;background:var(--b600);margin-top:6px;flex-shrink:0"></div><div><div style="font-size:13.5px;color:var(--b900);font-weight:500">Notes publiées — <strong>M. Diallo</strong> · Comptabilité générale · FCGE 2</div><div style="font-size:12px;color:var(--g400)">Aujourd'hui à 09h30</div></div></div>
-        <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)"><div style="width:7px;height:7px;border-radius:50%;background:var(--red);margin-top:6px;flex-shrink:0"></div><div><div style="font-size:13.5px;color:var(--b900);font-weight:500">Retard paiement signalé — <strong>Traoré Moussa</strong></div><div style="font-size:12px;color:var(--g400)">Hier à 08h00</div></div></div>
-        <div style="display:flex;gap:12px;padding:12px 0"><div style="width:7px;height:7px;border-radius:50%;background:#F59E0B;margin-top:6px;flex-shrink:0"></div><div><div style="font-size:13.5px;color:var(--b900);font-weight:500">Annonce publiée — <strong>Formation Excel du 10 au 14 mars</strong></div><div style="font-size:12px;color:var(--g400)">Lundi à 08h00</div></div></div>
-      </div>
+      <div style="padding:16px 18px;color:var(--g400);font-size:13px">Aucune activité récente.</div>
     </div>
   </div>
 
@@ -2095,55 +2064,32 @@ tr:hover td{background:var(--navy-l)}
 // DB MOCK — structure miroir de la future base de données
 // ════════════════════════════════════════════════════
 const DB = {
+  // ── users — future table SQL: users ──────────────────────────────────────
+  // Colonnes : id INT, role ENUM('student','teacher','admin'), nom VARCHAR,
+  //            prenom VARCHAR, email VARCHAR UNIQUE, pwd_hash VARCHAR,
+  //            classe_id VARCHAR, status ENUM('active','inactive'),
+  //            is_delegue BOOLEAN, email_parent VARCHAR,
+  //            matieres JSON, classes JSON, poste VARCHAR
+  // Route API : POST /api/auth/login  |  GET /api/users/:id
   users: [
-    {id:1,role:'student',nom:'Kouassi',prenom:'Jean',email:'jean.kouassi@ihbi.ci',classe_id:'FCGE2',status:'active',is_delegue:true,email_parent:'parent.kouassi@email.com'},
-    {id:2,role:'student',nom:'Bamba',prenom:'Aminata',email:'aminata.bamba@ihbi.ci',classe_id:'FCGE2',status:'active',is_delegue:false,email_parent:'bamba.parent@email.com'},
-    {id:3,role:'student',nom:'Traoré',prenom:'Moussa',email:'moussa.traore@ihbi.ci',classe_id:'FCGE2',status:'active',is_delegue:false,email_parent:'traore.parent@email.com'},
-    {id:4,role:'student',nom:'Koné',prenom:'Fatoumata',email:'fatoumata.kone@ihbi.ci',classe_id:'IDA1',status:'active',is_delegue:false,email_parent:'kone.parent@email.com'},
-    {id:5,role:'student',nom:'Diallo',prenom:'Seydou',email:'seydou.diallo@ihbi.ci',classe_id:'2MA1',status:'active',is_delegue:false,email_parent:'diallo.parent@email.com'},
-    {id:10,role:'teacher',nom:'Diallo',prenom:'Mamadou',email:'m.diallo@ihbi.ci',status:'active',matieres:['Comptabilité générale','Gestion financière'],classes:['FCGE1','FCGE2']},
-    {id:11,role:'teacher',nom:'Traoré',prenom:'Awa',email:'a.traore@ihbi.ci',status:'active',matieres:['Anglais des affaires'],classes:['FCGE2','RHC1']},
-    {id:20,role:'admin',nom:"N'Guessan",prenom:'Adjoua',email:'a.nguessan@ihbi.ci',status:'active',poste:'Directrice pédagogique'},
+    {id:1, role:'student', nom:'Étudiant',  prenom:'Test',  email:'etudiant@ihbi.ci',
+     pwd_hash:'91400f1b7e8dfee5c5abf3f170bde3698833251dfdd6acf879ca17aae0bbea7e',
+     classe_id:'', status:'active', is_delegue:false, email_parent:''},
+    {id:2, role:'teacher', nom:'Professeur', prenom:'Test', email:'prof@ihbi.ci',
+     pwd_hash:'895f5f7fffe0beb545e9f4dd2de7fdba0ad3ab6c56b7cccbaa017275fa2f375b',
+     status:'active', matieres:[], classes:[]},
+    {id:3, role:'admin',   nom:'Admin',     prenom:'Test',  email:'admin@ihbi.ci',
+     pwd_hash:'dc8c74284295f0de799587a295878c4f7d8e7b19070f37077fc407d1bddbeef4',
+     status:'active', poste:'Administration'},
   ],
-  classes: [
-    {id:'FCGE2',nom:'2ème année Finances Comptabilité',filiere:'FCGE',niveau:2,nb_etudiants:20,delegue_id:1},
-    {id:'FCGE1',nom:'1ère année Finances Comptabilité',filiere:'FCGE',niveau:1,nb_etudiants:22,delegue_id:null},
-    {id:'IDA1',nom:'1ère année Informatique Dev. App.',filiere:'IDA',niveau:1,nb_etudiants:16,delegue_id:4},
-    {id:'2MA1',nom:'1ère année Moteur et Mécanique Auto',filiere:'2MA',niveau:1,nb_etudiants:18,delegue_id:null},
-  ],
-  evaluations: [
-    {id:1,titre:'Devoir n°2',classe_id:'FCGE2',matiere:'Comptabilité générale',type:'Devoir',coeff:4,date:'2025-01-25',statut:'publie',moy:14.3},
-    {id:2,titre:'Examen Semestre 1',classe_id:'FCGE1',matiere:'Gestion financière',type:'Examen',coeff:5,date:'2025-01-18',statut:'brouillon',moy:null},
-    {id:3,titre:'TP n°1',classe_id:'FCGE2',matiere:'Comptabilité générale',type:'TP',coeff:2,date:'2025-02-10',statut:'publie',moy:16.2},
-    {id:4,titre:'Devoir n°3',classe_id:'FCGE2',matiere:'Gestion financière',type:'Devoir',coeff:3,date:'2025-03-05',statut:'brouillon',moy:null},
-  ],
-  messages_teacher: [
-    {id:1,de:'M. Diallo',vers:'FCGE 2',sujet:'Rappel : devoir de comptabilité à rendre vendredi',corps:'Bonjour à toute la classe,\n\nJe vous rappelle que le devoir de Comptabilité générale est à rendre vendredi avant 12h.\n\nMerci de remettre votre travail en salle A2 avant la fin du cours du matin.\n\nBonne préparation.',date:'05 juin, 09h14',statut:'envoyé'},
-    {id:2,de:'M. Diallo',vers:'FCGE 2',sujet:'Cours de gestion financière décalé à 10h demain',corps:'Bonjour,\n\nLe cours de Gestion financière de demain est décalé à 10h. Même salle A2.\n\nMerci de transmettre l\'information à vos camarades.',date:'04 juin, 16h30',statut:'envoyé'},
-    {id:3,de:'M. Diallo',vers:'FCGE 1 + FCGE 2',sujet:'Résultats de l\'examen du semestre 1 disponibles',corps:'Bonjour à tous,\n\nLes résultats de l\'examen de fin de semestre 1 sont désormais disponibles dans votre espace notes.\n\nLes rattrapages sont prévus du 10 au 14 février.',date:'02 juin, 08h00',statut:'envoyé'},
-  ],
-  annonces: [
-    {id:1,titre:'Formation Excel avancé',corps:'Une formation Excel avancée est organisée du 10 au 14 mars 2025 en Salle Informatique. Places limitées à 25. Inscriptions auprès de l\'administration.',cible:'Tous les étudiants',date:'2025-06-02',expiration:'2025-03-14',statut:'active'},
-    {id:2,titre:'Calendrier des examens de rattrapage',corps:'Le calendrier des examens de rattrapage du semestre 1 est disponible. Les examens se dérouleront du 10 au 21 février dans les salles habituelles.',cible:'Tous les étudiants',date:'2025-06-01',expiration:'2025-02-21',statut:'active'},
-    {id:3,titre:'Fermeture exceptionnelle — Fête nationale',corps:'En raison de la fête nationale du 7 août, l\'établissement sera fermé les 7 et 8 août. Les cours reprennent normalement le lundi 11 août.',cible:'Tous les étudiants',date:'2025-05-28',expiration:null,statut:'active'},
-  ],
-  formations: [
-    {id:1,titre:'Formation Excel avancé',description:'Maîtrisez les fonctions avancées d\'Excel : tableaux croisés dynamiques, formules complexes, macros. Idéal pour la gestion et l\'analyse financière.',lieu:'Salle Informatique',date_debut:'2025-03-10',date_fin:'2025-03-14',places:25,inscrits:[{nom:'Kouassi',prenom:'Jean',email:'jean.kouassi@ihbi.ci',telephone:'',date:'2025-02-14'},{nom:'Bamba',prenom:'Aminata',email:'aminata.bamba@ihbi.ci',telephone:'',date:'2025-02-15'}],public:true,statut:'actif'},
-    {id:2,titre:'Atelier préparation aux entretiens',description:'Techniques de présentation, simulation d\'entretiens professionnels, rédaction de CV et lettre de motivation. Ouvert à tous.',lieu:'Salle B2',date_debut:'2025-06-20',date_fin:'2025-06-21',places:30,inscrits:[],public:true,statut:'actif'},
-    {id:3,titre:'Séminaire Droit du travail en Côte d\'Ivoire',description:'Textes fondamentaux du droit du travail ivoirien. Droits, obligations, contrats, cas pratiques. Ouvert aux étudiants et professionnels.',lieu:'Amphithéâtre A',date_debut:'2025-07-05',date_fin:'2025-07-05',places:80,inscrits:[],public:true,statut:'actif'},
-  ],
-  contact_submissions: [
-    {id:1,nom:'Konan',prenom:'Serge',email:'serge.konan@email.com',telephone:'07 77 88 99 00',filiere:'FCGE',message:'Je souhaite obtenir des informations sur la filière Finances Comptabilité. Quels sont les débouchés ?',date:'2025-06-05',statut:'nouveau'},
-    {id:2,nom:'Assi',prenom:'Marie-Laure',email:'marie.assi@gmail.com',telephone:'05 45 67 89 01',filiere:'IDA',message:"Je suis bachelière et je voudrais m'inscrire en BTS Informatique. Quelles sont les conditions d'admission ?",date:'2025-06-04',statut:'traité'},
-    {id:3,nom:'Coulibaly',prenom:'Ibrahim',email:'ibrahim.coulibaly@yahoo.fr',telephone:'01 02 34 56 78',filiere:'RHC',message:"J'aimerais avoir des informations sur les frais de scolarité et les modalités de paiement.",date:'2025-06-03',statut:'nouveau'},
-  ],
-  events: [
-    {id:1,titre:'Journée portes ouvertes IHBI',lieu:'Campus IHBI',date_debut:'2025-06-20',date_fin:'2025-06-20',capacite:100},
-  ],
-  event_registrations: [
-    {id:1,event_id:1,nom:'Traoré',prenom:'Moussa',classe:'FCGE 2',date_inscription:'2025-05-20'},
-    {id:2,event_id:1,nom:'Koné',prenom:'Fatoumata',classe:'IDA 1',date_inscription:'2025-05-22'},
-  ],
+  classes:             [],
+  evaluations:         [],
+  messages_teacher:    [],
+  annonces:            [],
+  formations:          [],
+  contact_submissions: [],
+  events:              [],
+  event_registrations: [],
   // ── edt_drafts — future table SQL: schedule_drafts ──────────────────────────
   // Colonnes : id INT, classe_id VARCHAR, week_id VARCHAR, semaine_label TEXT,
   //            slots JSON, date_saved TIMESTAMP, statut ENUM('brouillon','publie')
@@ -2162,35 +2108,13 @@ const DB = {
   //            t1_montant INT, t2_montant INT, t3_montant INT, solde INT,
   //            statut ENUM('ajour','retard','solde')
   // Route API : GET /api/payments  |  PUT /api/payments/:id
-  payments: [
-    {id:1,etudiant_id:1,nom:'Kouassi Jean',classe:'FCGE 2',classe_id:'FCGE2',
-     email_parent:'parent.kouassi@email.com',
-     t1:{montant:300000,statut:'payé'},t2:{montant:300000,statut:'payé'},t3:{montant:200000,statut:'à venir'},
-     solde:200000,statut:'ajour'},
-    {id:2,etudiant_id:2,nom:'Bamba Aminata',classe:'FCGE 2',classe_id:'FCGE2',
-     email_parent:'bamba.parent@email.com',
-     t1:{montant:300000,statut:'retard'},t2:{montant:300000,statut:'en retard'},t3:{montant:200000,statut:'en retard'},
-     solde:600000,statut:'retard'},
-    {id:3,etudiant_id:3,nom:'Traoré Moussa',classe:'FCGE 2',classe_id:'FCGE2',
-     email_parent:'traore.parent@email.com',
-     t1:{montant:300000,statut:'en retard'},t2:{montant:300000,statut:'en retard'},t3:{montant:200000,statut:'en retard'},
-     solde:800000,statut:'retard'},
-    {id:4,etudiant_id:5,nom:'Diallo Seydou',classe:'2MA 1',classe_id:'2MA1',
-     email_parent:'diallo.parent@email.com',
-     t1:{montant:300000,statut:'payé'},t2:{montant:300000,statut:'payé'},t3:{montant:200000,statut:'payé'},
-     solde:0,statut:'solde'},
-    {id:5,etudiant_id:4,nom:'Koné Fatoumata',classe:'IDA 1',classe_id:'IDA1',
-     email_parent:'kone.parent@email.com',
-     t1:{montant:300000,statut:'payé'},t2:{montant:300000,statut:'à venir'},t3:{montant:200000,statut:'à venir'},
-     solde:400000,statut:'ajour'},
-  ],
+  payments: [],
 };
 
 
 
-// Utilisateur courant (simulation login)
-// En production : récupéré depuis session serveur
-const CURRENT_USER = DB.users[0]; // Kouassi Jean — is_delegue:true
+// En production : récupéré depuis JWT / session serveur après POST /api/auth/login
+let CURRENT_USER = null;
 
 // ── PERSISTANCE LOCALE (démo sans back-end) ───
 // En production, toutes les mutations passent par les routes API Railway
@@ -2253,17 +2177,60 @@ function hideLogin()  { document.getElementById('modal').classList.remove('on');
 function bgc(e)       { if (e.target === document.getElementById('modal')) hideLogin(); }
 function pt(el)       { document.querySelectorAll('.tab').forEach(t => t.classList.remove('on')); el.classList.add('on'); }
 
-function goDash() {
+// En prod : remplacer par POST /api/auth/login → JWT
+async function _sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function goDash() {
+  const email    = document.getElementById('login-email')?.value?.trim().toLowerCase();
+  const password = document.getElementById('login-password')?.value;
+  const errEl    = document.getElementById('login-error');
+  if (!email || !password) { if(errEl) errEl.style.display='block'; return; }
+
+  const hash = await _sha256(password);
+  const user = DB.users.find(u => u.email.toLowerCase() === email && u.pwd_hash === hash);
+
+  if (!user) {
+    if (errEl) errEl.style.display = 'block';
+    if (document.getElementById('login-password')) document.getElementById('login-password').value = '';
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+
+  CURRENT_USER = user;
   hideLogin();
-  const role = document.querySelector('.tab.on').textContent.trim();
+
+  // Mettre à jour le salut dynamique selon le profil
+  const fullName = user.prenom + ' ' + user.nom;
+  const initials = (user.prenom[0] + user.nom[0]).toUpperCase();
+  if (user.role === 'student') {
+    const el = document.getElementById('dash-greeting');
+    if (el) el.innerHTML =
+      '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
+      + '<div class="d-sub" id="dash-sub">' + (user.classe_id || 'Étudiant') + '</div>';
+    const av = document.getElementById('dash-avatar');
+    if (av) av.innerHTML = '<div class="dav">' + initials + '</div>'
+      + '<div><div class="dun">' + fullName + '</div><div class="dur">Étudiant · ' + (user.classe_id||'') + '</div></div>';
+  } else if (user.role === 'teacher') {
+    const el = document.getElementById('teacher-greeting');
+    if (el) el.innerHTML =
+      '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
+      + '<div class="d-sub">Enseignant</div>';
+    const av = document.getElementById('teacher-avatar');
+    if (av) av.innerHTML = '<div class="dav" style="background:#0A3D2D">' + initials + '</div>'
+      + '<div><div class="dun">' + fullName + '</div><div class="dur">Enseignant</div></div>';
+  }
+
   ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id => document.getElementById(id).style.display = 'none');
-  if (role === 'Étudiant') {
+  if (user.role === 'student') {
     document.getElementById('pg-dash').style.display = 'block';
     renderCal();
     initStudentMessaging();
-    renderStudentNotifs();    // notifications EDT non lues
-    renderStudentAnnonces();  // annonces admin actives
-  } else if (role === 'Enseignant') {
+    renderStudentNotifs();
+    renderStudentAnnonces();
+  } else if (user.role === 'teacher') {
     document.getElementById('pg-teacher').style.display = 'block';
     initTeacher();
   } else {
@@ -2318,19 +2285,8 @@ function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '�
 // ══════════════════════════════════════════════
 // CALENDRIER ÉTUDIANT
 // ══════════════════════════════════════════════
-const COURSES = [
-  {d:0,s:'08:00',e:'10:00',n:'Comptabilité générale',r:'Salle A2',t:'M. Diallo',type:'Cours intégré',grp:'FCGE 2',c:'#1A2C6B'},
-  {d:0,s:'10:30',e:'12:30',n:'Anglais des affaires',r:'Salle B1',t:'Mme Traoré',type:'Cours intégré',grp:'FCGE 2',c:'#0E7490'},
-  {d:0,s:'14:00',e:'17:15',n:'Droit commercial',r:'Salle C3',t:'Mme Coulibaly',type:'CM',grp:'FCGE 2',c:'#7C3AED'},
-  {d:1,s:'08:00',e:'11:00',n:'Fiscalité des entreprises',r:'Salle A1',t:'M. Koné',type:'Cours intégré',grp:'FCGE 2',c:'#B45309'},
-  {d:1,s:'14:00',e:'17:15',n:'Gestion financière',r:'Salle A2',t:'M. Diallo',type:'TD',grp:'FCGE 2',c:'#1E3893'},
-  {d:2,s:'09:00',e:'12:00',n:'Informatique de gestion',r:'Labo Info',t:'M. Bamba',type:'TP',grp:'FCGE 2',c:'#15803D'},
-  {d:2,s:'14:00',e:'17:15',n:'Communication entreprise',r:'Salle B2',t:'Mme Traoré',type:'Cours intégré',grp:'FCGE 2',c:'#0E7490'},
-  {d:3,s:'08:00',e:'12:00',n:'Comptabilité analytique',r:'Salle A1',t:'M. Koné',type:'Cours intégré',grp:'FCGE 2',c:'#1A2C6B'},
-  {d:3,s:'14:00',e:'17:15',n:'Mathématiques financières',r:'Salle A2',t:'M. Diallo',type:'CM',grp:'FCGE 2',c:'#BE185D'},
-  {d:4,s:'09:00',e:'12:00',n:'Anglais des affaires',r:'Salle B1',t:'Mme Traoré',type:'Cours intégré',grp:'FCGE 2',c:'#0E7490'},
-  {d:4,s:'14:00',e:'17:15',n:'Révisions / TD',r:'Salle C1',t:'M. Bamba',type:'TD',grp:'FCGE 2',c:'#15803D'},
-];
+// En prod : GET /api/edt?classe_id=X&week=Y → remplace ce tableau
+const COURSES = [];
 const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
 const DATES = ['01/06/2025','02/06/2025','03/06/2025','04/06/2025','05/06/2025'];
@@ -2572,18 +2528,9 @@ function markNotifRead(notifId) {
 // ══════════════════════════════════════════════
 // ESPACE ENSEIGNANT
 // ══════════════════════════════════════════════
-const STUDENTS_FCGE2 = [
-  {id:1,nom:'Kouassi',prenom:'Jean',email:'jean.kouassi@ihbi.ci',moy:'14.2'},
-  {id:2,nom:'Bamba',prenom:'Aminata',email:'aminata.bamba@ihbi.ci',moy:'12.8'},
-  {id:3,nom:'Traoré',prenom:'Moussa',email:'moussa.traore@ihbi.ci',moy:'15.1'},
-  {id:4,nom:'Ouattara',prenom:'Sali',email:'sali.ouattara@ihbi.ci',moy:'11.5'},
-  {id:5,nom:'Diarra',prenom:'Koffi',email:'koffi.diarra@ihbi.ci',moy:'16.3'},
-];
-const STUDENTS_FCGE1 = [
-  {id:6,nom:'Sylla',prenom:'Aïcha',email:'aicha.sylla@ihbi.ci',moy:'13.5'},
-  {id:7,nom:'Coulibaly',prenom:'Issa',email:'issa.coulibaly@ihbi.ci',moy:'14.8'},
-  {id:8,nom:'Keita',prenom:'Mariam',email:'mariam.keita@ihbi.ci',moy:'10.2'},
-];
+// En prod : GET /api/users?role=student&classe_id=X
+const STUDENTS_FCGE2 = [];
+const STUDENTS_FCGE1 = [];
 
 const TEACHER_NAME = 'M. Diallo'; // En prod : CURRENT_USER.nom
 
