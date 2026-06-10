@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Scripts de diagnostic / build utilisés pendant le développement
+diag*.py
+fix_*.py
+patch_*.py
+build_*.py
+show_line.py
+verify.py
+find_brace.py
+CHANGELOG.md
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
