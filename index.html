@@ -2116,40 +2116,46 @@ const DB = {
 // En production : récupéré depuis JWT / session serveur après POST /api/auth/login
 let CURRENT_USER = null;
 
-// ── PERSISTANCE LOCALE (démo sans back-end) ───
-// En production, toutes les mutations passent par les routes API Railway
-// Les clés persistées correspondent aux tables SQL futures
-function saveDB() {
-  try {
-    localStorage.setItem('ihbi_db_v2', JSON.stringify({
-      formations:          DB.formations,
-      annonces:            DB.annonces,
-      edt_drafts:          DB.edt_drafts,
-      notifications:       DB.notifications,
-      users:               DB.users,
-      classes:             DB.classes,
-      evaluations:         DB.evaluations,
-      messages_teacher:    DB.messages_teacher,
-      contact_submissions: DB.contact_submissions,
-      payments:            DB.payments,
-    }));
-  } catch(e) { /* localStorage indisponible (navigation privée) */ }
+// ── PERSISTANCE — localStorage + Railway API ──────────────────────────────
+// En prod : POST /api/data  (remplace le localStorage)
+const _DB_KEYS = ['formations','annonces','edt_drafts','notifications','users','classes',
+                  'evaluations','messages_teacher','contact_submissions','payments'];
+
+function _dbSnapshot() {
+  const snap = {};
+  _DB_KEYS.forEach(k => { snap[k] = DB[k]; });
+  return snap;
 }
+
+function saveDB() {
+  const snap = _dbSnapshot();
+  // 1. Toujours sauvegarder en localStorage (fallback hors ligne)
+  try { localStorage.setItem('ihbi_db_v2', JSON.stringify(snap)); } catch(e) {}
+  // 2. Synchroniser avec Railway si authentifié (fire-and-forget)
+  const token = localStorage.getItem('ihbi_token');
+  if (token) {
+    fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(snap)
+    }).catch(() => {}); // silencieux si serveur inaccessible
+  }
+}
+
 function resetDB() {
-  // Réinitialise les données démo (utile pour les tests)
   localStorage.removeItem('ihbi_db_v2');
+  localStorage.removeItem('ihbi_token');
+  localStorage.removeItem('ihbi_user');
   location.reload();
 }
+
+// Restauration localStorage (fallback hors ligne)
 (function loadSavedDB() {
-  // Restaure les données persistées au rechargement de la page
   try {
     const saved = localStorage.getItem('ihbi_db_v2');
     if (!saved) return;
     const p = JSON.parse(saved);
-    ['formations','annonces','edt_drafts','notifications','users','classes',
-     'evaluations','messages_teacher','contact_submissions','payments'].forEach(k => {
-      if (p[k] !== undefined) DB[k] = p[k];
-    });
+    _DB_KEYS.forEach(k => { if (p[k] !== undefined) DB[k] = p[k]; });
   } catch(e) {}
 })();
 
@@ -2177,59 +2183,36 @@ function hideLogin()  { document.getElementById('modal').classList.remove('on');
 function bgc(e)       { if (e.target === document.getElementById('modal')) hideLogin(); }
 function pt(el)       { document.querySelectorAll('.tab').forEach(t => t.classList.remove('on')); el.classList.add('on'); }
 
-// En prod : remplacer par POST /api/auth/login → JWT
 async function _sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-async function goDash() {
-  const email    = document.getElementById('login-email')?.value?.trim().toLowerCase();
-  const password = document.getElementById('login-password')?.value;
-  const errEl    = document.getElementById('login-error');
-  if (!email || !password) { if(errEl) errEl.style.display='block'; return; }
-
-  const hash = await _sha256(password);
-  const user = DB.users.find(u => u.email.toLowerCase() === email && u.pwd_hash === hash);
-
-  if (!user) {
-    if (errEl) errEl.style.display = 'block';
-    if (document.getElementById('login-password')) document.getElementById('login-password').value = '';
-    return;
-  }
-  if (errEl) errEl.style.display = 'none';
-
-  CURRENT_USER = user;
-  hideLogin();
-
-  // Mettre à jour le salut dynamique selon le profil
+// Navigue vers l'espace correspondant au rôle et met à jour l'UI
+function _navigateAfterLogin(user) {
   const fullName = user.prenom + ' ' + user.nom;
   const initials = (user.prenom[0] + user.nom[0]).toUpperCase();
   if (user.role === 'student') {
     const el = document.getElementById('dash-greeting');
-    if (el) el.innerHTML =
-      '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
-      + '<div class="d-sub" id="dash-sub">' + (user.classe_id || 'Étudiant') + '</div>';
+    if (el) el.innerHTML = '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
+      + '<div class="d-sub">' + (user.classe_id || 'Étudiant') + '</div>';
     const av = document.getElementById('dash-avatar');
-    if (av) av.innerHTML = '<div class="dav">' + initials + '</div>'
-      + '<div><div class="dun">' + fullName + '</div><div class="dur">Étudiant · ' + (user.classe_id||'') + '</div></div>';
+    if (av) av.innerHTML = '<div class="dav">' + initials + '</div><div>'
+      + '<div class="dun">' + fullName + '</div>'
+      + '<div class="dur">Étudiant · ' + (user.classe_id||'') + '</div></div>';
   } else if (user.role === 'teacher') {
     const el = document.getElementById('teacher-greeting');
-    if (el) el.innerHTML =
-      '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
+    if (el) el.innerHTML = '<div class="d-hi">Bonjour, ' + user.prenom + ' 👋</div>'
       + '<div class="d-sub">Enseignant</div>';
     const av = document.getElementById('teacher-avatar');
-    if (av) av.innerHTML = '<div class="dav" style="background:#0A3D2D">' + initials + '</div>'
-      + '<div><div class="dun">' + fullName + '</div><div class="dur">Enseignant</div></div>';
+    if (av) av.innerHTML = '<div class="dav" style="background:#0A3D2D">' + initials + '</div><div>'
+      + '<div class="dun">' + fullName + '</div><div class="dur">Enseignant</div></div>';
   }
-
-  ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id => document.getElementById(id).style.display = 'none');
+  ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
   if (user.role === 'student') {
     document.getElementById('pg-dash').style.display = 'block';
-    renderCal();
-    initStudentMessaging();
-    renderStudentNotifs();
-    renderStudentAnnonces();
+    renderCal(); initStudentMessaging(); renderStudentNotifs(); renderStudentAnnonces();
   } else if (user.role === 'teacher') {
     document.getElementById('pg-teacher').style.display = 'block';
     initTeacher();
@@ -2239,12 +2222,89 @@ async function goDash() {
   }
   window.scrollTo(0, 0);
 }
+
+// POST /api/auth/login → JWT + données
+// Fallback local si le serveur est inaccessible (dev sans backend)
+async function goDash() {
+  const email    = document.getElementById('login-email')?.value?.trim().toLowerCase();
+  const password = document.getElementById('login-password')?.value;
+  const errEl    = document.getElementById('login-error');
+  if (!email || !password) { if (errEl) errEl.style.display = 'block'; return; }
+
+  let user = null;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      user = json.user;
+      localStorage.setItem('ihbi_token', json.token);
+      localStorage.setItem('ihbi_user',  JSON.stringify(user));
+      // Charger les données depuis le serveur
+      _DB_KEYS.forEach(k => { if (json.data[k] !== undefined) DB[k] = json.data[k]; });
+    }
+  } catch (_) {
+    // Serveur inaccessible → authentification locale (fallback dev)
+  }
+
+  // Fallback : vérifier le hash localement si le serveur n'a pas répondu
+  if (!user) {
+    const hash = await _sha256(password);
+    user = DB.users.find(u => u.email.toLowerCase() === email && u.pwd_hash === hash) || null;
+  }
+
+  if (!user) {
+    if (errEl) errEl.style.display = 'block';
+    document.getElementById('login-password').value = '';
+    return;
+  }
+
+  if (errEl) errEl.style.display = 'none';
+  CURRENT_USER = user;
+  hideLogin();
+  _navigateAfterLogin(user);
+}
+
+// Déconnexion — efface la session et revient au site public
 function goSite() {
-  ['pg-dash','pg-teacher','pg-admin'].forEach(id => document.getElementById(id).style.display = 'none');
+  CURRENT_USER = null;
+  localStorage.removeItem('ihbi_token');
+  localStorage.removeItem('ihbi_user');
+  ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
   document.getElementById('pg-site').style.display = 'block';
-  renderPublicFormations(); // sync : reflète les dernières modifs admin
+  renderPublicFormations();
   window.scrollTo(0, 0);
 }
+
+// Auto-restauration de session au rechargement (GET /api/data avec JWT stocké)
+(async function autoRestoreSession() {
+  const token     = localStorage.getItem('ihbi_token');
+  const savedUser = localStorage.getItem('ihbi_user');
+  if (!token || !savedUser) return;
+  try {
+    const res = await fetch('/api/data', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      localStorage.removeItem('ihbi_token');
+      localStorage.removeItem('ihbi_user');
+      return;
+    }
+    const data = await res.json();
+    _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
+    CURRENT_USER = JSON.parse(savedUser);
+    _navigateAfterLogin(CURRENT_USER);
+  } catch (_) {
+    // Hors ligne : utiliser localStorage déjà chargé par loadSavedDB()
+    const u = JSON.parse(savedUser);
+    if (u) { CURRENT_USER = u; _navigateAfterLogin(u); }
+  }
+})();
 
 // ── SECTION NAV ──────────────────────────────
 function showDS(id, el) {

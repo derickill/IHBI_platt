@@ -1,3 +1,9 @@
+# Variables d'environnement — NE JAMAIS committer
+.env
+
+# Node.js
+node_modules/
+
 # Python cache
 __pycache__/
 *.pyc
