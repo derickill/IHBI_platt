@@ -2127,6 +2127,14 @@ function _dbSnapshot() {
   return snap;
 }
 
+// Restaure COURSES depuis les brouillons publiés après chaque chargement de DB
+function _restoreCoursesFromEdt() {
+  const published = DB.edt_drafts.filter(d => d.statut === 'publie');
+  if (!published.length) return;
+  COURSES.length = 0;
+  published.forEach(d => { if (d.slots) d.slots.forEach(s => COURSES.push({...s})); });
+}
+
 function saveDB() {
   const snap = _dbSnapshot();
   // 1. Toujours sauvegarder en localStorage (fallback hors ligne)
@@ -2156,6 +2164,7 @@ function resetDB() {
     if (!saved) return;
     const p = JSON.parse(saved);
     _DB_KEYS.forEach(k => { if (p[k] !== undefined) DB[k] = p[k]; });
+    _restoreCoursesFromEdt();
   } catch(e) {}
 })();
 
@@ -2246,6 +2255,7 @@ async function goDash() {
       localStorage.setItem('ihbi_user',  JSON.stringify(user));
       // Charger les données depuis le serveur
       _DB_KEYS.forEach(k => { if (json.data[k] !== undefined) DB[k] = json.data[k]; });
+      _restoreCoursesFromEdt();
     }
   } catch (_) {
     // Serveur inaccessible → authentification locale (fallback dev)
@@ -2297,6 +2307,7 @@ function goSite() {
     }
     const data = await res.json();
     _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
+    _restoreCoursesFromEdt();
     CURRENT_USER = JSON.parse(savedUser);
     _navigateAfterLogin(CURRENT_USER);
   } catch (_) {
