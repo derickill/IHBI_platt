@@ -2248,6 +2248,8 @@ function _navigateAfterLogin(user) {
     initAdmin();
   }
   window.scrollTo(0, 0);
+  const pg = user.role === 'student' ? 'pg-dash' : user.role === 'teacher' ? 'pg-teacher' : 'pg-admin';
+  _historyPush({page: pg, section: null});
 }
 
 // POST /api/auth/login → JWT + données
@@ -2307,6 +2309,7 @@ function goSite() {
   document.getElementById('pg-site').style.display = 'block';
   renderPublicFormations();
   window.scrollTo(0, 0);
+  _historyPush({page:'pg-site'});
 }
 
 // Auto-restauration de session au rechargement (GET /api/data avec JWT stocké)
@@ -2335,12 +2338,55 @@ function goSite() {
   }
 })();
 
-// ── SECTION NAV ──────────────────────────────
+// ── SECTION NAV + HISTORY API (bouton retour navigateur) ─────────────────
+let _skipHistory = false;
+function _historyPush(state) {
+  if (_skipHistory) return;
+  history.pushState(state, '');
+}
+// État initial : on est sur le site public
+history.replaceState({page:'pg-site'}, '');
+
+window.addEventListener('popstate', function(e) {
+  _skipHistory = true;
+  const s = e.state || {page:'pg-site'};
+  if (s.page === 'pg-site' || !CURRENT_USER) {
+    // Déconnexion silencieuse si on revient au site depuis un espace connecté
+    if (CURRENT_USER) {
+      CURRENT_USER = null;
+      localStorage.removeItem('ihbi_token');
+      localStorage.removeItem('ihbi_user');
+      ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
+        document.getElementById(id).style.display = 'none');
+      document.getElementById('pg-site').style.display = 'block';
+      renderPublicFormations();
+      window.scrollTo(0,0);
+    }
+  } else if (s.page === 'pg-dash') {
+    ['pg-site','pg-teacher','pg-admin'].forEach(id =>
+      document.getElementById(id).style.display = 'none');
+    document.getElementById('pg-dash').style.display = 'block';
+    if (s.section) showDS(s.section, null);
+  } else if (s.page === 'pg-teacher') {
+    ['pg-site','pg-dash','pg-admin'].forEach(id =>
+      document.getElementById(id).style.display = 'none');
+    document.getElementById('pg-teacher').style.display = 'block';
+    if (s.section) showT(s.section, null);
+  } else if (s.page === 'pg-admin') {
+    ['pg-site','pg-dash','pg-teacher'].forEach(id =>
+      document.getElementById(id).style.display = 'none');
+    document.getElementById('pg-admin').style.display = 'block';
+    if (s.section) showA(s.section, null);
+  }
+  _skipHistory = false;
+});
+
 function showDS(id, el) {
   document.querySelectorAll('#pg-dash .ds').forEach(d => d.classList.remove('active'));
   document.getElementById('ds-' + id).classList.add('active');
   document.querySelectorAll('#pg-dash .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
+  _historyPush({page:'pg-dash', section:id});
 }
 function showT(id, el) {
   document.querySelectorAll('#pg-teacher .ds').forEach(d => d.classList.remove('active'));
@@ -2348,6 +2394,7 @@ function showT(id, el) {
   document.querySelectorAll('#pg-teacher .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
   if (id === 't-planning') renderTeacherCal();
+  _historyPush({page:'pg-teacher', section:id});
 }
 function showA(id, el) {
   document.querySelectorAll('#pg-admin .ds').forEach(d => d.classList.remove('active'));
@@ -2361,6 +2408,7 @@ function showA(id, el) {
   if (id === 'a-events')    renderAdminFormations();
   if (id === 'a-accounts')  renderAccounts();
   if (id === 'a-payments')  renderPayments();
+  _historyPush({page:'pg-admin', section:id});
 }
 
 // ── UTILITIES ────────────────────────────────
