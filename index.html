@@ -2005,13 +2005,68 @@ tr:hover td{background:var(--navy-l)}
       <button class="acc-tab" onclick="switchAccTab('teachers',this)" style="padding:10px 22px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;font-weight:600;color:var(--g400);cursor:pointer">Enseignants</button>
       <button class="acc-tab" onclick="switchAccTab('admins',this)" style="padding:10px 22px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;font-weight:600;color:var(--g400);cursor:pointer">Administration</button>
     </div>
-    <div style="display:flex;gap:10px;margin-bottom:16px">
-      <input type="text" class="fi" placeholder="Rechercher un compte…" style="max-width:280px" oninput="filterAccounts(this.value)">
-      <button onclick="document.getElementById('create-teacher-modal').style.display='flex'" style="padding:9px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">+ Créer compte enseignant</button>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <input type="text" class="fi" placeholder="Rechercher un compte…" style="max-width:260px" oninput="filterAccounts(this.value)">
+      <button onclick="openCreateStudentsModal()" style="padding:9px 18px;background:#0A3D2D;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">+ Créer comptes étudiants</button>
+      <button onclick="document.getElementById('create-teacher-modal').style.display='flex'" style="padding:9px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">+ Créer compte enseignant</button>
     </div>
     <div id="acc-students"><div id="acc-students-content"></div></div>
     <div id="acc-teachers" style="display:none"><div id="acc-teachers-content"></div></div>
     <div id="acc-admins" style="display:none"><div id="acc-admins-content"></div></div>
+  </div>
+
+  <!-- Modal créer comptes étudiants en masse -->
+  <div class="overlay-modal" id="create-students-modal" onclick="if(event.target===this)closeCreateStudentsModal()" style="display:none">
+    <div class="obox" style="max-width:560px">
+      <button class="obox-close" onclick="closeCreateStudentsModal()">×</button>
+      <div class="obox-title">Créer des comptes étudiants</div>
+      <p style="font-size:13px;color:var(--g400);margin-bottom:18px;line-height:1.6">Les mots de passe sont générés automatiquement et envoyés par e-mail. Le prénom et le nom sont extraits de l'adresse e-mail.</p>
+      <div style="display:grid;gap:14px">
+        <div>
+          <label class="fl">Adresses e-mail <span style="color:#CC1A27">*</span></label>
+          <textarea id="bulk-emails" class="fi" rows="7" placeholder="jean.dupont@email.com&#10;marie.martin@email.com&#10;koffi.kouassi@email.com" style="resize:vertical;font-family:monospace;font-size:13px;line-height:1.6"></textarea>
+          <div style="font-size:11px;color:var(--g400);margin-top:5px">Une adresse par ligne — séparer par virgule ou saut de ligne</div>
+        </div>
+        <div>
+          <label class="fl">Classe <span style="color:#CC1A27">*</span></label>
+          <input type="text" id="bulk-classe" class="fi" placeholder="Ex: FCGE1, FCGE2, 2MA, GEC…" list="bulk-classe-list" autocomplete="off">
+          <datalist id="bulk-classe-list"></datalist>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:22px">
+        <button onclick="closeCreateStudentsModal()" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer;border-radius:2px">Annuler</button>
+        <button id="btn-create-students" onclick="createStudentAccounts()" style="padding:9px 22px;background:#0A3D2D;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">Créer les comptes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal résultats — identifiants générés (affichage unique) -->
+  <div class="overlay-modal" id="credentials-modal" onclick="if(event.target===this)closeCredentialsModal()" style="display:none">
+    <div class="obox" style="max-width:800px;width:95vw">
+      <button class="obox-close" onclick="closeCredentialsModal()">×</button>
+      <div class="obox-title">Comptes créés avec succès</div>
+      <div style="background:#FFF8E1;border:1px solid #F6C90E;border-radius:3px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#7A5C00;line-height:1.5">
+        Ces mots de passe ne s'affichent qu'une seule fois. Notez-les ou téléchargez le fichier CSV avant de fermer cette fenêtre.
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--off)">
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600">Prénom Nom</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600">E-mail</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600">Mot de passe</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600">Classe</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid var(--border);font-weight:600">Email</th>
+            </tr>
+          </thead>
+          <tbody id="credentials-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+        <button onclick="downloadCredentialsCSV()" style="padding:9px 18px;background:var(--off);border:1px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">Télécharger CSV</button>
+        <button onclick="closeCredentialsModal()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">Fermer</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal créer compte enseignant -->
@@ -3601,6 +3656,103 @@ function removeDelegue(userId) {
   if (cls) cls.delegue_id = null;
   renderAccounts();
   toast('Rôle délégué retiré ✓');
+}
+
+// ── Création de comptes étudiants en masse ────────────────────────────────
+function openCreateStudentsModal() {
+  // Peupler la datalist avec les classes existantes
+  const dl = document.getElementById('bulk-classe-list');
+  if (dl) {
+    const classes = [...new Set(DB.users.filter(u => u.classe_id).map(u => u.classe_id))];
+    dl.innerHTML = classes.map(c => `<option value="${c}">`).join('');
+  }
+  document.getElementById('bulk-emails').value  = '';
+  document.getElementById('bulk-classe').value  = '';
+  document.getElementById('create-students-modal').style.display = 'flex';
+}
+function closeCreateStudentsModal() {
+  document.getElementById('create-students-modal').style.display = 'none';
+}
+
+async function createStudentAccounts() {
+  const rawEmails = document.getElementById('bulk-emails').value;
+  const classe_id = document.getElementById('bulk-classe').value.trim();
+  if (!rawEmails.trim()) { toast('Veuillez saisir au moins une adresse e-mail', '#CC1A27'); return; }
+  if (!classe_id)        { toast('Veuillez indiquer la classe', '#CC1A27'); return; }
+
+  const emails = rawEmails.split(/[\n,;]+/).map(e => e.trim().toLowerCase()).filter(e => e.includes('@'));
+  if (!emails.length)    { toast('Aucune adresse e-mail valide trouvée', '#CC1A27'); return; }
+
+  const btn = document.getElementById('btn-create-students');
+  btn.disabled = true;
+  btn.textContent = 'Création en cours…';
+
+  try {
+    const token = localStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/admin/create-students', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body:    JSON.stringify({ emails, classe_id })
+    });
+    const data = await res.json();
+
+    if (data.results?.length) {
+      // Synchroniser DB.users localement
+      data.results.forEach(r => {
+        if (!DB.users.find(u => u.email === r.email)) {
+          const newId = DB.users.length ? Math.max(...DB.users.map(u => u.id)) + 1 : 10;
+          DB.users.push({ id: newId, role: 'student', nom: r.nom, prenom: r.prenom,
+            email: r.email, pwd_hash: '—', classe_id: r.classe_id,
+            status: 'active', is_delegue: false, email_parent: '' });
+        }
+      });
+      saveDB();
+      closeCreateStudentsModal();
+      showCredentialsModal(data.results);
+    }
+
+    if (data.errors?.length) {
+      const msg = data.errors.map(e => `${e.email} (${e.error})`).join(' | ');
+      toast('Problèmes : ' + msg, '#CC1A27');
+    }
+  } catch (err) {
+    toast('Erreur de connexion au serveur', '#CC1A27');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Créer les comptes';
+  }
+}
+
+function showCredentialsModal(results) {
+  const tbody = document.getElementById('credentials-tbody');
+  tbody.innerHTML = results.map(r => `
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 12px;font-weight:500">${r.prenom} ${r.nom}</td>
+      <td style="padding:10px 12px;color:var(--g600)">${r.email}</td>
+      <td style="padding:10px 12px"><code style="background:#f4f4f4;padding:4px 10px;border-radius:3px;font-size:13px;letter-spacing:.5px;user-select:all;cursor:copy">${r.password}</code></td>
+      <td style="padding:10px 12px">${r.classe_id}</td>
+      <td style="padding:10px 12px;font-size:12px;font-weight:600;color:${r.email_sent ? '#0A3D2D' : '#CC1A27'}">${r.email_sent ? 'Envoyé ✓' : 'Non envoyé'}</td>
+    </tr>`).join('');
+  document.getElementById('credentials-modal').style.display = 'flex';
+  renderAccounts();
+}
+
+function closeCredentialsModal() {
+  document.getElementById('credentials-modal').style.display = 'none';
+}
+
+function downloadCredentialsCSV() {
+  const rows = document.querySelectorAll('#credentials-tbody tr');
+  let csv = 'Prénom,Nom,Email,Mot de passe,Classe,Email envoyé\n';
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const vals  = Array.from(cells).map(c => '"' + c.textContent.trim().replace(/"/g,'""') + '"');
+    csv += vals.join(',') + '\n';
+  });
+  const a    = document.createElement('a');
+  a.href     = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+  a.download = `comptes-etudiants-ihbi-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
 function closeCreateTeacher() { document.getElementById('create-teacher-modal').style.display = 'none'; }
