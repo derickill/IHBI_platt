@@ -1248,7 +1248,7 @@ tr:hover td{background:var(--navy-l)}
     <div class="dsb-a" onclick="showDS('edt',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Emploi du temps</div>
     <div class="dsb-a" onclick="showDS('notes',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Mes notes</div>
     <div class="dsb-a" onclick="showDS('scol',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Scolarité</div>
-    <div class="dsb-a" onclick="showDS('msg',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messages<span class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px">3</span></div>
+    <div class="dsb-a" onclick="showDS('msg',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messages<span id="nav-msg-badge" class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px;display:none">0</span></div>
   </nav>
   <div class="dsb-foot">
     <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
@@ -1264,9 +1264,9 @@ tr:hover td{background:var(--navy-l)}
     <div class="d-user" id="dash-avatar"></div>
   </div>
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v">14.2<span style="font-size:15px;color:var(--g400)">/20</span></div><div class="kpi-s">Semestre 1 &nbsp;<span class="bdg bl">Admis</span></div></div>
-    <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-l">Scolarité</div><div class="kpi-v ok">À jour</div><div class="kpi-s">Prochaine échéance : 15 mars 2025</div></div>
-    <div class="kpi"><div class="kpi-l">Messages non lus</div><div class="kpi-v">3</div><div class="kpi-s">Dont 2 de vos professeurs</div></div>
+    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v" id="kpi-moy-gen"><span style="color:var(--g400)">—</span></div><div class="kpi-s" id="kpi-moy-sub">Aucune note</div></div>
+    <div class="kpi" style="border-top-color:var(--red)"><div class="kpi-l">Scolarité</div><div class="kpi-v ok">À jour</div><div class="kpi-s">Contactez l'administration</div></div>
+    <div class="kpi"><div class="kpi-l">Messages non lus</div><div class="kpi-v" id="kpi-msg-unread">0</div><div class="kpi-s" id="kpi-msg-sub">Aucun nouveau message</div></div>
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Emploi du temps — Cette semaine</span><span onclick="showDS('edt',document.querySelectorAll('.dsb-a')[1])" style="font-size:12px;font-weight:600;color:var(--b600);cursor:pointer">Voir complet →</span></div>
@@ -2157,6 +2157,7 @@ const DB = {
   ],
   classes:             [],
   evaluations:         [],
+  notes:               [],   // {id, eval_id, etudiant_id, note, commentaire}
   messages_teacher:    [],
   annonces:            [],
   formations:          [],
@@ -2192,7 +2193,7 @@ let CURRENT_USER = null;
 // ── PERSISTANCE — localStorage + Railway API ──────────────────────────────
 // En prod : POST /api/data  (remplace le localStorage)
 const _DB_KEYS = ['formations','annonces','edt_drafts','notifications','users','classes',
-                  'evaluations','messages_teacher','contact_submissions','payments'];
+                  'evaluations','notes','messages_teacher','contact_submissions','payments'];
 
 function _dbSnapshot() {
   const snap = {};
@@ -2441,6 +2442,7 @@ function showDS(id, el) {
   document.getElementById('ds-' + id).classList.add('active');
   document.querySelectorAll('#pg-dash .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
+  if (id === 'notes') renderStudentNotes();
   _historyPush({page:'pg-dash', section:id});
 }
 function showT(id, el) {
@@ -2606,10 +2608,18 @@ function renderStudentMessages() {
 }
 
 function _updateMsgBadge(combined) {
-  const badge = document.getElementById('msg-unread-badge');
-  if (!badge) return;
   const n = combined.filter(item => !luMsgs.has(item.type + '_' + item.id)).length;
-  badge.textContent = n;
+  // Badge boîte de réception
+  const badge = document.getElementById('msg-unread-badge');
+  if (badge) badge.textContent = n;
+  // Badge nav sidebar
+  const navBadge = document.getElementById('nav-msg-badge');
+  if (navBadge) { navBadge.textContent = n; navBadge.style.display = n > 0 ? 'inline-block' : 'none'; }
+  // KPI tableau de bord
+  const kpiUnread = document.getElementById('kpi-msg-unread');
+  if (kpiUnread) kpiUnread.textContent = n;
+  const kpiSub = document.getElementById('kpi-msg-sub');
+  if (kpiSub) kpiSub.textContent = n === 0 ? 'Aucun nouveau message' : n === 1 ? '1 message non lu' : n + ' messages non lus';
   badge.style.display = n > 0 ? '' : 'none';
 }
 
@@ -2636,6 +2646,71 @@ function showStudentMsg(type, id, el) {
   const replyZone = document.getElementById('msg-reply-zone');
   if (replyZone) replyZone.style.display = (type === 'teacher' && CURRENT_USER.is_delegue) ? 'flex' : 'none';
   _updateMsgBadge(_studentMsgCombined());
+}
+
+// ── NOTES ÉTUDIANT ────────────────────────────
+function renderStudentNotes() {
+  if (!CURRENT_USER) return;
+  const uid     = CURRENT_USER.id;
+  const myNotes = DB.notes.filter(n => n.etudiant_id === uid);
+  const pubEvals = DB.evaluations.filter(e => e.statut === 'publie');
+
+  // Calcul moyenne générale pondérée
+  let totW = 0, totC = 0;
+  const byMat = {};
+  myNotes.forEach(n => {
+    const ev = pubEvals.find(e => e.id === n.eval_id);
+    if (!ev) return;
+    const c = ev.coeff || 1;
+    totW += n.note * c; totC += c;
+    if (!byMat[ev.matiere]) byMat[ev.matiere] = { notes: [], coeff: c, teacher: ev.teacher || '—' };
+    byMat[ev.matiere].notes.push({ note: n.note, commentaire: n.commentaire, ev });
+  });
+  const avg = totC > 0 ? (totW / totC) : null;
+
+  // KPI dashboard
+  const kpiMoy = document.getElementById('kpi-moy-gen');
+  if (kpiMoy) kpiMoy.innerHTML = avg !== null
+    ? `${avg.toFixed(1)}<span style="font-size:15px;color:var(--g400)">/20</span>`
+    : '<span style="font-size:18px;color:var(--g400)">—</span>';
+  const kpiSub = document.getElementById('kpi-moy-sub');
+  if (kpiSub) kpiSub.innerHTML = avg !== null
+    ? `Semestre 1 &nbsp;<span class="bdg bl">${avg >= 10 ? 'Admis' : 'En difficulté'}</span>`
+    : 'Aucune note';
+
+  // KPI section notes
+  const kpiNotes = document.querySelector('#ds-notes .notes-kpi');
+  if (!kpiNotes) return;
+  const bestMat = avg !== null ? Object.entries(byMat).sort((a,b) => {
+    const ma = a[1].notes.reduce((s,x)=>s+x.note,0)/a[1].notes.length;
+    const mb = b[1].notes.reduce((s,x)=>s+x.note,0)/b[1].notes.length;
+    return mb - ma;
+  })[0] : null;
+  kpiNotes.innerHTML = `
+    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v" style="${avg===null?'color:var(--g400)':''}">${avg!==null ? avg.toFixed(2)+'/20' : '—'}</div><div class="kpi-s">${avg===null?'Aucune note':avg>=10?'Admis':'En difficulté'}</div></div>
+    <div class="kpi"><div class="kpi-l">Meilleure matière</div><div class="kpi-v" style="font-size:${bestMat?'16px':'18px'};${!bestMat?'color:var(--g400)':''}">${bestMat ? bestMat[0] : '—'}</div><div class="kpi-s">${bestMat ? (bestMat[1].notes.reduce((s,x)=>s+x.note,0)/bestMat[1].notes.length).toFixed(1)+'/20' : 'Aucune note'}</div></div>
+    <div class="kpi"><div class="kpi-l">Évaluations passées</div><div class="kpi-v" style="${!myNotes.length?'color:var(--g400)':''}">${myNotes.length}</div><div class="kpi-s">${myNotes.length ? myNotes.length+' note(s) enregistrée(s)' : 'Aucune évaluation'}</div></div>`;
+
+  // Tableau moyennes par matière
+  const bxes = document.querySelectorAll('#ds-notes .bx');
+  if (bxes[0]) {
+    const matRows = Object.entries(byMat).map(([mat, data]) => {
+      const moy = data.notes.reduce((s,x)=>s+x.note,0)/data.notes.length;
+      const pct = Math.round(moy*5);
+      return `<tr><td>${mat}</td><td>${data.teacher}</td><td><strong>${moy.toFixed(2)}/20</strong></td><td>${data.coeff}</td><td><div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%"><div style="background:${moy>=10?'#0A3D2D':'#CC1A27'};width:${pct}%;height:100%;border-radius:4px"></div></div></td></tr>`;
+    }).join('');
+    bxes[0].querySelector('tbody').innerHTML = matRows || '<tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune note disponible.</td></tr>';
+  }
+
+  // Tableau détail toutes évaluations
+  if (bxes[1]) {
+    const detRows = myNotes.map(n => {
+      const ev = pubEvals.find(e => e.id === n.eval_id);
+      if (!ev) return '';
+      return `<tr><td>${ev.date||'—'}</td><td>${ev.matiere}</td><td>${ev.type||'—'}</td><td><strong>${n.note}/20</strong>${n.commentaire?` <span style="font-size:11px;color:var(--g400)">(${n.commentaire})</span>`:''}</td><td>${ev.coeff}</td></tr>`;
+    }).join('');
+    bxes[1].querySelector('tbody').innerHTML = detRows || '<tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr>';
+  }
 }
 
 // ── STUDENT MESSAGING — règle délégué ─────────
@@ -2843,32 +2918,44 @@ function publishEvalDirect(evalId) {
 
 function saveGrades(mode) {
   const intitule = document.getElementById('grade-intitule')?.value || 'Évaluation';
-  const classe = document.getElementById('grade-classe')?.value;
-  const matiere = document.getElementById('grade-matiere')?.value;
-  const type = document.getElementById('grade-type')?.value;
-  const date = document.getElementById('grade-date')?.value;
-  const coeff = parseInt(document.querySelector('.fi[min="1"]')?.value || 2);
+  const classe   = document.getElementById('grade-classe')?.value;
+  const matiere  = document.getElementById('grade-matiere')?.value;
+  const type     = document.getElementById('grade-type')?.value;
+  const date     = document.getElementById('grade-date')?.value;
+  const coeff    = parseInt(document.querySelector('.fi[min="1"]')?.value || 2);
 
+  let evalId = loadedEvalId;
   if (loadedEvalId) {
     const ev = DB.evaluations.find(e => e.id === loadedEvalId);
-    if (ev) {
-      ev.titre = intitule; ev.classe_id = classe; ev.matiere = matiere;
-      ev.type = type; ev.date = date;
-      ev.statut = mode === 'draft' ? 'brouillon' : 'publie';
-    }
+    if (ev) { ev.titre = intitule; ev.classe_id = classe; ev.matiere = matiere; ev.type = type; ev.date = date; ev.coeff = coeff; ev.statut = mode === 'draft' ? 'brouillon' : 'publie'; }
   } else {
-    const newId = Math.max(...DB.evaluations.map(e => e.id)) + 1;
-    DB.evaluations.push({
-      id: newId, titre: intitule, classe_id: classe, matiere, type,
-      coeff, date, statut: mode === 'draft' ? 'brouillon' : 'publie', moy: null
+    evalId = DB.evaluations.length ? Math.max(...DB.evaluations.map(e => e.id)) + 1 : 1;
+    DB.evaluations.push({ id: evalId, titre: intitule, classe_id: classe, matiere, type, coeff, date, statut: mode === 'draft' ? 'brouillon' : 'publie' });
+    loadedEvalId = evalId;
+  }
+
+  // Sauvegarder les notes individuelles dans DB.notes
+  if (mode === 'publie') {
+    document.querySelectorAll('#grade-tbody tr[data-student-id]').forEach(row => {
+      const studentId = parseInt(row.dataset.studentId);
+      const noteVal   = parseFloat(row.querySelector('input[type="number"]')?.value);
+      const comment   = row.querySelector('input[type="text"]')?.value || '';
+      if (isNaN(noteVal)) return; // note vide = ignorée
+      const existing = DB.notes.find(n => n.etudiant_id === studentId && n.eval_id === evalId);
+      if (existing) { existing.note = noteVal; existing.commentaire = comment; }
+      else {
+        const nid = DB.notes.length ? Math.max(...DB.notes.map(n => n.id)) + 1 : 1;
+        DB.notes.push({ id: nid, eval_id: evalId, etudiant_id: studentId, note: noteVal, commentaire: comment });
+      }
     });
   }
+
   renderEvalHistory(currentEvalFilter);
   if (mode === 'draft') {
     toast('Brouillon enregistré ✓', '#0A3D2D');
   } else {
     hideNewEvalForm();
-    toast('Notes publiées — visibles par les étudiants ✓', '#0A3D2D');
+    toast('Notes publiées et enregistrées en base ✓', '#0A3D2D');
   }
 }
 
@@ -2876,17 +2963,22 @@ function buildGradeTable() {
   const cls = document.getElementById('grade-classe')?.value;
   const mat = document.getElementById('grade-matiere')?.value;
   if (!cls || !mat) return;
-  const students = cls === 'FCGE2' ? STUDENTS_FCGE2 : STUDENTS_FCGE1;
+  // Utiliser DB.users (source de vérité) plutôt que les tableaux statiques
+  const students = DB.users.filter(u => u.role === 'student' && u.classe_id === cls && u.status === 'active');
   document.getElementById('grade-table-title').textContent = `Saisie — ${mat} · ${cls}`;
-  let html = '';
-  students.forEach((s, i) => {
-    html += `<tr>
+  if (!students.length) {
+    document.getElementById('grade-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center;padding:16px">Aucun étudiant enregistré dans cette classe.</td></tr>';
+    document.getElementById('grade-table-box').style.display = 'block';
+    return;
+  }
+  document.getElementById('grade-tbody').innerHTML = students.map((s, i) => {
+    const existing = loadedEvalId ? DB.notes.find(n => n.etudiant_id === s.id && n.eval_id === loadedEvalId) : null;
+    return `<tr data-student-id="${s.id}">
       <td>${i + 1}</td><td><strong>${s.nom}</strong></td><td>${s.prenom}</td>
-      <td><input type="number" min="0" max="20" step="0.5" placeholder="—" style="width:90px;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:14px;text-align:center"></td>
-      <td><input type="text" placeholder="Absent / Bien…" style="width:100%;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:13px"></td>
+      <td><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${existing ? existing.note : ''}" style="width:90px;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:14px;text-align:center"></td>
+      <td><input type="text" placeholder="Absent / Bien…" value="${existing ? (existing.commentaire||'') : ''}" style="width:100%;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:13px"></td>
     </tr>`;
-  });
-  document.getElementById('grade-tbody').innerHTML = html;
+  }).join('');
   document.getElementById('grade-table-box').style.display = 'block';
 }
 
@@ -3171,6 +3263,15 @@ function publishEdt() {
     // Si l'onglet planning est ouvert, forcer le re-rendu
     if (document.getElementById('t-planning')?.classList.contains('active')) renderTeacherCal();
   }
+  // 3. Ajouter un message dans la boîte de réception des étudiants
+  const msgId = DB.messages_teacher.length ? Math.max(...DB.messages_teacher.map(m => m.id)) + 1 : 1;
+  DB.messages_teacher.push({
+    id: msgId, de: 'Administration', vers: classeId,
+    sujet: `Emploi du temps mis à jour — ${weekLabel}`,
+    corps: `L'emploi du temps de la semaine ${weekLabel} a été mis à jour pour la classe ${classeLabel}. Connectez-vous à votre espace étudiant pour consulter les nouveaux créneaux.`,
+    date: new Date().toISOString().split('T')[0]
+  });
+  if (document.getElementById('pg-dash')?.style.display === 'block') renderStudentMessages();
   toast(`Emploi du temps publié — Notification envoyée à ${classeLabel} ✓`, '#0A3D2D');
 }
 
