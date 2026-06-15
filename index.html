@@ -2443,6 +2443,7 @@ function showDS(id, el) {
   document.querySelectorAll('#pg-dash .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
   if (id === 'notes') renderStudentNotes();
+  if (id === 'msg')   renderStudentMessages();
   _historyPush({page:'pg-dash', section:id});
 }
 function showT(id, el) {
@@ -2560,9 +2561,12 @@ const luMsgs = new Set(); // clés 'type_id' ex: 'teacher_1', 'annonce_2'
 
 function _studentMsgCombined() {
   const today = new Date().toISOString().split('T')[0];
-  const filteredTeacher = DB.messages_teacher.filter(m =>
-    m.vers === 'Tous' || m.vers.replace(/\s/g,'').includes(CURRENT_USER.classe_id)
-  );
+  const cid = (CURRENT_USER.classe_id || '').trim();
+  const filteredTeacher = DB.messages_teacher.filter(m => {
+    if (!m.vers || m.vers === 'Tous') return true;          // broadcast
+    if (!cid) return true;                                   // étudiant sans classe → voit tout
+    return m.vers.trim() === cid;                            // correspondance exacte
+  });
   const filteredAnnonces = DB.annonces.filter(a =>
     a.statut === 'active' &&
     (!a.expiration || a.expiration >= today) &&
