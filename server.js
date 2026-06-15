@@ -1,10 +1,9 @@
 require('dotenv').config();
-const express    = require('express');
-const { Pool }   = require('pg');
-const jwt        = require('jsonwebtoken');
-const crypto     = require('crypto');
-const path       = require('path');
-const nodemailer = require('nodemailer');
+const express = require('express');
+const { Pool } = require('pg');
+const jwt     = require('jsonwebtoken');
+const crypto  = require('crypto');
+const path    = require('path');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -56,16 +55,18 @@ function nameFromEmail(email) {
   return { prenom: cap(parts[0] || 'Étudiant'), nom: 'IHBI' };
 }
 
-// ── Resend API — envoi d'emails via HTTPS (compatible Railway) ─────────────
+// ── Brevo API — envoi d'emails transactionnels via HTTPS ───────────────────
+// Doc : https://developers.brevo.com/reference/sendtransacemail
+// Prérequis : BREVO_API_KEY + BREVO_FROM (email expéditeur vérifié dans Brevo)
 const APP_URL = process.env.APP_URL || '';
 
 async function sendWelcomeEmail(email, prenom, nom, password, classe_id) {
-  if (!process.env.RESEND_API_KEY) {
-    console.log('RESEND_API_KEY non configuré — email non envoyé');
+  if (!process.env.BREVO_API_KEY || !process.env.BREVO_FROM) {
+    console.log('BREVO_API_KEY ou BREVO_FROM non configuré — email non envoyé');
     return false;
   }
 
-  const html = `
+  const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">
       <div style="background:#250D42;padding:24px 32px">
         <h1 style="color:white;font-size:20px;margin:0">IHBI — Plateforme étudiante</h1>
@@ -86,23 +87,24 @@ async function sendWelcomeEmail(email, prenom, nom, password, classe_id) {
     </div>
   `;
 
-  const res = await fetch('https://api.resend.com/emails', {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method:  'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type':  'application/json',
+      'api-key':      process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      'accept':       'application/json',
     },
     body: JSON.stringify({
-      from:    process.env.SMTP_FROM || 'IHBI Platform <onboarding@resend.dev>',
-      to:      [email],
-      subject: 'Vos identifiants de connexion — IHBI',
-      html,
+      sender:      { name: 'IHBI Platform', email: process.env.BREVO_FROM },
+      to:          [{ email, name: `${prenom} ${nom}` }],
+      subject:     'Vos identifiants de connexion — IHBI',
+      htmlContent,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Resend API error: ${res.status} — ${err}`);
+    throw new Error(`Brevo API error: ${res.status} — ${err}`);
   }
   return true;
 }
