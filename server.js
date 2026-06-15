@@ -56,48 +56,54 @@ function nameFromEmail(email) {
   return { prenom: cap(parts[0] || 'Étudiant'), nom: 'IHBI' };
 }
 
-// ── Nodemailer — optionnel, activé si SMTP configuré ───────────────────────
+// ── Resend API — envoi d'emails via HTTPS (compatible Railway) ─────────────
 const APP_URL = process.env.APP_URL || '';
-let transporter = null;
-if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-  transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST,
-    port:   parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-  console.log('Nodemailer configuré :', process.env.SMTP_HOST);
-} else {
-  console.log('SMTP non configuré — les emails ne seront pas envoyés.');
-}
 
 async function sendWelcomeEmail(email, prenom, nom, password, classe_id) {
-  if (!transporter) return false;
-  await transporter.sendMail({
-    from:    process.env.SMTP_FROM || `"IHBI Platform" <${process.env.SMTP_USER}>`,
-    to:      email,
-    subject: 'Vos identifiants de connexion — IHBI',
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">
-        <div style="background:#250D42;padding:24px 32px">
-          <h1 style="color:white;font-size:20px;margin:0">IHBI — Plateforme étudiante</h1>
-        </div>
-        <div style="padding:28px 32px;background:#fff;border:1px solid #e5e7eb">
-          <h2 style="font-size:18px;color:#250D42;margin-top:0">Bienvenue, ${prenom} !</h2>
-          <p style="color:#555;line-height:1.6">Votre compte étudiant a été créé pour la classe <strong>${classe_id}</strong>. Voici vos identifiants de connexion :</p>
-          <div style="background:#f8f9fa;border-left:4px solid #250D42;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
-            <p style="margin:0 0 8px;font-size:14px"><strong>Email :</strong> ${email}</p>
-            <p style="margin:0;font-size:14px"><strong>Mot de passe :</strong> <code style="background:#e8e8e8;padding:3px 8px;border-radius:3px;font-size:14px;letter-spacing:.5px">${password}</code></p>
-          </div>
-          ${APP_URL ? `<a href="${APP_URL}" style="display:inline-block;background:#250D42;color:white;padding:12px 24px;text-decoration:none;font-weight:600;border-radius:3px;margin-bottom:20px">Accéder à la plateforme →</a>` : ''}
-          <p style="font-size:12px;color:#999;margin-bottom:0">Pour votre sécurité, nous vous recommandons de changer votre mot de passe après votre première connexion.</p>
-        </div>
-        <div style="padding:16px 32px;background:#f8f9fa;font-size:11px;color:#999;text-align:center">
-          International High Business Institute — IHBI
-        </div>
+  if (!process.env.RESEND_API_KEY) {
+    console.log('RESEND_API_KEY non configuré — email non envoyé');
+    return false;
+  }
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">
+      <div style="background:#250D42;padding:24px 32px">
+        <h1 style="color:white;font-size:20px;margin:0">IHBI — Plateforme étudiante</h1>
       </div>
-    `
+      <div style="padding:28px 32px;background:#fff;border:1px solid #e5e7eb">
+        <h2 style="font-size:18px;color:#250D42;margin-top:0">Bienvenue, ${prenom} !</h2>
+        <p style="color:#555;line-height:1.6">Votre compte étudiant a été créé pour la classe <strong>${classe_id}</strong>. Voici vos identifiants de connexion :</p>
+        <div style="background:#f8f9fa;border-left:4px solid #250D42;padding:16px 20px;margin:20px 0;border-radius:0 4px 4px 0">
+          <p style="margin:0 0 8px;font-size:14px"><strong>Email :</strong> ${email}</p>
+          <p style="margin:0;font-size:14px"><strong>Mot de passe :</strong> <code style="background:#e8e8e8;padding:3px 8px;border-radius:3px;font-size:14px;letter-spacing:.5px">${password}</code></p>
+        </div>
+        ${APP_URL ? `<a href="${APP_URL}" style="display:inline-block;background:#250D42;color:white;padding:12px 24px;text-decoration:none;font-weight:600;border-radius:3px;margin-bottom:20px">Accéder à la plateforme →</a>` : ''}
+        <p style="font-size:12px;color:#999;margin-bottom:0">Pour votre sécurité, nous vous recommandons de changer votre mot de passe après votre première connexion.</p>
+      </div>
+      <div style="padding:16px 32px;background:#f8f9fa;font-size:11px;color:#999;text-align:center">
+        International High Business Institute — IHBI
+      </div>
+    </div>
+  `;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      from:    process.env.SMTP_FROM || 'IHBI Platform <onboarding@resend.dev>',
+      to:      [email],
+      subject: 'Vos identifiants de connexion — IHBI',
+      html,
+    }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend API error: ${res.status} — ${err}`);
+  }
   return true;
 }
 
