@@ -223,14 +223,23 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
 });
 
 // ── DELETE /api/admin/users/:id — suppression d'un compte ──────────────────
+// On supprime par email (fiable) ET par id (fallback) pour éviter les désynchs
 app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
-  const id = parseInt(req.params.id);
-  if (!id) return res.status(400).json({ error: 'ID invalide' });
-  // Sécurité : on ne peut pas supprimer son propre compte
-  if (id === req.user.id) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
+  if (req.user.id === parseInt(req.params.id)) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
+  const email = req.body?.email;
   try {
-    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    let deleted = 0;
+    // Suppression par email (source de vérité)
+    if (email) {
+      const r = await pool.query('DELETE FROM users WHERE LOWER(email) = LOWER($1) AND id != $2', [email, req.user.id]);
+      deleted = r.rowCount;
+    }
+    // Fallback par id si email non fourni ou non trouvé
+    if (!deleted) {
+      const id = parseInt(req.params.id);
+      if (id) await pool.query('DELETE FROM users WHERE id = $1 AND id != $2', [id, req.user.id]);
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete user error:', err.message);

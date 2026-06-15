@@ -3644,12 +3644,13 @@ async function deleteAccount(userId) {
   renderAccounts();
   toast(`Compte de ${user.prenom} ${user.nom} supprimé`, '#CC1A27');
 
-  // Supprimer en base de données
+  // Supprimer en base de données — on envoie aussi l'email pour garantir la suppression
   try {
     const token = localStorage.getItem('ihbi_token');
     await fetch(`/api/admin/users/${userId}`, {
       method:  'DELETE',
-      headers: { 'Authorization': 'Bearer ' + token }
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email: user.email })
     });
   } catch (e) { console.error('Delete user API error:', e); }
 }
