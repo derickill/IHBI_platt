@@ -220,6 +220,22 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
   res.json({ results, errors });
 });
 
+// ── DELETE /api/admin/users/:id — suppression d'un compte ──────────────────
+app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const id = parseInt(req.params.id);
+  if (!id) return res.status(400).json({ error: 'ID invalide' });
+  // Sécurité : on ne peut pas supprimer son propre compte
+  if (id === req.user.id) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete user error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── GET /api/health — vérification Railway ──────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 

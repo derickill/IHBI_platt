@@ -3581,6 +3581,7 @@ function renderStudentAccounts() {
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         <button onclick="toggleAccount(${u.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:${u.status === 'active' ? '#CC1A27' : '#15803D'}">${u.status === 'active' ? 'Désactiver' : 'Réactiver'}</button>
         ${!u.is_delegue ? `<button onclick="assignDelegue(${u.id},'${u.classe_id}')" style="padding:4px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Délégué</button>` : `<button onclick="removeDelegue(${u.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:var(--g600)">Retirer rôle</button>`}
+        <button onclick="deleteAccount(${u.id})" style="padding:4px 10px;background:#CC1A27;color:white;border:none;font-size:12px;cursor:pointer">Supprimer</button>
       </td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
@@ -3597,7 +3598,10 @@ function renderTeacherAccounts() {
       <td><strong>${u.nom}</strong></td><td>${u.prenom}</td><td>${u.email}</td>
       <td><span style="font-size:12px">${(u.matieres||[]).join(', ')}</span></td>
       <td><span class="bdg ${u.status === 'active' ? 'bg' : ''}" style="${u.status !== 'active' ? 'background:#E5E7EB;color:#6B7280' : ''}">${u.status === 'active' ? 'Actif' : 'Désactivé'}</span></td>
-      <td><button onclick="toggleAccount(${u.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:${u.status === 'active' ? '#CC1A27' : '#15803D'}">${u.status === 'active' ? 'Désactiver' : 'Réactiver'}</button></td>
+      <td style="display:flex;gap:4px">
+        <button onclick="toggleAccount(${u.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:${u.status === 'active' ? '#CC1A27' : '#15803D'}">${u.status === 'active' ? 'Désactiver' : 'Réactiver'}</button>
+        <button onclick="deleteAccount(${u.id})" style="padding:4px 10px;background:#CC1A27;color:white;border:none;font-size:12px;cursor:pointer">Supprimer</button>
+      </td>
     </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -3627,6 +3631,27 @@ function switchAccTab(tab, el) {
   el.style.color = '#250D42'; el.style.borderBottomColor = '#250D42';
   ['acc-students','acc-teachers','acc-admins'].forEach(id => document.getElementById(id).style.display = 'none');
   document.getElementById('acc-' + tab).style.display = 'block';
+}
+
+async function deleteAccount(userId) {
+  const user = DB.users.find(u => u.id === userId);
+  if (!user) return;
+  if (!confirm(`Supprimer définitivement le compte de ${user.prenom} ${user.nom} (${user.email}) ?\n\nCette action est irréversible.`)) return;
+
+  // Supprimer localement
+  DB.users = DB.users.filter(u => u.id !== userId);
+  saveDB();
+  renderAccounts();
+  toast(`Compte de ${user.prenom} ${user.nom} supprimé`, '#CC1A27');
+
+  // Supprimer en base de données
+  try {
+    const token = localStorage.getItem('ihbi_token');
+    await fetch(`/api/admin/users/${userId}`, {
+      method:  'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+  } catch (e) { console.error('Delete user API error:', e); }
 }
 
 function toggleAccount(userId) {
