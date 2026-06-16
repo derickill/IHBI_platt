@@ -2472,8 +2472,27 @@ function showA(id, el) {
 // ── UTILITIES ────────────────────────────────
 function fmtDate(dateStr) {
   if (!dateStr) return '—';
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr);
   return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+}
+// Formatte date + heure pour la boîte de réception
+// Exemples : "Aujourd'hui · 14h32"  |  "Hier · 09h05"  |  "16 juin · 08h30"
+function fmtMsgDatetime(str) {
+  if (!str) return '—';
+  const MOIS = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+  const d   = new Date(str.length === 10 ? str + 'T12:00:00' : str);
+  if (isNaN(d.getTime())) return str;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const sameDay = (a, b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const hasTime  = str.length > 10;
+  const timeStr  = hasTime ? `${pad(d.getHours())}h${pad(d.getMinutes())}` : null;
+  let label;
+  if      (sameDay(d, now))       label = "Aujourd'hui";
+  else if (sameDay(d, yesterday)) label = 'Hier';
+  else                            label = `${d.getDate()} ${MOIS[d.getMonth()]}`;
+  return timeStr ? `${label} · ${timeStr}` : label;
 }
 function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str; }
 
@@ -2628,16 +2647,17 @@ function _studentMsgCombined() {
   return [
     ...filteredAnnonces.map(a => ({
       type:'annonce', id:a.id, sender:'Administration', color:'#0A3D2D',
-      subject:a.titre, body:a.corps.replace(/\n/g,'<br>'), date:a.date, to:a.cible
+      subject:a.titre, body:a.corps.replace(/\n/g,'<br>'),
+      date: a.published_at || a.date,   // published_at = datetime complet si disponible
+      to:a.cible
     })),
     ...filteredTeacher.map(m => ({
       type:'teacher', id:m.id, sender:m.de, color:'#1A2C6B',
       subject:m.sujet, body:m.corps.replace(/\n/g,'<br>'), date:m.date, to:m.vers
     }))
   ].sort((a, b) => {
-    // Tri décroissant : le plus récent en premier
     const diff = new Date(b.date) - new Date(a.date);
-    return diff !== 0 ? diff : b.id - a.id; // à date égale, le plus grand id en premier
+    return diff !== 0 ? diff : b.id - a.id;
   });
 }
 
@@ -2660,7 +2680,7 @@ function renderStudentMessages() {
       + '<div style="flex:1;overflow:hidden">'
       + '<div style="display:flex;align-items:center">'
       + '<span class="msg-name2">' + item.sender + '</span>'
-      + '<span class="msg-time2">' + item.date + '</span>'
+      + '<span class="msg-time2">' + fmtMsgDatetime(item.date) + '</span>'
       + '</div>'
       + '<div class="msg-preview">' + item.subject + '</div>'
       + '</div></div>';
@@ -2701,7 +2721,7 @@ function showStudentMsg(type, id, el) {
     body = a.corps.replace(/\n/g,'<br>'); to = a.cible; date = a.date;
   }
   document.getElementById('msg-detail-sender').textContent = sender;
-  document.getElementById('msg-detail-meta').textContent = 'Envoyé à : ' + to + ' · ' + date;
+  document.getElementById('msg-detail-meta').textContent = 'Envoyé à : ' + to + ' · ' + fmtMsgDatetime(date);
   document.getElementById('msg-detail-body').innerHTML =
     '<strong style="display:block;margin-bottom:10px;font-size:14px">' + subject + '</strong>' + body;
   const replyZone = document.getElementById('msg-reply-zone');
@@ -3100,7 +3120,7 @@ function sendTeacherMsg() {
   const now = new Date();
   DB.messages_teacher.unshift({
     id: newId, de: 'M. Diallo', vers: dest, sujet, corps,
-    date: now.toLocaleDateString('fr-FR', {day:'2-digit', month:'short'}) + ', ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
+    date: now.toISOString(),
     statut: 'envoyé'
   });
   document.getElementById('tmsg-sujet').value = '';
@@ -3388,7 +3408,7 @@ function publishEdt() {
     id: msgId, de: 'Administration', vers: classeId,
     sujet: `Emploi du temps mis à jour — ${weekLabel}`,
     corps: `L'emploi du temps de la semaine ${weekLabel} a été mis à jour pour la classe ${classeLabel}. Connectez-vous à votre espace étudiant pour consulter les nouveaux créneaux.`,
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString()
   });
   if (document.getElementById('pg-dash')?.style.display === 'block') renderStudentMessages();
   toast(`Emploi du temps publié — Notification envoyée à ${classeLabel} ✓`, '#0A3D2D');
@@ -3495,7 +3515,7 @@ function publishAnnonce() {
   const expir = document.getElementById('ann-expir')?.value || null;
   if (!titre || !corps) { toast('Veuillez remplir le titre et le contenu', '#CC1A27'); return; }
   const newId = Math.max(...DB.annonces.map(a => a.id)) + 1;
-  DB.annonces.unshift({id:newId, titre, corps, cible, date, expiration:expir, statut:'active'});
+  DB.annonces.unshift({id:newId, titre, corps, cible, date, published_at: new Date().toISOString(), expiration:expir, statut:'active'});
   document.getElementById('ann-titre').value = '';
   document.getElementById('ann-corps').value = '';
   renderAdminAnnonces();
