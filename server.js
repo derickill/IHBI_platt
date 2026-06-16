@@ -247,6 +247,61 @@ app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ── POST /api/formations/:id/inscriptions — public (sans auth) ─────────────
+// Permet à un visiteur non connecté de s'inscrire à une formation.
+// Les données sont stockées dans app_data.formations[x].inscrits → visibles en admin.
+app.post('/api/formations/:id/inscriptions', async (req, res) => {
+  const fid = parseInt(req.params.id);
+  if (!fid) return res.status(400).json({ error: 'ID formation invalide' });
+
+  const { nom, prenom, profession, email, telephone } = req.body || {};
+  if (!nom || !prenom || !email) {
+    return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
+  }
+
+  try {
+    // Charger le snapshot courant
+    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
+    const data = snap.rows.length ? snap.rows[0].value : {};
+
+    const formations = data.formations || [];
+    const f = formations.find(x => x.id === fid);
+    if (!f) return res.status(404).json({ error: 'Formation introuvable' });
+
+    if (!Array.isArray(f.inscrits)) f.inscrits = [];
+    if (f.inscrits.length >= (f.places || 0)) {
+      return res.status(400).json({ error: 'Formation complète' });
+    }
+
+    // Anti-doublon sur l'email
+    if (f.inscrits.find(i => i.email?.toLowerCase() === email.toLowerCase())) {
+      return res.status(409).json({ error: 'Vous êtes déjà inscrit(e) à cette formation' });
+    }
+
+    f.inscrits.push({
+      nom,
+      prenom,
+      profession: profession || '',
+      email,
+      telephone: telephone || '',
+      date: new Date().toISOString().split('T')[0],
+    });
+
+    // Sauvegarder le snapshot mis à jour
+    await pool.query(
+      `INSERT INTO app_data (key, value, updated_at)
+       VALUES ('main', $1, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [JSON.stringify(data)]
+    );
+
+    res.json({ ok: true, inscrits: f.inscrits.length });
+  } catch (err) {
+    console.error('Inscription formation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── GET /api/health — vérification Railway ──────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 

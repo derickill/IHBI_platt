@@ -3507,8 +3507,6 @@ function renderAllFormations() {
 }
 
 function inscrireFormation() {
-  // En prod : POST /api/formations/:id/inscriptions
-  // Table SQL : inscriptions_formations(id, formation_id, nom, prenom, profession, email, telephone, date_inscription)
   const nom        = document.getElementById('form-inscrit-nom')?.value?.trim();
   const prenom     = document.getElementById('form-inscrit-prenom')?.value?.trim();
   const profession = document.getElementById('form-inscrit-profession')?.value?.trim() || '';
@@ -3517,13 +3515,29 @@ function inscrireFormation() {
   if (!nom || !prenom || !email) { toast('Nom, prénom et email sont requis (*)', '#CC1A27'); return; }
   const f = DB.formations.find(x => x.id === currentFormationId);
   if (!f) return;
-  if (f.inscrits.length >= f.places) { toast('Cette formation est complète', '#CC1A27'); return; }
-  f.inscrits.push({nom, prenom, profession, email, telephone:tel, date:new Date().toISOString().split('T')[0]});
+  if ((f.inscrits||[]).length >= f.places) { toast('Cette formation est complète', '#CC1A27'); return; }
+
+  const inscrit = { nom, prenom, profession, email, telephone: tel, date: new Date().toISOString().split('T')[0] };
+
+  // 1. Mise à jour locale immédiate (affichage instantané)
+  if (!Array.isArray(f.inscrits)) f.inscrits = [];
+  f.inscrits.push(inscrit);
+  saveDB(); // localStorage + Railway si l'admin est connecté
+
+  // 2. Persistance Railway via API publique (fonctionne même sans token)
+  fetch('/api/formations/' + currentFormationId + '/inscriptions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nom, prenom, profession, email, telephone: tel }),
+  }).then(r => {
+    if (!r.ok) r.json().then(e => console.warn('Inscription API:', e.error));
+  }).catch(e => console.warn('Inscription API non joignable:', e.message));
+
   closeFormationModal();
   renderPublicFormations();
-  renderAdminFormations();  // mise à jour immédiate dans le panel admin
+  renderAdminFormations();
   if (document.getElementById('all-formations-modal')?.classList.contains('on')) renderAllFormations();
-  toast(`Inscription confirmée ! Un email de confirmation vous sera envoyé à ${email}`, '#0A3D2D');
+  toast('Inscription confirmée ! Votre demande a bien été enregistrée.', '#0A3D2D');
 }
 
 function showFormationInscrits(fid) {
