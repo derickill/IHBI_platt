@@ -2484,12 +2484,51 @@ function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '�
 const COURSES = [];
 const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
-const DATES = ['01/06/2025','02/06/2025','03/06/2025','04/06/2025','05/06/2025'];
 
-function buildCalColumn(containerId, timesId, courses, todayDay = 4) {
+// ── Utilitaires de semaine (dates réelles) ─────────────────────────────────
+const _MOIS_FR  = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+const _JOURS_FR = ['LUN','MAR','MER','JEU','VEN'];
+function _getMondayOfWeek(offset = 0) {
+  const d = new Date(); const dow = d.getDay() || 7;
+  d.setDate(d.getDate() - dow + 1 + offset * 7); d.setHours(0,0,0,0); return d;
+}
+function _isoWeekNum(d) {
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dow = tmp.getUTCDay() || 7; tmp.setUTCDate(tmp.getUTCDate() + 4 - dow);
+  const jan1 = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tmp - jan1) / 86400000) + 1) / 7);
+}
+function _weekKey(mon)   { return mon.toISOString().split('T')[0]; }            // "2026-06-16"
+function _weekLabel(mon) {
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  return `Semaine ${_isoWeekNum(mon)} — ${mon.getDate()} au ${fri.getDate()} ${_MOIS_FR[fri.getMonth()]} ${fri.getFullYear()}`;
+}
+function _updateCalHeaders(calDaysSelector, mon) {
+  const wrap = document.querySelector(calDaysSelector); if (!wrap) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  wrap.querySelectorAll('.cal-day-head').forEach((head, i) => {
+    if (i >= 5) return;
+    const d = new Date(mon); d.setDate(mon.getDate() + i); d.setHours(0,0,0,0);
+    head.classList.toggle('today', d.getTime() === today.getTime());
+    head.innerHTML = `<span class="day-num">${String(d.getDate()).padStart(2,'0')}</span><span>${_JOURS_FR[i]}</span>`;
+  });
+}
+
+// ── Grille admin EDT — constantes ──────────────────────────────────────────
+const ADM_PX_H = 52; // pixels par heure dans la grille admin
+function _adminTimeToPx(t) {
+  const [h, m] = t.split(':').map(Number);
+  return ((h * 60 + m) - H_START * 60) * (ADM_PX_H / 60);
+}
+
+function buildCalColumn(containerId, timesId, courses, todayColIdx) {
   const tc = document.getElementById(timesId);
   if (!tc || tc.dataset.built) return;
   tc.dataset.built = '1';
+  // Indice de la colonne "aujourd'hui" (0=lun…4=ven, -1 si week-end ou non fourni)
+  const now = new Date();
+  const realTodayCol = (todayColIdx !== undefined) ? todayColIdx : ((now.getDay() || 7) - 1);
+  const nowStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const totalH = H_END - H_START;
   tc.style.cssText = `position:relative;height:${totalH * PX_H}px`;
   for (let h = H_START; h <= H_END; h++) {
@@ -2517,14 +2556,28 @@ function buildCalColumn(containerId, timesId, courses, todayDay = 4) {
       ev.onclick = () => showCourse(idx, courses);
       col.appendChild(ev);
     });
-    if (d === todayDay) {
+    // Marqueur "maintenant" sur la colonne du jour actuel (heure réelle)
+    if (d === realTodayCol && now.getHours() >= H_START && now.getHours() < H_END) {
       const n = document.createElement('div');
-      n.className = 'cal-now'; n.style.top = timeToPx('10:30') + 'px';
+      n.className = 'cal-now'; n.style.top = timeToPx(nowStr) + 'px';
       col.appendChild(n);
     }
   }
 }
-function renderCal() { buildCalColumn('cal-day-', 'cal-times', COURSES, 4); renderMiniCal(); }
+function renderCal() {
+  const mon = _getMondayOfWeek();
+  _updateCalHeaders('#ds-edt .cal-days', mon);
+  const todayCol = (new Date().getDay() || 7) - 1; // 0=lun…4=ven, ≥5=week-end
+  buildCalColumn('cal-day-', 'cal-times', COURSES, todayCol < 5 ? todayCol : -1);
+  // Sous-titre dynamique
+  const sub = document.querySelector('#ds-edt .ds-sub');
+  if (sub) {
+    const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+    const cls = CURRENT_USER?.classe_id ? ' · ' + CURRENT_USER.classe_id : '';
+    sub.textContent = `Semaine ${_isoWeekNum(mon)} · du ${mon.getDate()} au ${fri.getDate()} ${_MOIS_FR[fri.getMonth()]} ${fri.getFullYear()}${cls}`;
+  }
+  renderMiniCal();
+}
 function renderMiniCal() {
   const wrap = document.getElementById('mini-cal');
   if (!wrap || wrap.dataset.built) return;
@@ -2830,14 +2883,15 @@ function renderTeacherBoard() {
 }
 
 function renderTeacherCal() {
-  // En prod : GET /api/edt?teacher_id=X&week=Y
   const teacherSlots = COURSES.filter(c => c.t === TEACHER_NAME);
-  // Reset les colonnes (permet le rechargement après publishEdt)
   ['tcal-times','tcal-day-0','tcal-day-1','tcal-day-2','tcal-day-3','tcal-day-4'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
   });
-  buildCalColumn('tcal-day-', 'tcal-times', teacherSlots, 4);
+  const mon = _getMondayOfWeek();
+  _updateCalHeaders('#t-planning .cal-days', mon);
+  const todayCol = (new Date().getDay() || 7) - 1;
+  buildCalColumn('tcal-day-', 'tcal-times', teacherSlots, todayCol < 5 ? todayCol : -1);
 }
 
 // ── Brouillons d'évaluations ──────────────────
@@ -3085,32 +3139,70 @@ function initAdmin() {
 
 // ── EDT Admin ─────────────────────────────────
 let adminEdtBuilt = false;
+
+// Génère les options du sélecteur de semaine à partir de la date réelle
+function initEdtWeekSelector() {
+  const sel = document.getElementById('admin-edt-week');
+  if (!sel || sel.dataset.built) return;
+  sel.dataset.built = '1';
+  sel.innerHTML = '';
+  for (let i = -1; i <= 8; i++) {        // semaine précédente + 8 semaines à venir
+    const mon = _getMondayOfWeek(i);
+    const opt = document.createElement('option');
+    opt.value = _weekKey(mon);
+    opt.textContent = _weekLabel(mon);
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+// Met à jour l'en-tête de la grille (LUN 16, MAR 17…) selon la semaine choisie
+function _updateAdminEdtHeader(mon) {
+  if (!mon || isNaN(mon.getTime())) mon = _getMondayOfWeek();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cells = document.querySelectorAll('#edt-weekly-grid .edt-weekly-header .edt-hcell');
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(mon); d.setDate(mon.getDate() + i); d.setHours(0,0,0,0);
+    const isToday = d.getTime() === today.getTime();
+    if (cells[i + 1]) {
+      cells[i + 1].style.background = isToday ? 'rgba(255,255,255,.18)' : '';
+      cells[i + 1].innerHTML = `${_JOURS_FR[i]} <span style="font-weight:400;opacity:.75">${String(d.getDate()).padStart(2,'0')}</span>`;
+    }
+  }
+}
+
 function initAdminEdt() {
+  initEdtWeekSelector();
   if (adminEdtBuilt) return;
   adminEdtBuilt = true;
+  const weekSel = document.getElementById('admin-edt-week');
+  const mon = weekSel?.value ? new Date(weekSel.value + 'T00:00:00') : _getMondayOfWeek();
+  _updateAdminEdtHeader(mon);
   buildEdtRows();
-  renderDraftsList(); // affiche les brouillons dès l'ouverture de la section
+  renderDraftsList();
 }
 
 function loadAdminEdt() {
-  // En prod : GET /api/edt-drafts?classe={classeId}&week={weekId}
-  const classeId  = document.getElementById('admin-edt-class')?.value || 'FCGE2';
-  const weekId    = document.getElementById('admin-edt-week')?.value  || 'S23';
+  const classeId = document.getElementById('admin-edt-class')?.value || 'FCGE2';
+  const weekSel  = document.getElementById('admin-edt-week');
+  const weekId   = weekSel?.value || _weekKey(_getMondayOfWeek());
+  const mon      = new Date(weekId + 'T00:00:00');
+
   const draft = DB.edt_drafts.find(d => d.classe_id === classeId && d.week_id === weekId);
   if (draft) {
-    edtSlots = draft.slots.map(s => ({...s})); // deep copy
+    edtSlots = draft.slots.map(s => ({...s}));
     edtDraftStatus = draft.statut;
     const badge = document.getElementById('edt-status-badge');
     if (badge) badge.innerHTML = draft.statut === 'publie'
       ? '<span class="badge-publie">Publié</span>'
       : '<span class="badge-draft">Brouillon non publié</span>';
   } else {
-    // Aucun brouillon sauvegardé → emploi du temps de base (COURSES)
-    edtSlots = COURSES.map(c => ({...c}));
-    edtDraftStatus = 'publie';
+    edtSlots = [];
+    edtDraftStatus = 'vide';
     const badge = document.getElementById('edt-status-badge');
-    if (badge) badge.innerHTML = '<span class="badge-publie">Publié</span>';
+    if (badge) badge.innerHTML = '<span style="font-size:11px;color:var(--g400)">Aucun brouillon pour cette semaine</span>';
   }
+  _updateAdminEdtHeader(mon);
   adminEdtBuilt = false;
   const rows = document.getElementById('edt-rows-container');
   if (rows) rows.innerHTML = '';
@@ -3121,30 +3213,49 @@ function loadAdminEdt() {
 function buildEdtRows() {
   const container = document.getElementById('edt-rows-container');
   if (!container) return;
-  const hours = [];
-  for (let h = 7; h <= 19; h++) hours.push(h);
-  let html = '';
-  hours.forEach(h => {
-    const label = String(h).padStart(2,'0') + ':00';
-    html += `<div class="edt-row">
-      <div class="edt-timecell">${label}</div>`;
-    for (let d = 0; d < 5; d++) {
-      const slot = edtSlots.find(c => c.d === d && parseInt(c.s.split(':')[0]) === h);
-      if (slot) {
-        const dur = calcDuration(slot.s, slot.e);
-        html += `<div class="edt-daycell" onclick="openSlotModal()">
-          <div class="edt-block" style="background:${slot.c}" title="${slot.n} · ${slot.r}">
-            <span>${slot.n}</span><br>
-            <span style="font-weight:400;opacity:.85">${slot.s}–${slot.e} · ${slot.r}</span>
-            <button class="edt-del" onclick="event.stopPropagation();removeEdtSlot(${d},'${slot.s}')">×</button>
-          </div>
-        </div>`;
-      } else {
-        html += `<div class="edt-daycell" onclick="quickAddSlot(${d},${h})" title="Cliquer pour ajouter un créneau"></div>`;
-      }
+  const totalH  = H_END - H_START;
+  const totalPx = totalH * ADM_PX_H;
+  let html = `<div style="display:grid;grid-template-columns:56px repeat(5,1fr)">`;
+
+  // ── Colonne horaire ────────────────────────────────────────────────
+  html += `<div style="position:relative;height:${totalPx}px;border-right:1px solid var(--g200)">`;
+  for (let h = H_START; h <= H_END; h++) {
+    const top = (h - H_START) * ADM_PX_H;
+    html += `<div style="position:absolute;top:${top - 7}px;right:6px;font-size:10.5px;color:var(--g400);font-weight:500;white-space:nowrap;pointer-events:none">${String(h).padStart(2,'0')}:00</div>`;
+  }
+  html += `</div>`;
+
+  // ── Colonnes jours ─────────────────────────────────────────────────
+  for (let d = 0; d < 5; d++) {
+    html += `<div style="position:relative;height:${totalPx}px;border-left:1px solid var(--g200)">`;
+
+    // Lignes horaires
+    for (let h = H_START; h <= H_END; h++) {
+      html += `<div style="position:absolute;left:0;right:0;top:${(h - H_START) * ADM_PX_H}px;border-top:1px solid var(--g100);pointer-events:none;z-index:0"></div>`;
     }
-    html += '</div>';
-  });
+    // Zones cliquables (derrière les blocs)
+    for (let h = H_START; h < H_END; h++) {
+      html += `<div onclick="quickAddSlot(${d},${h})" title="Ajouter à ${String(h).padStart(2,'0')}:00"
+        style="position:absolute;left:0;right:0;top:${(h - H_START) * ADM_PX_H}px;height:${ADM_PX_H}px;cursor:pointer;z-index:1"></div>`;
+    }
+    // Créneaux avec hauteur proportionnelle à la durée réelle
+    edtSlots.filter(c => c.d === d).forEach(slot => {
+      const top    = _adminTimeToPx(slot.s);
+      const height = Math.max(_adminTimeToPx(slot.e) - top, 22);
+      html += `<div onclick="openSlotModal()"
+        style="position:absolute;left:3px;right:3px;top:${top}px;height:${height}px;
+               background:${slot.c};border-radius:3px;padding:4px 7px;cursor:pointer;
+               z-index:2;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.18)">
+        <div style="font-size:11px;font-weight:700;color:white;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${slot.n}</div>
+        ${height >= 36 ? `<div style="font-size:10px;color:rgba(255,255,255,.85);line-height:1.3;margin-top:1px">${slot.s}–${slot.e}${slot.r ? ' · ' + slot.r : ''}</div>` : ''}
+        <button onclick="event.stopPropagation();removeEdtSlot(${d},'${slot.s}')"
+          style="position:absolute;top:2px;right:3px;background:rgba(0,0,0,.35);border:none;
+                 color:white;cursor:pointer;font-size:10px;padding:0 4px;border-radius:2px;line-height:1.5">×</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
   container.innerHTML = html;
 }
 
@@ -3310,19 +3421,29 @@ function renderDraftsList() {
 }
 
 // Charge un brouillon spécifique dans l'éditeur EDT
-// En prod : GET /api/edt-drafts/:id
 function loadDraftById(draftId) {
   const draft = DB.edt_drafts.find(d => d.id === draftId);
   if (!draft) { toast('Brouillon introuvable', '#CC1A27'); return; }
   edtSlots = draft.slots.map(s => ({...s}));
   edtDraftStatus = draft.statut;
-  // Synchroniser le sélecteur de semaine
+  // Synchroniser le sélecteur de semaine (supporte anciens "S23" et nouveaux "2026-06-16")
   const weekSel = document.getElementById('admin-edt-week');
   if (weekSel) {
+    let found = false;
     for (let i = 0; i < weekSel.options.length; i++) {
-      if (weekSel.options[i].value === draft.week_id) { weekSel.selectedIndex = i; break; }
+      if (weekSel.options[i].value === draft.week_id) { weekSel.selectedIndex = i; found = true; break; }
+    }
+    if (!found) {
+      const opt = document.createElement('option');
+      opt.value = draft.week_id;
+      opt.textContent = draft.semaine_label || draft.week_id;
+      weekSel.insertBefore(opt, weekSel.firstChild);
+      weekSel.selectedIndex = 0;
     }
   }
+  const mon = /^\d{4}-\d{2}-\d{2}$/.test(draft.week_id)
+    ? new Date(draft.week_id + 'T00:00:00') : _getMondayOfWeek();
+  _updateAdminEdtHeader(mon);
   const badge = document.getElementById('edt-status-badge');
   if (badge) badge.innerHTML = draft.statut === 'publie'
     ? '<span class="badge-publie">Publié</span>'
