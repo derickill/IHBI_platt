@@ -2492,7 +2492,7 @@ function fmtMsgDatetime(str) {
   if      (sameDay(d, now))       label = "Aujourd'hui";
   else if (sameDay(d, yesterday)) label = 'Hier';
   else                            label = `${d.getDate()} ${MOIS[d.getMonth()]}`;
-  return timeStr ? `${label} · ${timeStr}` : label;
+  return `${label} · ${timeStr || '--:--'}`;
 }
 function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str; }
 
@@ -2718,7 +2718,7 @@ function showStudentMsg(type, id, el) {
     const a = DB.annonces.find(x => x.id === id);
     if (!a) return;
     sender = 'Administration 📢'; subject = a.titre;
-    body = a.corps.replace(/\n/g,'<br>'); to = a.cible; date = a.date;
+    body = a.corps.replace(/\n/g,'<br>'); to = a.cible; date = a.published_at || a.date;
   }
   document.getElementById('msg-detail-sender').textContent = sender;
   document.getElementById('msg-detail-meta').textContent = 'Envoyé à : ' + to + ' · ' + fmtMsgDatetime(date);
@@ -3149,6 +3149,11 @@ let currentFormationId = null;
 let contactFilter = 'all';
 
 function initAdmin() {
+  // Initialiser la date de publication des annonces à aujourd'hui
+  const _annDate = document.getElementById('ann-date');
+  if (_annDate) _annDate.value = new Date().toISOString().split('T')[0];
+  const _gradeDate = document.getElementById('grade-date');
+  if (_gradeDate) _gradeDate.value = new Date().toISOString().split('T')[0];
   // Rendu différé — initAdminEdt appelé seulement si on va sur a-edt
   renderAdminAnnonces();
   renderAdminFormations();
