@@ -2626,15 +2626,19 @@ function _studentMsgCombined() {
     (a.cible === 'Tous les étudiants' || a.cible === CURRENT_USER.classe_id || a.cible === 'Tous')
   );
   return [
-    ...filteredAnnonces.sort((a,b) => b.id - a.id).map(a => ({
+    ...filteredAnnonces.map(a => ({
       type:'annonce', id:a.id, sender:'Administration', color:'#0A3D2D',
       subject:a.titre, body:a.corps.replace(/\n/g,'<br>'), date:a.date, to:a.cible
     })),
-    ...filteredTeacher.sort((a,b) => b.id - a.id).map(m => ({
+    ...filteredTeacher.map(m => ({
       type:'teacher', id:m.id, sender:m.de, color:'#1A2C6B',
       subject:m.sujet, body:m.corps.replace(/\n/g,'<br>'), date:m.date, to:m.vers
     }))
-  ];
+  ].sort((a, b) => {
+    // Tri décroissant : le plus récent en premier
+    const diff = new Date(b.date) - new Date(a.date);
+    return diff !== 0 ? diff : b.id - a.id; // à date égale, le plus grand id en premier
+  });
 }
 
 function renderStudentMessages() {
