@@ -2306,6 +2306,7 @@ function _navigateAfterLogin(user) {
   window.scrollTo(0, 0);
   const pg = user.role === 'student' ? 'pg-dash' : user.role === 'teacher' ? 'pg-teacher' : 'pg-admin';
   _historyPush({page: pg, section: null});
+  startPolling(); // démarrer le polling auto-refresh
 }
 
 // POST /api/auth/login → JWT + données
@@ -2357,6 +2358,7 @@ async function goDash() {
 
 // Déconnexion — efface la session et revient au site public
 function goSite() {
+  stopPolling();
   CURRENT_USER = null;
   localStorage.removeItem('ihbi_token');
   localStorage.removeItem('ihbi_user');
@@ -2366,6 +2368,61 @@ function goSite() {
   renderPublicFormations();
   window.scrollTo(0, 0);
   _historyPush({page:'pg-site'});
+}
+
+// ── POLLING AUTO-REFRESH ──────────────────────────────────────────────────
+// Toutes les 20s : compare Railway avec DB local, re-rend si changement
+const _POLL_MS = 20000;
+let   _pollTimer = null;
+
+function startPolling() {
+  stopPolling();
+  _pollTimer = setInterval(_pollRefresh, _POLL_MS);
+}
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+async function _pollRefresh() {
+  const t = localStorage.getItem('ihbi_token');
+  if (!t || !CURRENT_USER) { stopPolling(); return; }
+  try {
+    const res = await fetch('/api/data', { headers: { 'Authorization': 'Bearer ' + t } });
+    if (!res.ok) return;
+    const fresh = await res.json();
+    // Détecter s'il y a eu un changement
+    const changed = _DB_KEYS.some(k => JSON.stringify(fresh[k]) !== JSON.stringify(DB[k]));
+    if (!changed) return;
+    // Appliquer les nouvelles données
+    _DB_KEYS.forEach(k => { if (k in fresh) DB[k] = fresh[k]; });
+    // Re-rendre les sections actuellement visibles
+    _rerenderActiveSections();
+  } catch(e) { /* silencieux si hors ligne */ }
+}
+
+function _rerenderActiveSections() {
+  const role = CURRENT_USER?.role;
+  const isOn = id => document.getElementById(id)?.classList.contains('active');
+
+  if (role === 'admin') {
+    if (isOn('a-contacts'))  renderContacts(contactFilter || 'all');
+    if (isOn('a-annonces'))  renderAdminAnnonces();
+    if (isOn('a-events'))    renderAdminFormations();
+    if (isOn('a-accounts'))  renderAccounts();
+    if (isOn('a-payments'))  renderPayments();
+    if (isOn('a-edt'))       buildEdtRows();
+    // badge candidatures toujours à jour
+    const nb = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
+    const badge = document.getElementById('contacts-count-badge');
+    if (badge) badge.textContent = nb;
+  } else if (role === 'student') {
+    renderStudentMessages();
+    renderStudentAnnonces();
+    if (isOn('notes')) renderStudentNotes();
+  } else if (role === 'teacher') {
+    if (isOn('t-planning')) renderTeacherCal();
+    if (isOn('t-messages')) renderTeacherMessages?.();
+  }
 }
 
 // Auto-restauration de session au rechargement (GET /api/data avec JWT stocké)
@@ -2409,6 +2466,7 @@ window.addEventListener('popstate', function(e) {
   if (s.page === 'pg-site' || !CURRENT_USER) {
     // Déconnexion silencieuse si on revient au site depuis un espace connecté
     if (CURRENT_USER) {
+      stopPolling();
       CURRENT_USER = null;
       localStorage.removeItem('ihbi_token');
       localStorage.removeItem('ihbi_user');
@@ -2664,6 +2722,8 @@ function _studentMsgCombined() {
 function renderStudentMessages() {
   const listEl = document.getElementById('msg-list-items');
   if (!listEl) return;
+  // Mémoriser le message actuellement sélectionné pour le restaurer après re-rendu
+  const prevActive = listEl.querySelector('.msg-item-row.active')?.id;
   const combined = _studentMsgCombined();
   if (!combined.length) {
     listEl.innerHTML = '<div style="padding:20px 14px;font-size:13px;color:var(--g400)">Aucun message.</div>';
@@ -2685,6 +2745,11 @@ function renderStudentMessages() {
       + '<div class="msg-preview">' + item.subject + '</div>'
       + '</div></div>';
   }).join('');
+  // Restaurer la surbrillance du message ouvert
+  if (prevActive) {
+    const row = document.getElementById(prevActive);
+    if (row) row.classList.add('active');
+  }
   _updateMsgBadge(combined);
 }
 
