@@ -3689,14 +3689,36 @@ function markContactDone(cid) {
   toast('Contact marqué comme traité ✓', '#0A3D2D');
 }
 
-function sendRelance() {
-  const email = document.getElementById('relance-email')?.value;
-  document.getElementById('relance-modal').style.display = 'none';
-  // Mark as relancé
-  const c = DB.contact_submissions.find(x => x.email === email);
-  if (c) c.statut = 'traité';
-  renderContacts(contactFilter);
-  toast('Relance envoyée avec succès ✓', '#0A3D2D');
+async function sendRelance() {
+  const email   = document.getElementById('relance-email')?.value?.trim();
+  const message = document.getElementById('relance-body')?.value?.trim();
+  if (!email || !message) { toast('Email et message sont requis', '#CC1A27'); return; }
+
+  const c   = DB.contact_submissions.find(x => x.email === email);
+  const btn = document.querySelector('#relance-modal button[onclick="sendRelance()"]');
+
+  // État chargement
+  if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
+
+  try {
+    const token = localStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/admin/send-relance', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, prenom: c?.prenom || '', nom: c?.nom || '', message }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Erreur inconnue');
+
+    // Succès
+    document.getElementById('relance-modal').style.display = 'none';
+    if (c) { c.statut = 'traité'; saveDB(); }
+    renderContacts(contactFilter);
+    toast('Relance envoyée avec succès ✓', '#0A3D2D');
+  } catch (err) {
+    toast('Échec envoi : ' + err.message, '#CC1A27');
+    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer la relance'; }
+  }
 }
 
 // ── Gestion des comptes Admin ─────────────────

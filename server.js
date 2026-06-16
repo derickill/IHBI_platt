@@ -320,6 +320,67 @@ app.post('/api/formations/:id/inscriptions', async (req, res) => {
   }
 });
 
+// ── POST /api/admin/send-relance — envoi d'un email de relance via Brevo ────
+app.post('/api/admin/send-relance', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+
+  const { email, prenom, nom, message } = req.body || {};
+  if (!email || !message) return res.status(400).json({ error: 'Email et message requis' });
+
+  if (!process.env.BREVO_API_KEY || !process.env.BREVO_FROM) {
+    return res.status(503).json({ error: 'Service email non configuré (BREVO_API_KEY / BREVO_FROM manquants)' });
+  }
+
+  // Convertit le texte brut en HTML lisible (sauts de ligne → paragraphes)
+  const htmlBody = message
+    .split('\n')
+    .map(line => line.trim()
+      ? `<p style="margin:0 0 10px;line-height:1.6;color:#333">${line}</p>`
+      : '<br>')
+    .join('');
+
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">
+      <div style="background:#250D42;padding:24px 32px">
+        <h1 style="color:white;font-size:20px;margin:0">IHBI — International High Business Institute</h1>
+      </div>
+      <div style="padding:28px 32px;background:#fff;border:1px solid #e5e7eb">
+        ${htmlBody}
+      </div>
+      <div style="padding:16px 32px;background:#f8f9fa;font-size:11px;color:#999;text-align:center">
+        International High Business Institute — IHBI, Yamoussoukro
+      </div>
+    </div>
+  `;
+
+  try {
+    const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method:  'POST',
+      headers: {
+        'api-key':      process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'accept':       'application/json',
+      },
+      body: JSON.stringify({
+        sender:      { name: 'IHBI Platform', email: process.env.BREVO_FROM },
+        to:          [{ email, name: `${prenom || ''} ${nom || ''}`.trim() || email }],
+        subject:     'Suivi de votre candidature — IHBI',
+        htmlContent,
+      }),
+    });
+
+    if (!brevoRes.ok) {
+      const err = await brevoRes.text();
+      throw new Error(`Brevo ${brevoRes.status} — ${err}`);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Send relance error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── GET /api/health — vérification Railway ──────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 
