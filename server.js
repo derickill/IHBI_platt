@@ -247,6 +247,24 @@ app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ── GET /api/formations/:id/inscrits — liste fraîche des inscrits (admin) ───
+// Toujours lu depuis Railway → pas de problème de cache mémoire côté client
+app.get('/api/formations/:id/inscrits', authMiddleware, async (req, res) => {
+  const fid = parseInt(req.params.id);
+  if (!fid) return res.status(400).json({ error: 'ID formation invalide' });
+  try {
+    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
+    const data = snap.rows.length ? snap.rows[0].value : {};
+    const formations = data.formations || [];
+    const f = formations.find(x => x.id === fid);
+    if (!f) return res.status(404).json({ error: 'Formation introuvable' });
+    res.json({ inscrits: f.inscrits || [], titre: f.titre });
+  } catch (err) {
+    console.error('Get inscrits error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── POST /api/formations/:id/inscriptions — public (sans auth) ─────────────
 // Permet à un visiteur non connecté de s'inscrire à une formation.
 // Les données sont stockées dans app_data.formations[x].inscrits → visibles en admin.

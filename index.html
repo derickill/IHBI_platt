@@ -3540,15 +3540,39 @@ function inscrireFormation() {
   toast('Inscription confirmée ! Votre demande a bien été enregistrée.', '#0A3D2D');
 }
 
-function showFormationInscrits(fid) {
-  const f = DB.formations.find(x => x.id === fid);
-  if (!f) return;
-  document.getElementById('event-reg-title').textContent = 'Inscrits — ' + f.titre;
-  document.getElementById('event-reg-tbody').innerHTML = f.inscrits.length
-    ? f.inscrits.map((r, i) => `<tr><td>${i+1}</td><td><strong>${r.nom}</strong></td><td>${r.prenom}</td><td>${r.profession||'—'}</td><td>${r.email}</td><td>${r.telephone||'—'}</td><td>${fmtDate(r.date)}</td></tr>`).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:var(--g400);padding:16px">Aucune inscription pour le moment</td></tr>';
-  document.getElementById('event-export-btn').onclick = () => exportFormationInscrits(fid);
+function _renderInscritsTbody(inscrits) {
+  return (inscrits||[]).length
+    ? inscrits.map((r, i) => `<tr><td>${i+1}</td><td><strong>${r.nom||'—'}</strong></td><td>${r.prenom||'—'}</td><td>${r.profession||'—'}</td><td>${r.email||'—'}</td><td>${r.telephone||'—'}</td><td>${fmtDate(r.date)}</td></tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--g400);padding:16px">Aucune inscription pour le moment</td></tr>';
+}
+
+async function showFormationInscrits(fid) {
+  // Afficher le modal tout de suite avec les données locales (réponse instantanée)
+  const fLocal = DB.formations.find(x => x.id === fid);
+  const titre  = fLocal ? fLocal.titre : 'Formation';
+  document.getElementById('event-reg-title').textContent   = 'Inscrits — ' + titre;
+  document.getElementById('event-reg-tbody').innerHTML     = '<tr><td colspan="7" style="text-align:center;color:var(--g400);padding:16px">Chargement…</td></tr>';
+  document.getElementById('event-export-btn').onclick      = () => exportFormationInscrits(fid);
   document.getElementById('event-reg-modal').style.display = 'flex';
+
+  // Puis rafraîchir depuis Railway (données réelles, toujours à jour)
+  try {
+    const token = localStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/formations/' + fid + '/inscrits', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+
+    // Mettre à jour le cache local pour l'export CSV
+    if (fLocal) fLocal.inscrits = json.inscrits || [];
+    document.getElementById('event-reg-title').textContent = 'Inscrits — ' + (json.titre || titre);
+    document.getElementById('event-reg-tbody').innerHTML   = _renderInscritsTbody(json.inscrits);
+  } catch (e) {
+    // Fallback : afficher les données locales si l'API est inaccessible
+    console.warn('showFormationInscrits fallback local:', e.message);
+    document.getElementById('event-reg-tbody').innerHTML = _renderInscritsTbody(fLocal?.inscrits);
+  }
 }
 
 function exportFormationInscrits(fid) {
