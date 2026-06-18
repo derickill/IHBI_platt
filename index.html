@@ -2463,7 +2463,7 @@ function _rerenderActiveSections() {
     const badge = document.getElementById('contacts-count-badge');
     if (badge) badge.textContent = nb;
   } else if (role === 'student') {
-    renderStudentMessages();
+    initStudentMessaging(); // re-vérifie statut délégué + appelle renderStudentMessages()
     renderStudentAnnonces();
     if (isOn('notes')) renderStudentNotes();
   } else if (role === 'teacher') {
@@ -2930,12 +2930,12 @@ function renderStudentNotes() {
 function initStudentMessaging() {
   const compose = document.getElementById('student-delegate-compose');
   const note    = document.getElementById('student-delegate-note');
-  // Toujours vérifier DB.users (source de vérité) ET CURRENT_USER (peut être stale)
+  // DB.users est la source de vérité (rechargé depuis Railway) — CURRENT_USER peut être stale
   const dbUser    = DB.users.find(u => u.id === CURRENT_USER?.id);
-  const isDelegue = !!(CURRENT_USER?.is_delegue || dbUser?.is_delegue);
-  // Synchroniser CURRENT_USER si DB.users dit délégué mais CURRENT_USER est stale
-  if (isDelegue && CURRENT_USER && !CURRENT_USER.is_delegue) {
-    CURRENT_USER.is_delegue = true;
+  const isDelegue = dbUser ? !!dbUser.is_delegue : !!CURRENT_USER?.is_delegue;
+  // Synchroniser CURRENT_USER et localStorage avec la valeur fraîche
+  if (CURRENT_USER && CURRENT_USER.is_delegue !== isDelegue) {
+    CURRENT_USER.is_delegue = isDelegue;
     localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
   }
   if (isDelegue) {
