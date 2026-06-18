@@ -2566,7 +2566,7 @@ function showDS(id, el) {
   document.querySelectorAll('#pg-dash .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
   if (id === 'notes') renderStudentNotes();
-  if (id === 'msg')   renderStudentMessages();
+  if (id === 'msg')   { initStudentMessaging(); } // re-check délégué à chaque ouverture
   _historyPush({page:'pg-dash', section:id});
 }
 function showT(id, el) {
@@ -2930,7 +2930,15 @@ function renderStudentNotes() {
 function initStudentMessaging() {
   const compose = document.getElementById('student-delegate-compose');
   const note    = document.getElementById('student-delegate-note');
-  if (CURRENT_USER.is_delegue) {
+  // Toujours vérifier DB.users (source de vérité) ET CURRENT_USER (peut être stale)
+  const dbUser    = DB.users.find(u => u.id === CURRENT_USER?.id);
+  const isDelegue = !!(CURRENT_USER?.is_delegue || dbUser?.is_delegue);
+  // Synchroniser CURRENT_USER si DB.users dit délégué mais CURRENT_USER est stale
+  if (isDelegue && CURRENT_USER && !CURRENT_USER.is_delegue) {
+    CURRENT_USER.is_delegue = true;
+    localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
+  }
+  if (isDelegue) {
     if (compose) compose.style.display = 'block';
     if (note)    note.style.display = 'none';
     // Peupler dynamiquement la liste des destinataires
@@ -2947,7 +2955,7 @@ function initStudentMessaging() {
     if (compose) compose.style.display = 'none';
     if (note)    note.style.display = 'flex';
   }
-  renderStudentMessages(); // charger la liste dynamique
+  renderStudentMessages();
 }
 
 // Envoyer un message (délégué → prof ou admin)
