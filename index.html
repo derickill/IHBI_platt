@@ -1888,9 +1888,9 @@ tr:hover td{background:var(--navy-l)}
   </div>
 
   <!-- Modal inscrits formation -->
-  <div class="overlay-modal" id="event-reg-modal" onclick="if(event.target===this)document.getElementById('event-reg-modal').style.display='none'">
+  <div class="overlay-modal" id="event-reg-modal" onclick="if(event.target===this){document.getElementById('event-reg-modal').style.display='none';_openInscritsFid=null;}">
     <div class="obox" style="max-width:640px">
-      <button class="obox-close" onclick="document.getElementById('event-reg-modal').style.display='none'">×</button>
+      <button class="obox-close" onclick="document.getElementById('event-reg-modal').style.display='none';_openInscritsFid=null;">×</button>
       <div class="obox-title" id="event-reg-title">Inscrits</div>
       <table style="margin-bottom:16px"><thead><tr><th>#</th><th>Nom</th><th>Prénom</th><th>Profession</th><th>Email</th><th>Téléphone</th><th>Date d'inscription</th></tr></thead>
       <tbody id="event-reg-tbody"></tbody></table>
@@ -2374,6 +2374,7 @@ function goSite() {
 // Toutes les 20s : compare Railway avec DB local, re-rend si changement
 const _POLL_MS = 20000;
 let   _pollTimer = null;
+let   _openInscritsFid = null; // formation dont le modal inscrits est ouvert
 
 function startPolling() {
   stopPolling();
@@ -2405,13 +2406,28 @@ function _rerenderActiveSections() {
   const isOn = id => document.getElementById(id)?.classList.contains('active');
 
   if (role === 'admin') {
+    // Toujours re-rendre les formations (liste + compteur inscrits)
+    renderAdminFormations();
+    // Si le modal inscrits est ouvert, rafraîchir son contenu via API
+    const inscModal = document.getElementById('event-reg-modal');
+    if (_openInscritsFid && inscModal?.style.display === 'flex') {
+      const t = localStorage.getItem('ihbi_token');
+      fetch('/api/formations/' + _openInscritsFid + '/inscrits', {
+        headers: { 'Authorization': 'Bearer ' + t }
+      }).then(r => r.ok ? r.json() : null).then(json => {
+        if (!json) return;
+        const f = DB.formations.find(x => x.id === _openInscritsFid);
+        if (f) f.inscrits = json.inscrits || [];
+        document.getElementById('event-reg-tbody').innerHTML = _renderInscritsTbody(json.inscrits);
+      }).catch(() => {});
+    }
+    // Sections spécifiques
     if (isOn('a-contacts'))  renderContacts(contactFilter || 'all');
     if (isOn('a-annonces'))  renderAdminAnnonces();
-    if (isOn('a-events'))    renderAdminFormations();
     if (isOn('a-accounts'))  renderAccounts();
     if (isOn('a-payments'))  renderPayments();
     if (isOn('a-edt'))       buildEdtRows();
-    // badge candidatures toujours à jour
+    // Badge candidatures toujours à jour
     const nb = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
     const badge = document.getElementById('contacts-count-badge');
     if (badge) badge.textContent = nb;
@@ -2434,18 +2450,23 @@ function _rerenderActiveSections() {
     const res = await fetch('/api/data', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      // Token vraiment invalide ou expiré → déconnexion forcée
       localStorage.removeItem('ihbi_token');
       localStorage.removeItem('ihbi_user');
       return;
     }
-    const data = await res.json();
-    _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
-    _restoreCoursesFromEdt();
+    if (res.ok) {
+      // Succès → charger les données fraîches depuis Railway
+      const data = await res.json();
+      _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
+      _restoreCoursesFromEdt();
+    }
+    // Erreur serveur temporaire (5xx, réseau lent) → rester connecté avec localStorage
     CURRENT_USER = JSON.parse(savedUser);
     _navigateAfterLogin(CURRENT_USER);
   } catch (_) {
-    // Hors ligne : utiliser localStorage déjà chargé par loadSavedDB()
+    // Hors ligne ou Railway en cold-start : utiliser localStorage déjà chargé
     const u = JSON.parse(savedUser);
     if (u) { CURRENT_USER = u; _navigateAfterLogin(u); }
   }
@@ -3762,6 +3783,7 @@ function _renderInscritsTbody(inscrits) {
 }
 
 async function showFormationInscrits(fid) {
+  _openInscritsFid = fid; // mémoriser pour le polling auto-refresh
   // Afficher le modal tout de suite avec les données locales (réponse instantanée)
   const fLocal = DB.formations.find(x => x.id === fid);
   const titre  = fLocal ? fLocal.titre : 'Formation';
