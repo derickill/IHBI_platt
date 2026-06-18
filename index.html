@@ -1378,19 +1378,17 @@ tr:hover td{background:var(--navy-l)}
   <div class="ds-sub">Communications de vos enseignants et de l'administration</div>
   <!-- Compose délégué (affiché seulement si délégué) -->
   <div id="student-delegate-compose" class="delegate-compose" style="display:none">
-    <div class="delegate-compose-title">✉ Envoyer un message à un enseignant — <span style="color:#F59E0B">Délégué de classe</span></div>
+    <div class="delegate-compose-title">✉ Envoyer un message — <span style="color:#F59E0B">Délégué de classe</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
       <div><label class="fl">Destinataire</label>
         <select class="fsel" id="stu-msg-dest">
-          <option>M. Diallo — Comptabilité</option>
-          <option>Mme Traoré — Anglais</option>
-          <option>M. Koné — Fiscalité</option>
+          <!-- Peuplé dynamiquement par initStudentMessaging() -->
         </select>
       </div>
-      <div><label class="fl">Sujet</label><input type="text" class="fi" placeholder="Ex : Question sur le devoir n°3"></div>
+      <div><label class="fl">Sujet</label><input type="text" class="fi" id="stu-msg-sujet" placeholder="Ex : Question sur le devoir n°3"></div>
     </div>
-    <div style="margin-bottom:10px"><textarea class="fta" rows="3" placeholder="Votre message…"></textarea></div>
-    <button onclick="toast('Message envoyé à l\'enseignant ✓','#0A3D2D')" style="padding:8px 20px;background:var(--b600);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Envoyer</button>
+    <div style="margin-bottom:10px"><textarea class="fta" rows="3" id="stu-msg-corps" placeholder="Votre message…"></textarea></div>
+    <button onclick="sendDelegueMsg()" style="padding:8px 20px;background:var(--b600);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Envoyer</button>
   </div>
   <!-- Bannière info non-délégué -->
   <div id="student-delegate-note" class="delegate-banner" style="display:none">
@@ -1409,8 +1407,8 @@ tr:hover td{background:var(--navy-l)}
       </div>
       <div class="msg-detail-body" id="msg-detail-body" style="color:var(--g400);font-size:13px">Cliquez sur un message dans la liste pour le lire.</div>
       <div id="msg-reply-zone" class="msg-detail-reply" style="display:none">
-        <textarea class="msg-reply-input" placeholder="Répondre…"></textarea>
-        <button class="msg-reply-btn" onclick="toast('Réponse envoyée ✓','#0A3D2D')">Envoyer</button>
+        <textarea class="msg-reply-input" id="msg-reply-corps" placeholder="Répondre…"></textarea>
+        <button class="msg-reply-btn" onclick="sendDelegueReply()">Envoyer</button>
       </div>
     </div>
   </div>
@@ -1633,6 +1631,12 @@ tr:hover td{background:var(--navy-l)}
         <div style="margin-bottom:14px"><label class="fl">Message</label><textarea class="fta" rows="4" id="tmsg-corps" placeholder="Rédigez votre message…"></textarea></div>
         <button onclick="sendTeacherMsg()" style="padding:10px 24px;background:#0A3D2D;color:white;border:none;font-size:14px;font-weight:600;cursor:pointer">Envoyer le message</button>
       </div>
+    </div>
+
+    <!-- Messages reçus des délégués -->
+    <div class="bx" style="margin-bottom:16px">
+      <div class="bx-h"><span class="bx-t">Messages reçus des délégués</span><span id="t-delegue-badge" style="margin-left:8px;background:#CC1A27;color:white;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;display:none">0</span></div>
+      <div id="t-delegue-list" style="padding:0 0 4px"></div>
     </div>
 
     <!-- Messages envoyés + panel lecture -->
@@ -1964,6 +1968,15 @@ tr:hover td{background:var(--navy-l)}
       <div class="kpi" style="border-top-color:#15803D"><div class="kpi-l">Traités</div><div class="kpi-v" style="color:#15803D" id="contacts-kpi-done">1</div><div class="kpi-s">Contacts traités</div></div>
     </div>
 
+    <!-- Messages des délégués de classe -->
+    <div class="bx" style="margin-bottom:16px">
+      <div class="bx-h">
+        <span class="bx-t">Messages des délégués de classe</span>
+        <span id="admin-delegue-badge" style="margin-left:8px;background:#CC1A27;color:white;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;display:none">0</span>
+      </div>
+      <div id="admin-delegue-list" style="padding:0 0 4px"></div>
+    </div>
+
     <div class="bx">
       <div class="bx-h">
         <span class="bx-t">Demandes reçues</span>
@@ -2159,6 +2172,7 @@ const DB = {
   evaluations:         [],
   notes:               [],   // {id, eval_id, etudiant_id, note, commentaire}
   messages_teacher:    [],
+  messages_delegates:  [],   // {id, from_id, from_name, classe_id, to_role, to_id, to_name, sujet, corps, date, lu}
   annonces:            [],
   formations:          [],
   contact_submissions: [],
@@ -2193,7 +2207,8 @@ let CURRENT_USER = null;
 // ── PERSISTANCE — localStorage + Railway API ──────────────────────────────
 // En prod : POST /api/data  (remplace le localStorage)
 const _DB_KEYS = ['formations','annonces','edt_drafts','notifications','users','classes',
-                  'evaluations','notes','messages_teacher','contact_submissions','payments'];
+                  'evaluations','notes','messages_teacher','contact_submissions','payments',
+                  'messages_delegates'];
 
 function _dbSnapshot() {
   const snap = {};
@@ -2422,7 +2437,7 @@ function _rerenderActiveSections() {
       }).catch(() => {});
     }
     // Sections spécifiques
-    if (isOn('a-contacts'))  renderContacts(contactFilter || 'all');
+    if (isOn('a-contacts'))  { renderContacts(contactFilter || 'all'); renderAdminDelegateMsgs(); }
     if (isOn('a-annonces'))  renderAdminAnnonces();
     if (isOn('a-accounts'))  renderAccounts();
     if (isOn('a-payments'))  renderPayments();
@@ -2437,7 +2452,7 @@ function _rerenderActiveSections() {
     if (isOn('notes')) renderStudentNotes();
   } else if (role === 'teacher') {
     if (isOn('t-planning')) renderTeacherCal();
-    if (isOn('t-messages')) renderTeacherMessages?.();
+    if (isOn('t-msg'))      renderTeacherDelegateMsgs();
   }
 }
 
@@ -2818,6 +2833,8 @@ function showStudentMsg(type, id, el) {
     '<strong style="display:block;margin-bottom:10px;font-size:14px">' + subject + '</strong>' + body;
   const replyZone = document.getElementById('msg-reply-zone');
   if (replyZone) replyZone.style.display = (type === 'teacher' && CURRENT_USER.is_delegue) ? 'flex' : 'none';
+  // Mémoriser le contexte pour la réponse du délégué
+  _replyToMsg = CURRENT_USER.is_delegue ? { sender, subject } : null;
   _updateMsgBadge(_studentMsgCombined());
 }
 
@@ -2893,11 +2910,152 @@ function initStudentMessaging() {
   if (CURRENT_USER.is_delegue) {
     if (compose) compose.style.display = 'block';
     if (note)    note.style.display = 'none';
+    // Peupler dynamiquement la liste des destinataires
+    const sel = document.getElementById('stu-msg-dest');
+    if (sel) {
+      const teachers = DB.users.filter(u => u.role === 'teacher' && u.status !== 'inactive');
+      sel.innerHTML = '<option value="admin">🏛 Administration</option>'
+        + teachers.map(t => {
+          const mat = t.matieres?.length ? ' — ' + t.matieres[0] : '';
+          return `<option value="${t.id}">${t.prenom} ${t.nom}${mat}</option>`;
+        }).join('');
+    }
   } else {
     if (compose) compose.style.display = 'none';
     if (note)    note.style.display = 'flex';
   }
   renderStudentMessages(); // charger la liste dynamique
+}
+
+// Envoyer un message (délégué → prof ou admin)
+function sendDelegueMsg() {
+  const sel   = document.getElementById('stu-msg-dest');
+  const sujet = document.getElementById('stu-msg-sujet')?.value?.trim();
+  const corps = document.getElementById('stu-msg-corps')?.value?.trim();
+  if (!sujet || !corps) { toast('Remplissez le sujet et le message', '#CC1A27'); return; }
+  const toVal = sel?.value;
+  let toName, toRole, toId;
+  if (toVal === 'admin') {
+    toName = 'Administration'; toRole = 'admin'; toId = null;
+  } else {
+    const teacher = DB.users.find(u => u.id === parseInt(toVal));
+    if (!teacher) { toast('Destinataire introuvable', '#CC1A27'); return; }
+    toName = teacher.prenom + ' ' + teacher.nom;
+    toRole = 'teacher'; toId = teacher.id;
+  }
+  if (!Array.isArray(DB.messages_delegates)) DB.messages_delegates = [];
+  const newId = DB.messages_delegates.length
+    ? Math.max(...DB.messages_delegates.map(m => m.id)) + 1 : 1;
+  DB.messages_delegates.push({
+    id: newId,
+    from_id: CURRENT_USER.id,
+    from_name: CURRENT_USER.prenom + ' ' + CURRENT_USER.nom,
+    classe_id: CURRENT_USER.classe_id || '',
+    to_role: toRole, to_id: toId, to_name: toName,
+    sujet, corps,
+    date: new Date().toISOString(),
+    lu: false,
+  });
+  saveDB();
+  document.getElementById('stu-msg-sujet').value = '';
+  document.getElementById('stu-msg-corps').value = '';
+  toast('Message envoyé à ' + toName + ' ✓', '#0A3D2D');
+}
+
+// Réponse du délégué à un message de prof (zone de réponse dans le détail)
+let _replyToMsg = null; // mémorise le message d'origine
+function sendDelegueReply() {
+  const corps = document.getElementById('msg-reply-corps')?.value?.trim();
+  if (!corps) { toast('Le message est vide', '#CC1A27'); return; }
+  if (!_replyToMsg) { toast('Impossible d\'identifier le destinataire', '#CC1A27'); return; }
+  // Retrouver l'enseignant par son nom (champ `de` du message)
+  const teacher = DB.users.find(u => u.role === 'teacher'
+    && (u.prenom + ' ' + u.nom).toLowerCase() === _replyToMsg.sender.toLowerCase());
+  let toRole, toId, toName;
+  if (teacher) { toRole = 'teacher'; toId = teacher.id; toName = teacher.prenom + ' ' + teacher.nom; }
+  else         { toRole = 'admin'; toId = null; toName = _replyToMsg.sender; }
+  if (!Array.isArray(DB.messages_delegates)) DB.messages_delegates = [];
+  const newId = DB.messages_delegates.length
+    ? Math.max(...DB.messages_delegates.map(m => m.id)) + 1 : 1;
+  DB.messages_delegates.push({
+    id: newId,
+    from_id: CURRENT_USER.id,
+    from_name: CURRENT_USER.prenom + ' ' + CURRENT_USER.nom,
+    classe_id: CURRENT_USER.classe_id || '',
+    to_role: toRole, to_id: toId, to_name: toName,
+    sujet: 'Rép : ' + (_replyToMsg.subject || ''),
+    corps,
+    date: new Date().toISOString(),
+    lu: false,
+  });
+  saveDB();
+  document.getElementById('msg-reply-corps').value = '';
+  document.getElementById('msg-reply-zone').style.display = 'none';
+  toast('Réponse envoyée à ' + toName + ' ✓', '#0A3D2D');
+}
+
+// ── INBOX DÉLÉGUÉS — Enseignant ───────────────
+function renderTeacherDelegateMsgs() {
+  const listEl = document.getElementById('t-delegue-list');
+  const badge  = document.getElementById('t-delegue-badge');
+  if (!listEl) return;
+  const msgs = (DB.messages_delegates || [])
+    .filter(m => m.to_role === 'teacher' && m.to_id === CURRENT_USER.id)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const unread = msgs.filter(m => !m.lu).length;
+  if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? '' : 'none'; }
+  if (!msgs.length) {
+    listEl.innerHTML = '<div style="padding:14px 18px;font-size:13px;color:var(--g400)">Aucun message de délégué.</div>';
+    return;
+  }
+  listEl.innerHTML = '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
+    + msgs.map(m => `<tr style="${!m.lu ? 'font-weight:600' : ''}">
+      <td>${m.from_name}</td><td><span class="bdg bl">${m.classe_id}</span></td>
+      <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
+      <td><button onclick="readDelegueMsg(${m.id},'teacher')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
+    </tr>`).join('')
+    + '</tbody></table>';
+}
+
+// ── INBOX DÉLÉGUÉS — Admin ────────────────────
+function renderAdminDelegateMsgs() {
+  const listEl = document.getElementById('admin-delegue-list');
+  const badge  = document.getElementById('admin-delegue-badge');
+  if (!listEl) return;
+  const msgs = (DB.messages_delegates || [])
+    .filter(m => m.to_role === 'admin')
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const unread = msgs.filter(m => !m.lu).length;
+  if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? '' : 'none'; }
+  if (!msgs.length) {
+    listEl.innerHTML = '<div style="padding:14px 18px;font-size:13px;color:var(--g400)">Aucun message de délégué.</div>';
+    return;
+  }
+  listEl.innerHTML = '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
+    + msgs.map(m => `<tr style="${!m.lu ? 'font-weight:600' : ''}">
+      <td>${m.from_name}</td><td><span class="bdg bl">${m.classe_id}</span></td>
+      <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
+      <td><button onclick="readDelegueMsg(${m.id},'admin')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
+    </tr>`).join('')
+    + '</tbody></table>';
+}
+
+// Lire un message délégué (modal) + marquer comme lu
+function readDelegueMsg(id, ctx) {
+  const m = (DB.messages_delegates || []).find(x => x.id === id);
+  if (!m) return;
+  if (!m.lu) { m.lu = true; saveDB(); }
+  // Réutilise la modal d'annonce pour afficher le contenu
+  document.getElementById('annonce-view-title').textContent = m.sujet;
+  document.getElementById('annonce-view-body').innerHTML = `
+    <div style="font-size:12px;color:var(--g400);margin-bottom:14px">
+      De : <strong>${m.from_name}</strong> · Classe ${m.classe_id} · ${fmtMsgDatetime(m.date)}
+    </div>
+    <p style="font-size:14px;color:var(--g600);line-height:1.75;white-space:pre-wrap">${m.corps}</p>`;
+  document.getElementById('annonce-view-modal').classList.add('on');
+  // Rafraîchir le badge
+  if (ctx === 'teacher') renderTeacherDelegateMsgs();
+  else renderAdminDelegateMsgs();
 }
 
 // ── STUDENT ANNONCES (depuis admin → espace étudiant) ─────────────────────
@@ -2978,6 +3136,7 @@ function initTeacher() {
   renderEvalHistory('all');
   renderTmsgList();
   renderTeacherBoard();
+  renderTeacherDelegateMsgs(); // inbox messages délégués
 }
 
 function renderTeacherBoard() {
@@ -3246,6 +3405,7 @@ function initAdmin() {
   if (_annDate) _annDate.value = new Date().toISOString().split('T')[0];
   const _gradeDate = document.getElementById('grade-date');
   if (_gradeDate) _gradeDate.value = new Date().toISOString().split('T')[0];
+  renderAdminDelegateMsgs(); // messages délégués de classe
   // Rendu différé — initAdminEdt appelé seulement si on va sur a-edt
   renderAdminAnnonces();
   renderAdminFormations();
@@ -4078,6 +4238,7 @@ function assignDelegue(userId, classeId) {
   if (cls) cls.delegue_id = userId;
   const user = DB.users.find(u => u.id === userId);
   if (user) user.is_delegue = true;
+  saveDB(); // persister sur Railway
   renderAccounts();
   toast(`${user.prenom} ${user.nom} nommé(e) délégué(e) de ${classeId} ✓`, '#0A3D2D');
 }
@@ -4088,6 +4249,7 @@ function removeDelegue(userId) {
   user.is_delegue = false;
   const cls = DB.classes.find(c => c.id === user.classe_id);
   if (cls) cls.delegue_id = null;
+  saveDB(); // persister sur Railway
   renderAccounts();
   toast('Rôle délégué retiré ✓');
 }
