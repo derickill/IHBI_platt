@@ -2343,11 +2343,14 @@ async function goDash() {
     if (res.ok) {
       const json = await res.json();
       user = json.user;
-      localStorage.setItem('ihbi_token', json.token);
-      localStorage.setItem('ihbi_user',  JSON.stringify(user));
-      // Charger les données depuis le serveur
+      // Charger les données depuis le serveur (AVANT d'enrichir l'utilisateur)
       _DB_KEYS.forEach(k => { if (json.data[k] !== undefined) DB[k] = json.data[k]; });
       _restoreCoursesFromEdt();
+      // Enrichir user avec les champs issus de app_data.users[]
+      // (is_delegue, email_parent…) car la table SQL users ne les reflète pas toujours
+      user = _enrichUser(user);
+      localStorage.setItem('ihbi_token', json.token);
+      localStorage.setItem('ihbi_user',  JSON.stringify(user));
     }
   } catch (_) {
     // Serveur inaccessible → authentification locale (fallback dev)
@@ -2369,6 +2372,19 @@ async function goDash() {
   CURRENT_USER = user;
   hideLogin();
   _navigateAfterLogin(user);
+}
+
+// Enrichit un objet user avec les champs de app_data.users[] (is_delegue, etc.)
+// La table SQL users peut ne pas avoir is_delegue à jour — app_data est la source de vérité
+function _enrichUser(user) {
+  if (!user) return user;
+  const dbUser = DB.users.find(u => u.id === user.id);
+  if (!dbUser) return user;
+  return Object.assign({}, user, {
+    is_delegue:   !!dbUser.is_delegue,
+    email_parent: dbUser.email_parent || user.email_parent || '',
+    classe_id:    dbUser.classe_id    || user.classe_id    || '',
+  });
 }
 
 // Déconnexion — efface la session et revient au site public
@@ -2485,6 +2501,13 @@ function _rerenderActiveSections() {
       const data = await res.json();
       _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
       _restoreCoursesFromEdt();
+      // Mettre à jour CURRENT_USER avec les derniers champs (is_delegue peut avoir changé)
+      const enriched = _enrichUser(CURRENT_USER);
+      if (enriched.is_delegue !== CURRENT_USER.is_delegue) {
+        CURRENT_USER = enriched;
+        localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
+        initStudentMessaging(); // re-init le panneau délégué si besoin
+      }
       _rerenderActiveSections(); // mettre à jour l'UI avec les données fraîches
     }
     // Erreur 5xx / réseau lent → données localStorage déjà utilisées, RAS
