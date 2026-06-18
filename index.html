@@ -2441,34 +2441,40 @@ function _rerenderActiveSections() {
   }
 }
 
-// Auto-restauration de session au rechargement (GET /api/data avec JWT stocké)
+// Auto-restauration de session au rechargement
 (async function autoRestoreSession() {
   const token     = localStorage.getItem('ihbi_token');
   const savedUser = localStorage.getItem('ihbi_user');
   if (!token || !savedUser) return;
+  let u;
+  try { u = JSON.parse(savedUser); } catch(_) { return; }
+  if (!u) return;
+
+  // ── ÉTAPE 1 : naviguer IMMÉDIATEMENT avec les données localStorage ──────
+  // DB est déjà peuplé par loadSavedDB() (appelé juste avant, synchrone).
+  // L'utilisateur voit directement son espace — aucun flash de la page publique.
+  CURRENT_USER = u;
+  _navigateAfterLogin(CURRENT_USER);
+
+  // ── ÉTAPE 2 : rafraîchir depuis Railway en arrière-plan (invisible) ─────
   try {
-    const res = await fetch('/api/data', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const res = await fetch('/api/data', { headers: { 'Authorization': 'Bearer ' + token } });
     if (res.status === 401 || res.status === 403) {
-      // Token vraiment invalide ou expiré → déconnexion forcée
+      // Token vraiment expiré/révoqué → déconnexion propre
+      goSite();
       localStorage.removeItem('ihbi_token');
       localStorage.removeItem('ihbi_user');
       return;
     }
     if (res.ok) {
-      // Succès → charger les données fraîches depuis Railway
       const data = await res.json();
       _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
       _restoreCoursesFromEdt();
+      _rerenderActiveSections(); // mettre à jour l'UI avec les données fraîches
     }
-    // Erreur serveur temporaire (5xx, réseau lent) → rester connecté avec localStorage
-    CURRENT_USER = JSON.parse(savedUser);
-    _navigateAfterLogin(CURRENT_USER);
+    // Erreur 5xx / réseau lent → données localStorage déjà utilisées, RAS
   } catch (_) {
-    // Hors ligne ou Railway en cold-start : utiliser localStorage déjà chargé
-    const u = JSON.parse(savedUser);
-    if (u) { CURRENT_USER = u; _navigateAfterLogin(u); }
+    // Hors ligne → données localStorage déjà utilisées, RAS
   }
 })();
 
