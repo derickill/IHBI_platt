@@ -140,9 +140,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
-    // Charger le snapshot de données applicatives
-    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
-    const data = snap.rows.length ? snap.rows[0].value : {};
+    // Charger toutes les données (blob + tables SQL)
+    const data = await getFullData();
 
     res.json({ token, user, data });
   } catch (err) {
@@ -151,29 +150,197 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ── GET /api/data — charger les données ────────────────────────────────────
+// ── Création des tables SQL transactionnelles ───────────────────────────────
+async function ensureTables() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS annonces (
+        id           SERIAL PRIMARY KEY,
+        titre        TEXT NOT NULL,
+        corps        TEXT DEFAULT '',
+        cible        TEXT DEFAULT 'Tous les étudiants',
+        date         TEXT,
+        published_at TIMESTAMPTZ DEFAULT NOW(),
+        expiration   TEXT,
+        statut       TEXT DEFAULT 'active',
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS messages_teacher (
+        id      SERIAL PRIMARY KEY,
+        de      TEXT NOT NULL,
+        vers    TEXT NOT NULL,
+        sujet   TEXT NOT NULL,
+        corps   TEXT NOT NULL,
+        date    TIMESTAMPTZ DEFAULT NOW(),
+        statut  TEXT DEFAULT 'envoyé'
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS messages_delegates (
+        id         SERIAL PRIMARY KEY,
+        from_id    INTEGER,
+        from_name  TEXT,
+        classe_id  TEXT DEFAULT '',
+        to_role    TEXT,
+        to_id      INTEGER,
+        to_name    TEXT,
+        sujet      TEXT DEFAULT '',
+        corps      TEXT DEFAULT '',
+        date       TIMESTAMPTZ DEFAULT NOW(),
+        lu         BOOLEAN DEFAULT FALSE
+      )
+    `);
+    console.log('[DB] Tables vérifiées ✓');
+  } catch (e) {
+    console.error('[DB] ensureTables error:', e.message);
+  }
+}
+ensureTables();
+
+// ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
+async function getFullData() {
+  const isoStr = d => (d ? new Date(d).toISOString() : null);
+  const [snap, annR, mtR, mdR] = await Promise.all([
+    pool.query("SELECT value FROM app_data WHERE key = 'main'"),
+    pool.query('SELECT * FROM annonces ORDER BY created_at DESC'),
+    pool.query('SELECT * FROM messages_teacher ORDER BY date DESC'),
+    pool.query('SELECT * FROM messages_delegates ORDER BY date DESC'),
+  ]);
+  const base = snap.rows.length ? snap.rows[0].value : {};
+  return {
+    ...base,
+    annonces: annR.rows.map(r => ({
+      id: r.id, titre: r.titre, corps: r.corps, cible: r.cible,
+      date: r.date || isoStr(r.published_at)?.split('T')[0],
+      published_at: isoStr(r.published_at), expiration: r.expiration, statut: r.statut,
+    })),
+    messages_teacher: mtR.rows.map(r => ({
+      id: r.id, de: r.de, vers: r.vers, sujet: r.sujet, corps: r.corps,
+      date: isoStr(r.date), statut: r.statut,
+    })),
+    messages_delegates: mdR.rows.map(r => ({
+      id: r.id, from_id: r.from_id, from_name: r.from_name,
+      classe_id: r.classe_id || '', to_role: r.to_role, to_id: r.to_id,
+      to_name: r.to_name, sujet: r.sujet || '', corps: r.corps || '',
+      date: isoStr(r.date), lu: !!r.lu,
+    })),
+  };
+}
+
+// ── GET /api/data — charger toutes les données ─────────────────────────────
 app.get('/api/data', authMiddleware, async (req, res) => {
   try {
-    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
-    res.json(snap.rows.length ? snap.rows[0].value : {});
+    res.json(await getFullData());
   } catch (err) {
     console.error('Load data error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// ── POST /api/data — sauvegarder les données ────────────────────────────────
+// ── POST /api/data — sauvegarder le blob (hors tables SQL) ─────────────────
 app.post('/api/data', authMiddleware, async (req, res) => {
   try {
+    // On retire les clés gérées par leurs propres tables pour éviter les conflits
+    const { annonces, messages_teacher, messages_delegates, ...blob } = req.body;
     await pool.query(
       `INSERT INTO app_data (key, value, updated_at)
        VALUES ('main', $1, NOW())
        ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [JSON.stringify(req.body)]
+      [JSON.stringify(blob)]
     );
     res.json({ ok: true });
   } catch (err) {
     console.error('Save data error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/annonces ──────────────────────────────────────────────────────
+app.post('/api/annonces', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { titre, corps, cible, date, expiration } = req.body;
+  if (!titre) return res.status(400).json({ error: 'Titre requis' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO annonces (titre, corps, cible, date, expiration)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [titre, corps || '', cible || 'Tous les étudiants', date || null, expiration || null]
+    );
+    const r = rows[0];
+    res.json({
+      id: r.id, titre: r.titre, corps: r.corps, cible: r.cible,
+      date: r.date, published_at: r.published_at ? new Date(r.published_at).toISOString() : null,
+      expiration: r.expiration, statut: r.statut,
+    });
+  } catch (err) {
+    console.error('Create annonce error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── DELETE /api/annonces/:id ────────────────────────────────────────────────
+app.delete('/api/annonces/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    await pool.query('DELETE FROM annonces WHERE id = $1', [parseInt(req.params.id)]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete annonce error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/messages/teacher ──────────────────────────────────────────────
+app.post('/api/messages/teacher', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const { de, vers, sujet, corps } = req.body;
+  if (!sujet || !corps) return res.status(400).json({ error: 'Sujet et corps requis' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO messages_teacher (de, vers, sujet, corps) VALUES ($1,$2,$3,$4) RETURNING *`,
+      [de || '', vers || '', sujet, corps]
+    );
+    const r = rows[0];
+    res.json({ id: r.id, de: r.de, vers: r.vers, sujet: r.sujet, corps: r.corps,
+               date: r.date ? new Date(r.date).toISOString() : null, statut: r.statut });
+  } catch (err) {
+    console.error('Create teacher msg error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/messages/delegate ─────────────────────────────────────────────
+app.post('/api/messages/delegate', authMiddleware, async (req, res) => {
+  const { from_id, from_name, classe_id, to_role, to_id, to_name, sujet, corps } = req.body;
+  if (!sujet || !corps) return res.status(400).json({ error: 'Sujet et corps requis' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO messages_delegates
+       (from_id, from_name, classe_id, to_role, to_id, to_name, sujet, corps)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [from_id || null, from_name || '', classe_id || '',
+       to_role || '', to_id || null, to_name || '', sujet, corps]
+    );
+    const r = rows[0];
+    res.json({ id: r.id, from_id: r.from_id, from_name: r.from_name, classe_id: r.classe_id,
+               to_role: r.to_role, to_id: r.to_id, to_name: r.to_name,
+               sujet: r.sujet, corps: r.corps,
+               date: r.date ? new Date(r.date).toISOString() : null, lu: r.lu });
+  } catch (err) {
+    console.error('Create delegate msg error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PATCH /api/messages/delegate/:id/read ───────────────────────────────────
+app.patch('/api/messages/delegate/:id/read', authMiddleware, async (req, res) => {
+  try {
+    await pool.query('UPDATE messages_delegates SET lu = true WHERE id = $1', [parseInt(req.params.id)]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Mark delegate msg read error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
