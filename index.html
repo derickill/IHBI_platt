@@ -3407,13 +3407,17 @@ function sendTeacherMsg() {
   const sujet = document.getElementById('tmsg-sujet')?.value;
   const corps = document.getElementById('tmsg-corps')?.value;
   if (!sujet || !corps) { toast('Veuillez remplir le sujet et le message', '#CC1A27'); return; }
-  const newId = Math.max(...DB.messages_teacher.map(m => m.id)) + 1;
+  const ids = DB.messages_teacher.map(m => m.id).filter(Number.isFinite);
+  const newId = ids.length ? Math.max(...ids) + 1 : 1;
   const now = new Date();
+  const senderName = (CURRENT_USER?.prenom && CURRENT_USER?.nom)
+    ? CURRENT_USER.prenom + ' ' + CURRENT_USER.nom : 'Enseignant';
   DB.messages_teacher.unshift({
-    id: newId, de: 'M. Diallo', vers: dest, sujet, corps,
+    id: newId, de: senderName, vers: dest, sujet, corps,
     date: now.toISOString(),
     statut: 'envoyé'
   });
+  saveDB(); // persister sur Railway pour que les étudiants voient le message
   document.getElementById('tmsg-sujet').value = '';
   document.getElementById('tmsg-corps').value = '';
   renderTmsgList();
@@ -3811,8 +3815,10 @@ function publishAnnonce() {
   const date  = document.getElementById('ann-date')?.value || new Date().toISOString().split('T')[0];
   const expir = document.getElementById('ann-expir')?.value || null;
   if (!titre || !corps) { toast('Veuillez remplir le titre et le contenu', '#CC1A27'); return; }
-  const newId = Math.max(...DB.annonces.map(a => a.id)) + 1;
+  const ids = DB.annonces.map(a => a.id).filter(Number.isFinite);
+  const newId = ids.length ? Math.max(...ids) + 1 : 1;
   DB.annonces.unshift({id:newId, titre, corps, cible, date, published_at: new Date().toISOString(), expiration:expir, statut:'active'});
+  saveDB(); // persister sur Railway
   document.getElementById('ann-titre').value = '';
   document.getElementById('ann-corps').value = '';
   renderAdminAnnonces();
@@ -3833,6 +3839,7 @@ function viewAnnonce(id) {
 
 function deleteAnnonce(id) {
   DB.annonces = DB.annonces.filter(a => a.id !== id);
+  saveDB(); // persister sur Railway
   renderAdminAnnonces();
   renderStudentAnnonces();  // sync dashboard étudiant
   renderStudentMessages();  // sync boîte de réception étudiant
