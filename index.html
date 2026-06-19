@@ -1854,15 +1854,6 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
-  <!-- Modal lecture annonce -->
-  <div class="overlay-modal" id="annonce-view-modal" onclick="if(event.target===this)document.getElementById('annonce-view-modal').classList.remove('on')">
-    <div class="obox">
-      <button class="obox-close" onclick="document.getElementById('annonce-view-modal').classList.remove('on')">×</button>
-      <div class="obox-title" id="annonce-view-title"></div>
-      <div id="annonce-view-body" style="font-size:14px;color:var(--g600);line-height:1.7"></div>
-    </div>
-  </div>
-
   <!-- ── FORMATIONS & ÉVÉNEMENTS ── -->
   <div id="a-events" class="ds">
     <div class="ds-title">Formations</div>
@@ -2139,6 +2130,14 @@ tr:hover td{background:var(--navy-l)}
     </div>
     <div class="cbox-body" id="cbox-body"></div>
     <div class="cbox-foot"><button class="btn-cbox" onclick="hideCourse()">Fermer</button></div>
+  </div>
+</div>
+<!-- Modal lecture annonce/message — global, accessible depuis toutes les vues -->
+<div class="overlay-modal" id="annonce-view-modal" onclick="if(event.target===this)document.getElementById('annonce-view-modal').classList.remove('on')">
+  <div class="obox">
+    <button class="obox-close" onclick="document.getElementById('annonce-view-modal').classList.remove('on')">×</button>
+    <div class="obox-title" id="annonce-view-title"></div>
+    <div id="annonce-view-body" style="font-size:14px;color:var(--g600);line-height:1.7"></div>
   </div>
 </div>
 <!-- TOAST -->
@@ -3040,11 +3039,16 @@ function renderTeacherDelegateMsgs() {
     return;
   }
   listEl.innerHTML = '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
-    + msgs.map(m => `<tr style="${!m.lu ? 'font-weight:600' : ''}">
-      <td>${m.from_name}</td><td><span class="bdg bl">${m.classe_id}</span></td>
-      <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
-      <td><button onclick="readDelegueMsg(${m.id},'teacher')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
-    </tr>`).join('')
+    + msgs.map(m => {
+      const cls = DB.classes.find(c => c.id === m.classe_id);
+      const classeLabel = m.classe_id ? (cls?.nom || m.classe_id) : '—';
+      const clsBadge = m.classe_id ? `<span class="bdg bl">${classeLabel}</span>` : `<span style="color:var(--g400)">—</span>`;
+      return `<tr style="${!m.lu ? 'font-weight:600' : ''}">
+        <td>${m.from_name}</td><td>${clsBadge}</td>
+        <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
+        <td><button onclick="readDelegueMsg(${m.id},'teacher')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
+      </tr>`;
+    }).join('')
     + '</tbody></table>';
 }
 
@@ -3063,11 +3067,16 @@ function renderAdminDelegateMsgs() {
     return;
   }
   listEl.innerHTML = '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
-    + msgs.map(m => `<tr style="${!m.lu ? 'font-weight:600' : ''}">
-      <td>${m.from_name}</td><td><span class="bdg bl">${m.classe_id}</span></td>
-      <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
-      <td><button onclick="readDelegueMsg(${m.id},'admin')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
-    </tr>`).join('')
+    + msgs.map(m => {
+      const cls = DB.classes.find(c => c.id === m.classe_id);
+      const classeLabel = m.classe_id ? (cls?.nom || m.classe_id) : '—';
+      const clsBadge = m.classe_id ? `<span class="bdg bl">${classeLabel}</span>` : `<span style="color:var(--g400)">—</span>`;
+      return `<tr style="${!m.lu ? 'font-weight:600' : ''}">
+        <td>${m.from_name}</td><td>${clsBadge}</td>
+        <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
+        <td><button onclick="readDelegueMsg(${m.id},'admin')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
+      </tr>`;
+    }).join('')
     + '</tbody></table>';
 }
 
