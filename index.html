@@ -2349,6 +2349,9 @@ async function goDash() {
       // Charger les données depuis le serveur (AVANT d'enrichir l'utilisateur)
       _DB_KEYS.forEach(k => { if (json.data[k] !== undefined) DB[k] = json.data[k]; });
       _restoreCoursesFromEdt();
+      // Persister immédiatement en localStorage (y compris données SQL : messages, annonces)
+      // → garantit qu'un refresh page montre ces données dès le premier paint
+      try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
       // Enrichir user avec les champs issus de app_data.users[]
       // (is_delegue, email_parent…) car la table SQL users ne les reflète pas toujours
       user = _enrichUser(user);
@@ -2430,6 +2433,9 @@ async function _pollRefresh() {
     if (!changed) return;
     // Appliquer les nouvelles données
     _DB_KEYS.forEach(k => { if (k in fresh) DB[k] = fresh[k]; });
+    // Persister en localStorage (annonces, messages_teacher, messages_delegates inclus)
+    // → un refresh page recharge directement ces données sans attendre Railway
+    try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
     // Re-rendre les sections actuellement visibles
     _rerenderActiveSections();
   } catch(e) { /* silencieux si hors ligne */ }
@@ -2504,6 +2510,8 @@ function _rerenderActiveSections() {
       const data = await res.json();
       _DB_KEYS.forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
       _restoreCoursesFromEdt();
+      // Persister en localStorage → le prochain refresh recharge directement les données fraîches
+      try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
       // Mettre à jour CURRENT_USER avec les derniers champs (is_delegue peut avoir changé)
       const enriched = _enrichUser(CURRENT_USER);
       if (enriched.is_delegue !== CURRENT_USER.is_delegue) {

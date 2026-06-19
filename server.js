@@ -197,7 +197,7 @@ async function ensureTables() {
     console.error('[DB] ensureTables error:', e.message);
   }
 }
-ensureTables();
+// NE PAS appeler ensureTables() ici — appelé dans startServer() ci-dessous, AVANT app.listen()
 
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
 async function getFullData() {
@@ -557,7 +557,17 @@ app.get('*', (req, res) => {
 });
 
 // ── Démarrage ────────────────────────────────────────────────────────────────
+// ensureTables() est ATTENDU avant app.listen() pour éviter la race condition :
+// sans await, une requête /api/data arrivant avant la création des tables renvoyait 500
+// et autoRestoreSession() gardait les vieilles données localStorage au lieu de charger Railway.
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Serveur IHBI démarré sur http://localhost:${PORT}`);
+async function startServer() {
+  await ensureTables();          // ← tables garanties avant toute requête
+  app.listen(PORT, () => {
+    console.log(`Serveur IHBI démarré sur http://localhost:${PORT}`);
+  });
+}
+startServer().catch(err => {
+  console.error('[FATAL] Impossible de démarrer le serveur :', err.message);
+  process.exit(1);
 });
