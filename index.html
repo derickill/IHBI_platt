@@ -2481,9 +2481,11 @@ function _rerenderActiveSections() {
         document.getElementById('event-reg-tbody').innerHTML = _renderInscritsTbody(json.inscrits);
       }).catch(() => {});
     }
+    // Messages délégués : toujours mis à jour (DOM présent même si section non active)
+    renderAdminDelegateMsgs();
     // Sections spécifiques
-    if (isOn('a-contacts'))  { renderContacts(contactFilter || 'all'); renderAdminDelegateMsgs(); }
-    if (isOn('a-annonces'))  { renderAdminAnnonces(); renderAdminDelegateMsgs(); }
+    if (isOn('a-contacts'))  renderContacts(contactFilter || 'all');
+    if (isOn('a-annonces'))  renderAdminAnnonces();
     if (isOn('a-accounts'))  renderAccounts();
     if (isOn('a-payments'))  renderPayments();
     if (isOn('a-edt'))       buildEdtRows();
@@ -3034,6 +3036,7 @@ async function sendDelegueMsg() {
     });
     if (!Array.isArray(DB.messages_delegates)) DB.messages_delegates = [];
     DB.messages_delegates.push({ ...m, lu: false });
+    saveDB(); // persiste le message en localStorage → visible après refresh
     document.getElementById('stu-msg-sujet').value = '';
     document.getElementById('stu-msg-corps').value = '';
     renderDelegateSentMsgs(); // mettre à jour l'historique immédiatement
