@@ -1412,6 +1412,16 @@ tr:hover td{background:var(--navy-l)}
       </div>
     </div>
   </div>
+  <!-- Messages envoyés (délégué) — conservés même après retrait du rôle -->
+  <div id="delegate-sent-section" style="display:none;margin-top:16px">
+    <div class="bx">
+      <div class="bx-h">
+        <span class="bx-t">Messages envoyés</span>
+        <span style="font-size:12px;color:var(--g400)">Vos messages aux enseignants et à l'administration</span>
+      </div>
+      <div id="delegate-sent-list"></div>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -1845,12 +1855,22 @@ tr:hover td{background:var(--navy-l)}
     </div>
 
     <!-- Liste annonces publiées -->
-    <div class="bx">
+    <div class="bx" style="margin-bottom:16px">
       <div class="bx-h"><span class="bx-t">Annonces publiées</span><span id="ann-count-badge" class="bdg bg">3 actives</span></div>
       <table>
         <thead><tr><th>Date</th><th>Titre</th><th>Destinataires</th><th>Expiration</th><th>Statut</th><th></th></tr></thead>
         <tbody id="ann-tbody"></tbody>
       </table>
+    </div>
+
+    <!-- Messages reçus des délégués de classe -->
+    <div class="bx">
+      <div class="bx-h">
+        <span class="bx-t">Messages reçus</span>
+        <span id="ann-delegue-badge" style="margin-left:8px;background:#CC1A27;color:white;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;display:none">0</span>
+        <span style="font-size:12px;color:var(--g400);margin-left:8px">Messages des délégués de classe</span>
+      </div>
+      <div id="ann-delegue-list" style="padding:0 0 4px"></div>
     </div>
   </div>
 
@@ -2463,7 +2483,7 @@ function _rerenderActiveSections() {
     }
     // Sections spécifiques
     if (isOn('a-contacts'))  { renderContacts(contactFilter || 'all'); renderAdminDelegateMsgs(); }
-    if (isOn('a-annonces'))  renderAdminAnnonces();
+    if (isOn('a-annonces'))  { renderAdminAnnonces(); renderAdminDelegateMsgs(); }
     if (isOn('a-accounts'))  renderAccounts();
     if (isOn('a-payments'))  renderPayments();
     if (isOn('a-edt'))       buildEdtRows();
@@ -2596,7 +2616,7 @@ function showA(id, el) {
   // lazy-init sections
   if (id === 'a-edt') initAdminEdt();
   if (id === 'a-contacts')  renderContacts('all');
-  if (id === 'a-annonces')  renderAdminAnnonces();
+  if (id === 'a-annonces')  { renderAdminAnnonces(); renderAdminDelegateMsgs(); }
   if (id === 'a-events')    renderAdminFormations();
   if (id === 'a-accounts')  renderAccounts();
   if (id === 'a-payments')  renderPayments();
@@ -2974,6 +2994,7 @@ function initStudentMessaging() {
     if (note)    note.style.display = 'flex';
   }
   renderStudentMessages();
+  renderDelegateSentMsgs(); // historique envois délégué (visible même après retrait rôle)
 }
 
 // Helper — POST vers /api/messages/delegate
@@ -3015,6 +3036,7 @@ async function sendDelegueMsg() {
     DB.messages_delegates.push({ ...m, lu: false });
     document.getElementById('stu-msg-sujet').value = '';
     document.getElementById('stu-msg-corps').value = '';
+    renderDelegateSentMsgs(); // mettre à jour l'historique immédiatement
     toast('Message envoyé à ' + toName + ' ✓', '#0A3D2D');
   } catch(e) { toast('Erreur lors de l\'envoi', '#CC1A27'); }
 }
@@ -3042,6 +3064,7 @@ async function sendDelegueReply() {
     DB.messages_delegates.push({ ...m, lu: false });
     document.getElementById('msg-reply-corps').value = '';
     document.getElementById('msg-reply-zone').style.display = 'none';
+    renderDelegateSentMsgs(); // mettre à jour l'historique immédiatement
     toast('Réponse envoyée à ' + toName + ' ✓', '#0A3D2D');
   } catch(e) { toast('Erreur lors de l\'envoi', '#CC1A27'); }
 }
@@ -3075,20 +3098,15 @@ function renderTeacherDelegateMsgs() {
 }
 
 // ── INBOX DÉLÉGUÉS — Admin ────────────────────
+// Rend dans DEUX conteneurs : a-contacts ET a-annonces (ann-delegue-list)
 function renderAdminDelegateMsgs() {
-  const listEl = document.getElementById('admin-delegue-list');
-  const badge  = document.getElementById('admin-delegue-badge');
-  if (!listEl) return;
   const msgs = (DB.messages_delegates || [])
     .filter(m => m.to_role === 'admin')
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   const unread = msgs.filter(m => !m.lu).length;
-  if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? '' : 'none'; }
-  if (!msgs.length) {
-    listEl.innerHTML = '<div style="padding:14px 18px;font-size:13px;color:var(--g400)">Aucun message de délégué.</div>';
-    return;
-  }
-  listEl.innerHTML = '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
+  const emptyHtml = '<div style="padding:14px 18px;font-size:13px;color:var(--g400)">Aucun message reçu.</div>';
+  const tableHtml = msgs.length ? (
+    '<table><thead><tr><th>De</th><th>Classe</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
     + msgs.map(m => {
       const cls = DB.classes.find(c => c.id === m.classe_id);
       const classeLabel = m.classe_id ? (cls?.nom || m.classe_id) : '—';
@@ -3098,8 +3116,18 @@ function renderAdminDelegateMsgs() {
         <td>${m.sujet}</td><td>${fmtMsgDatetime(m.date)}</td>
         <td><button onclick="readDelegueMsg(${m.id},'admin')" style="padding:3px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
       </tr>`;
-    }).join('')
-    + '</tbody></table>';
+    }).join('') + '</tbody></table>'
+  ) : emptyHtml;
+  // a-contacts (existant)
+  const listContacts = document.getElementById('admin-delegue-list');
+  const badgeContacts = document.getElementById('admin-delegue-badge');
+  if (listContacts) listContacts.innerHTML = tableHtml;
+  if (badgeContacts) { badgeContacts.textContent = unread; badgeContacts.style.display = unread > 0 ? '' : 'none'; }
+  // a-annonces (nouveau)
+  const listAnn = document.getElementById('ann-delegue-list');
+  const badgeAnn = document.getElementById('ann-delegue-badge');
+  if (listAnn) listAnn.innerHTML = tableHtml;
+  if (badgeAnn) { badgeAnn.textContent = unread; badgeAnn.style.display = unread > 0 ? '' : 'none'; }
 }
 
 // Lire un message délégué (modal) + marquer comme lu
@@ -3125,6 +3153,43 @@ function readDelegueMsg(id, ctx) {
   // Rafraîchir le badge
   if (ctx === 'teacher') renderTeacherDelegateMsgs();
   else renderAdminDelegateMsgs();
+}
+
+// ── MESSAGES ENVOYÉS — Délégué ───────────────────────────────────────────
+// Affiche l'historique des messages envoyés par ce délégué
+// Visible même après retrait du rôle (from_id = identifiant SQL permanent)
+function renderDelegateSentMsgs() {
+  const section = document.getElementById('delegate-sent-section');
+  const listEl  = document.getElementById('delegate-sent-list');
+  if (!section || !listEl) return;
+  const sent = (DB.messages_delegates || [])
+    .filter(m => m.from_id === CURRENT_USER?.id)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!sent.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  listEl.innerHTML = '<table><thead><tr><th>À</th><th>Sujet</th><th>Date</th><th></th></tr></thead><tbody>'
+    + sent.map(m => {
+      const dest = m.to_role === 'admin' ? '🏛 Administration' : (m.to_name || 'Enseignant');
+      return `<tr>
+        <td><strong>${dest}</strong></td>
+        <td>${m.sujet}</td>
+        <td>${fmtMsgDatetime(m.date)}</td>
+        <td><button onclick="readSentDelegueMsg(${m.id})" style="padding:3px 10px;background:var(--navy);color:white;border:none;font-size:12px;cursor:pointer">Lire</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function readSentDelegueMsg(id) {
+  const m = (DB.messages_delegates || []).find(x => x.id === id);
+  if (!m) return;
+  const dest = m.to_role === 'admin' ? 'Administration' : (m.to_name || 'Enseignant');
+  document.getElementById('annonce-view-title').textContent = m.sujet;
+  document.getElementById('annonce-view-body').innerHTML = `
+    <div style="font-size:12px;color:var(--g400);margin-bottom:14px">
+      À : <strong>${dest}</strong> · ${fmtMsgDatetime(m.date)}
+    </div>
+    <p style="font-size:14px;color:var(--g600);line-height:1.75;white-space:pre-wrap">${m.corps}</p>`;
+  document.getElementById('annonce-view-modal').classList.add('on');
 }
 
 // ── STUDENT ANNONCES (depuis admin → espace étudiant) ─────────────────────
@@ -3399,11 +3464,17 @@ function showClassDetail(classId) {
 function renderTmsgList() {
   const listEl = document.getElementById('tmsg-list');
   if (!listEl) return;
-  if (DB.messages_teacher.length === 0) {
+  // Filtrer uniquement les messages envoyés par cet enseignant
+  const myName = (CURRENT_USER?.prenom && CURRENT_USER?.nom)
+    ? (CURRENT_USER.prenom + ' ' + CURRENT_USER.nom) : '';
+  const msgs = myName
+    ? DB.messages_teacher.filter(m => m.de === myName)
+    : DB.messages_teacher;
+  if (!msgs.length) {
     listEl.innerHTML = '<div style="padding:20px;color:var(--g400);font-size:14px">Aucun message envoyé.</div>';
     return;
   }
-  listEl.innerHTML = DB.messages_teacher.map(m => `
+  listEl.innerHTML = msgs.map(m => `
     <div class="tmsg-row" data-msgid="${m.id}" onclick="selectTeacherMsg(${m.id})">
       <div style="flex:1;overflow:hidden">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
