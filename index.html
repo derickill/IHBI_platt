@@ -2949,6 +2949,13 @@ function initStudentMessaging() {
     CURRENT_USER.is_delegue = isDelegue;
     localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
   }
+  // Badge "Délégué" sous le nom de l'étudiant dans le profil
+  const durEl = document.querySelector('#dash-avatar .dur');
+  if (durEl) {
+    const classeLabel = CURRENT_USER?.classe_id || '';
+    durEl.innerHTML = 'Étudiant' + (classeLabel ? ' · ' + classeLabel : '')
+      + (isDelegue ? ' &nbsp;<span class="bdg-delegue" style="vertical-align:middle">Délégué</span>' : '');
+  }
   if (isDelegue) {
     if (compose) compose.style.display = 'block';
     if (note)    note.style.display = 'none';

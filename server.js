@@ -192,6 +192,11 @@ async function ensureTables() {
         lu         BOOLEAN DEFAULT FALSE
       )
     `);
+    // Migration : ajouter is_delegue sur la table users si elle n'existe pas encore
+    // (la table users n'est pas créée ici mais elle peut manquer cette colonne)
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_delegue BOOLEAN DEFAULT FALSE
+    `);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
     console.error('[DB] ensureTables error:', e.message);
@@ -202,31 +207,39 @@ async function ensureTables() {
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
 async function getFullData() {
   const isoStr = d => (d ? new Date(d).toISOString() : null);
-  const [snap, annR, mtR, mdR, usersR] = await Promise.all([
+  const [snap, annR, mtR, mdR] = await Promise.all([
     pool.query("SELECT value FROM app_data WHERE key = 'main'"),
     pool.query('SELECT * FROM annonces ORDER BY created_at DESC'),
     pool.query('SELECT * FROM messages_teacher ORDER BY date DESC'),
     pool.query('SELECT * FROM messages_delegates ORDER BY date DESC'),
-    // Lire users depuis SQL : IDs réels + is_delegue toujours à jour
-    pool.query('SELECT id, role, nom, prenom, email, classe_id, status, is_delegue FROM users'),
   ]);
   const base = snap.rows.length ? snap.rows[0].value : {};
   const blobUsers = base.users || [];
 
-  // Fusionner SQL (source de vérité pour id + is_delegue) avec blob (matieres, classes, poste…)
-  const users = usersR.rows.map(sqlU => {
-    const blobU = blobUsers.find(u => (u.email || '').toLowerCase() === (sqlU.email || '').toLowerCase());
-    return Object.assign({}, blobU || {}, {
-      id:        sqlU.id,
-      role:      sqlU.role,
-      nom:       sqlU.nom,
-      prenom:    sqlU.prenom,
-      email:     sqlU.email,
-      classe_id: sqlU.classe_id || (blobU && blobU.classe_id) || '',
-      status:    sqlU.status,
-      is_delegue: !!sqlU.is_delegue,
+  // Lire users depuis SQL séparément pour un fallback propre si la colonne manque
+  let users = blobUsers; // fallback : blob si SQL échoue
+  try {
+    const usersR = await pool.query(
+      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue FROM users'
+    );
+    // Fusionner SQL (IDs réels + is_delegue à jour) avec blob (matieres, classes, poste…)
+    users = usersR.rows.map(sqlU => {
+      const blobU = blobUsers.find(u => (u.email || '').toLowerCase() === (sqlU.email || '').toLowerCase());
+      const { pwd_hash, ...blobSafe } = blobU || {}; // ne jamais retourner le hash
+      return Object.assign({}, blobSafe, {
+        id:         sqlU.id,
+        role:       sqlU.role,
+        nom:        sqlU.nom,
+        prenom:     sqlU.prenom,
+        email:      sqlU.email,
+        classe_id:  sqlU.classe_id || (blobU && blobU.classe_id) || '',
+        status:     sqlU.status,
+        is_delegue: !!sqlU.is_delegue,
+      });
     });
-  });
+  } catch (e) {
+    console.error('[getFullData] users SQL error (fallback blob):', e.message);
+  }
 
   return {
     ...base,
