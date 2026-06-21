@@ -4317,25 +4317,43 @@ function toggleAccount(userId) {
   toast(user.status === 'inactive' ? `Compte de ${user.prenom} ${user.nom} désactivé` : `Compte de ${user.prenom} ${user.nom} réactivé ✓`, user.status === 'inactive' ? '#CC1A27' : '#0A3D2D');
 }
 
-function assignDelegue(userId, classeId) {
-  // Retire l'ancien délégué de cette classe
+async function assignDelegue(userId, classeId) {
+  // Mettre à jour mémoire locale immédiatement (UI réactive)
   DB.users.forEach(u => { if (u.classe_id === classeId) u.is_delegue = false; });
   const cls = DB.classes.find(c => c.id === classeId);
   if (cls) cls.delegue_id = userId;
   const user = DB.users.find(u => u.id === userId);
   if (user) user.is_delegue = true;
-  saveDB(); // persister sur Railway
+  saveDB(); // blob + localStorage
+  // Persister dans la table SQL users → visible depuis n'importe quel navigateur
+  try {
+    const t = localStorage.getItem('ihbi_token');
+    await fetch('/api/admin/users/' + userId + '/delegue', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+      body: JSON.stringify({ is_delegue: true, classe_id: classeId })
+    });
+  } catch(e) { /* silencieux */ }
   renderAccounts();
   toast(`${user.prenom} ${user.nom} nommé(e) délégué(e) de ${classeId} ✓`, '#0A3D2D');
 }
 
-function removeDelegue(userId) {
+async function removeDelegue(userId) {
   const user = DB.users.find(u => u.id === userId);
   if (!user) return;
   user.is_delegue = false;
   const cls = DB.classes.find(c => c.id === user.classe_id);
   if (cls) cls.delegue_id = null;
-  saveDB(); // persister sur Railway
+  saveDB(); // blob + localStorage
+  // Persister dans la table SQL users
+  try {
+    const t = localStorage.getItem('ihbi_token');
+    await fetch('/api/admin/users/' + userId + '/delegue', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+      body: JSON.stringify({ is_delegue: false })
+    });
+  } catch(e) { /* silencieux */ }
   renderAccounts();
   toast('Rôle délégué retiré ✓');
 }
@@ -4379,11 +4397,10 @@ async function createStudentAccounts() {
     const data = await res.json();
 
     if (data.results?.length) {
-      // Synchroniser DB.users localement
+      // Synchroniser DB.users avec les vrais IDs SQL retournés par le serveur
       data.results.forEach(r => {
         if (!DB.users.find(u => u.email === r.email)) {
-          const newId = DB.users.length ? Math.max(...DB.users.map(u => u.id)) + 1 : 10;
-          DB.users.push({ id: newId, role: 'student', nom: r.nom, prenom: r.prenom,
+          DB.users.push({ id: r.id, role: 'student', nom: r.nom, prenom: r.prenom,
             email: r.email, pwd_hash: '—', classe_id: r.classe_id,
             status: 'active', is_delegue: false, email_parent: '' });
         }

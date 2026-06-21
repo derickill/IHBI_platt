@@ -202,15 +202,35 @@ async function ensureTables() {
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
 async function getFullData() {
   const isoStr = d => (d ? new Date(d).toISOString() : null);
-  const [snap, annR, mtR, mdR] = await Promise.all([
+  const [snap, annR, mtR, mdR, usersR] = await Promise.all([
     pool.query("SELECT value FROM app_data WHERE key = 'main'"),
     pool.query('SELECT * FROM annonces ORDER BY created_at DESC'),
     pool.query('SELECT * FROM messages_teacher ORDER BY date DESC'),
     pool.query('SELECT * FROM messages_delegates ORDER BY date DESC'),
+    // Lire users depuis SQL : IDs réels + is_delegue toujours à jour
+    pool.query('SELECT id, role, nom, prenom, email, classe_id, status, is_delegue FROM users'),
   ]);
   const base = snap.rows.length ? snap.rows[0].value : {};
+  const blobUsers = base.users || [];
+
+  // Fusionner SQL (source de vérité pour id + is_delegue) avec blob (matieres, classes, poste…)
+  const users = usersR.rows.map(sqlU => {
+    const blobU = blobUsers.find(u => (u.email || '').toLowerCase() === (sqlU.email || '').toLowerCase());
+    return Object.assign({}, blobU || {}, {
+      id:        sqlU.id,
+      role:      sqlU.role,
+      nom:       sqlU.nom,
+      prenom:    sqlU.prenom,
+      email:     sqlU.email,
+      classe_id: sqlU.classe_id || (blobU && blobU.classe_id) || '',
+      status:    sqlU.status,
+      is_delegue: !!sqlU.is_delegue,
+    });
+  });
+
   return {
     ...base,
+    users,
     annonces: annR.rows.map(r => ({
       id: r.id, titre: r.titre, corps: r.corps, cible: r.cible,
       date: r.date || isoStr(r.published_at)?.split('T')[0],
@@ -366,20 +386,23 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
       const hash     = sha256(password);
       const { prenom, nom } = nameFromEmail(email);
 
-      const { rowCount } = await pool.query(
+      const { rows: inserted } = await pool.query(
         `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue)
          VALUES ('student', $1, $2, $3, $4, $5, 'active', false)
-         ON CONFLICT (email) DO NOTHING`,
+         ON CONFLICT (email) DO NOTHING
+         RETURNING id`,
         [nom, prenom, email, hash, classe_id]
       );
 
-      if (rowCount === 0) { errors.push({ email, error: 'Email déjà utilisé' }); continue; }
+      // RETURNING renvoie 0 ligne si ON CONFLICT DO NOTHING s'est déclenché
+      if (!inserted.length) { errors.push({ email, error: 'Email déjà utilisé' }); continue; }
+      const sqlId = inserted[0].id;
 
       let email_sent = false;
       try { email_sent = await sendWelcomeEmail(email, prenom, nom, password, classe_id); }
       catch (e) { console.error('Email error for', email, ':', e.message); }
 
-      results.push({ email, prenom, nom, classe_id, password, email_sent });
+      results.push({ id: sqlId, email, prenom, nom, classe_id, password, email_sent });
     } catch (err) {
       console.error('Create student error:', err.message);
       errors.push({ email, error: err.message });
@@ -410,6 +433,30 @@ app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete user error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PATCH /api/admin/users/:id/delegue — assigner / retirer le rôle délégué ─
+// Met à jour directement la table SQL users.is_delegue
+// → la prochaine connexion du student via n'importe quel navigateur reçoit le bon rôle
+app.patch('/api/admin/users/:id/delegue', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const userId = parseInt(req.params.id);
+  if (!userId) return res.status(400).json({ error: 'ID invalide' });
+  const { is_delegue, classe_id } = req.body;
+  try {
+    if (is_delegue && classe_id) {
+      // Retirer l'ancien délégué de la même classe avant d'en nommer un nouveau
+      await pool.query(
+        'UPDATE users SET is_delegue = false WHERE classe_id = $1 AND id != $2',
+        [classe_id, userId]
+      );
+    }
+    await pool.query('UPDATE users SET is_delegue = $1 WHERE id = $2', [!!is_delegue, userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Set delegue error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
