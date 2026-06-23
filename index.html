@@ -2237,9 +2237,8 @@ function _dbSnapshot() {
 
 // Restaure COURSES depuis les brouillons publiés après chaque chargement de DB
 function _restoreCoursesFromEdt() {
+  COURSES.length = 0; // Toujours vider avant de reconstruire
   const published = DB.edt_drafts.filter(d => d.statut === 'publie');
-  if (!published.length) return;
-  COURSES.length = 0;
   published.forEach(d => { if (d.slots) d.slots.forEach(s => COURSES.push({...s})); });
 }
 
@@ -2454,6 +2453,7 @@ async function _pollRefresh() {
     if (!changed) return;
     // Appliquer les nouvelles données
     _DB_KEYS.forEach(k => { if (k in fresh) DB[k] = fresh[k]; });
+    _restoreCoursesFromEdt(); // Rebuilder COURSES depuis edt_drafts mis à jour
     // Persister en localStorage (annonces, messages_teacher, messages_delegates inclus)
     // → un refresh page recharge directement ces données sans attendre Railway
     try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
@@ -2495,6 +2495,7 @@ function _rerenderActiveSections() {
     const badge = document.getElementById('contacts-count-badge');
     if (badge) badge.textContent = nb;
   } else if (role === 'student') {
+    renderCal();            // rebuild calendrier + mini-cal avec COURSES à jour
     initStudentMessaging(); // re-vérifie statut délégué + appelle renderStudentMessages()
     renderStudentAnnonces();
     if (isOn('notes')) renderStudentNotes();
@@ -2744,6 +2745,14 @@ function buildCalColumn(containerId, timesId, courses, todayColIdx) {
   }
 }
 function renderCal() {
+  // Réinitialiser les éléments pour permettre le rebuild (même logique que renderTeacherCal)
+  ['cal-times','cal-day-0','cal-day-1','cal-day-2','cal-day-3','cal-day-4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
+  });
+  const mc = document.getElementById('mini-cal');
+  if (mc) { mc.innerHTML = ''; mc.removeAttribute('data-built'); }
+
   const mon = _getMondayOfWeek();
   _updateCalHeaders('#ds-edt .cal-days', mon);
   const todayCol = (new Date().getDay() || 7) - 1; // 0=lun…4=ven, ≥5=week-end
@@ -2759,7 +2768,7 @@ function renderCal() {
 }
 function renderMiniCal() {
   const wrap = document.getElementById('mini-cal');
-  if (!wrap || wrap.dataset.built) return;
+  if (!wrap) return;
   wrap.dataset.built = '1';
   const mon = _getMondayOfWeek();
   const today = new Date(); today.setHours(0,0,0,0);
