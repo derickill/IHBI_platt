@@ -589,6 +589,27 @@ app.patch('/api/admin/users/:id/delegue', authMiddleware, async (req, res) => {
   }
 });
 
+// ── GET /api/formations — liste publique des formations actives (sans auth) ──
+app.get('/api/formations', async (req, res) => {
+  try {
+    const [fRes, insRes] = await Promise.all([
+      pool.query("SELECT * FROM formations WHERE statut = 'actif' AND public = TRUE ORDER BY created_at DESC"),
+      pool.query('SELECT * FROM inscriptions_formations ORDER BY created_at ASC'),
+    ]);
+    res.json(fRes.rows.map(f => ({
+      id: f.id, titre: f.titre, description: f.description || '',
+      lieu: f.lieu || '', date_debut: f.date_debut, date_fin: f.date_fin || f.date_debut,
+      places: f.places, public: f.public, statut: f.statut,
+      inscrits: insRes.rows
+        .filter(i => i.formation_id === f.id)
+        .map(i => ({ nom: i.nom, prenom: i.prenom, profession: i.profession || '', email: i.email, telephone: i.telephone || '', date: i.date })),
+    })));
+  } catch (err) {
+    console.error('Get formations public error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── POST /api/formations — créer une formation (admin) ─────────────────────
 app.post('/api/formations', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });

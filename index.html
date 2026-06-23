@@ -4753,8 +4753,19 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 });
 
 // ── INIT PUBLIC FORMATIONS ────────────────────
+// Affichage instantané depuis localStorage, puis remplacement par données fraîches depuis DB
 window.addEventListener('DOMContentLoaded', () => {
-  renderPublicFormations();
+  renderPublicFormations(); // rendu immédiat (localStorage)
+  // Fetch public — sans auth, fonctionne pour tous les visiteurs
+  fetch('/api/formations')
+    .then(r => r.ok ? r.json() : null)
+    .then(formations => {
+      if (!Array.isArray(formations)) return;
+      DB.formations = formations;
+      renderPublicFormations();
+      if (document.getElementById('all-formations-modal')?.classList.contains('on')) renderAllFormations();
+    })
+    .catch(() => {});
 });
 </script>
 </body>
