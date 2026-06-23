@@ -218,13 +218,20 @@ async function ensureTables() {
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
 async function getFullData() {
   const isoStr = d => (d ? new Date(d).toISOString() : null);
-  const [snap, annR, mtR, mdR, edtR] = await Promise.all([
+  // edt_drafts est dans une table séparée — requête isolée pour ne pas bloquer si la table n'existe pas encore
+  const [snap, annR, mtR, mdR] = await Promise.all([
     pool.query("SELECT value FROM app_data WHERE key = 'main'"),
     pool.query('SELECT * FROM annonces ORDER BY created_at DESC'),
     pool.query('SELECT * FROM messages_teacher ORDER BY date DESC'),
     pool.query('SELECT * FROM messages_delegates ORDER BY date DESC'),
-    pool.query('SELECT * FROM edt_drafts ORDER BY date_saved DESC'),
   ]);
+  let edtRows = [];
+  try {
+    const edtR = await pool.query('SELECT * FROM edt_drafts ORDER BY date_saved DESC');
+    edtRows = edtR.rows;
+  } catch (e) {
+    console.error('[getFullData] edt_drafts not available yet:', e.message);
+  }
   const base = snap.rows.length ? snap.rows[0].value : {};
   const blobUsers = base.users || [];
 
@@ -253,6 +260,20 @@ async function getFullData() {
     console.error('[getFullData] users SQL error (fallback blob):', e.message);
   }
 
+  // Fusionner blob + SQL pour edt_drafts : SQL a la priorité sur le blob (migration progressive)
+  const blobEdtDrafts = Array.isArray(base.edt_drafts) ? base.edt_drafts : [];
+  const sqlEdtDrafts  = edtRows.map(r => ({
+    id: r.id, classe_id: r.classe_id, week_id: r.week_id,
+    slots: r.slots || [], statut: r.statut,
+    date_saved: isoStr(r.date_saved),
+  }));
+  // Garder les entrées du blob qui n'ont pas encore de correspondance dans SQL
+  const mergedEdtDrafts = [...sqlEdtDrafts];
+  for (const b of blobEdtDrafts) {
+    const alreadyInSql = sqlEdtDrafts.some(s => s.classe_id === b.classe_id && s.week_id === b.week_id);
+    if (!alreadyInSql) mergedEdtDrafts.push(b);
+  }
+
   return {
     ...base,
     users,
@@ -271,11 +292,7 @@ async function getFullData() {
       to_name: r.to_name, sujet: r.sujet || '', corps: r.corps || '',
       date: isoStr(r.date), lu: !!r.lu,
     })),
-    edt_drafts: edtR.rows.map(r => ({
-      id: r.id, classe_id: r.classe_id, week_id: r.week_id,
-      slots: r.slots || [], statut: r.statut,
-      date_saved: isoStr(r.date_saved),
-    })),
+    edt_drafts: mergedEdtDrafts,
   };
 }
 
@@ -293,7 +310,7 @@ app.get('/api/data', authMiddleware, async (req, res) => {
 app.post('/api/data', authMiddleware, async (req, res) => {
   try {
     // On retire les clés gérées par leurs propres tables pour éviter les conflits
-    const { annonces, messages_teacher, messages_delegates, ...blob } = req.body;
+    const { annonces, messages_teacher, messages_delegates, edt_drafts, ...blob } = req.body;
     await pool.query(
       `INSERT INTO app_data (key, value, updated_at)
        VALUES ('main', $1, NOW())

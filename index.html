@@ -2505,6 +2505,10 @@ function _rerenderActiveSections() {
   }
 }
 
+// Constantes de formatage des dates — déclarées avant autoRestoreSession pour éviter TDZ
+const _MOIS_FR  = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+const _JOURS_FR = ['LUN','MAR','MER','JEU','VEN'];
+
 // Auto-restauration de session au rechargement
 (async function autoRestoreSession() {
   const token     = sessionStorage.getItem('ihbi_token');
@@ -2663,8 +2667,6 @@ const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
 
 // ── Utilitaires de semaine (dates réelles) ─────────────────────────────────
-const _MOIS_FR  = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
-const _JOURS_FR = ['LUN','MAR','MER','JEU','VEN'];
 function _getMondayOfWeek(offset = 0) {
   const d = new Date(); const dow = d.getDay() || 7;
   d.setDate(d.getDate() - dow + 1 + offset * 7); d.setHours(0,0,0,0); return d;
