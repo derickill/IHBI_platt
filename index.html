@@ -2518,6 +2518,10 @@ const _JOURS_FR = ['LUN','MAR','MER','JEU','VEN'];
   try { u = JSON.parse(savedUser); } catch(_) { return; }
   if (!u) return;
 
+  // Attendre la fin du script synchrone pour que toutes les const (H_START, PX_H…)
+  // soient initialisées avant d'appeler renderCal() via _navigateAfterLogin.
+  await Promise.resolve();
+
   // ── ÉTAPE 1 : naviguer IMMÉDIATEMENT avec les données localStorage ──────
   // DB est déjà peuplé par loadSavedDB() (appelé juste avant, synchrone).
   // L'utilisateur voit directement son espace — aucun flash de la page publique.
