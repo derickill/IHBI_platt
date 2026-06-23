@@ -1478,7 +1478,7 @@ tr:hover td{background:var(--navy-l)}
     </div>
     <!-- Cours du jour — dynamique depuis COURSES -->
     <div class="bx">
-      <div class="bx-h"><span class="bx-t">Mes cours aujourd'hui — Vendredi 05 juin</span><span onclick="showT('t-planning',document.querySelectorAll('#pg-teacher .dsb-a')[3])" style="font-size:12px;font-weight:600;color:#0A3D2D;cursor:pointer">Voir semaine →</span></div>
+      <div class="bx-h"><span class="bx-t" id="t-today-title">Mes cours aujourd'hui</span><span onclick="showT('t-planning',document.querySelectorAll('#pg-teacher .dsb-a')[3])" style="font-size:12px;font-weight:600;color:#0A3D2D;cursor:pointer">Voir semaine →</span></div>
       <table><thead><tr><th>Horaire</th><th>Matière</th><th>Classe</th><th>Salle</th><th>Type</th></tr></thead>
       <tbody id="t-today-tbody"></tbody></table>
     </div>
@@ -2674,7 +2674,10 @@ function _isoWeekNum(d) {
   const jan1 = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
   return Math.ceil((((tmp - jan1) / 86400000) + 1) / 7);
 }
-function _weekKey(mon)   { return mon.toISOString().split('T')[0]; }            // "2026-06-16"
+function _weekKey(mon) {
+  // Utiliser les composantes locales (pas toISOString qui donne UTC et décale d'un jour UTC+X)
+  return `${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
+}
 function _weekLabel(mon) {
   const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
   return `Semaine ${_isoWeekNum(mon)} — ${mon.getDate()} au ${fri.getDate()} ${_MOIS_FR[fri.getMonth()]} ${fri.getFullYear()}`;
@@ -2758,24 +2761,34 @@ function renderMiniCal() {
   const wrap = document.getElementById('mini-cal');
   if (!wrap || wrap.dataset.built) return;
   wrap.dataset.built = '1';
-  const days = ['LUN 01','MAR 02','MER 03','JEU 04','VEN 05'];
+  const mon = _getMondayOfWeek();
+  const today = new Date(); today.setHours(0,0,0,0);
   let html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border)">';
-  days.forEach((day, i) => {
-    html += `<div style="background:var(--white);padding:10px 8px;min-height:150px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--g400);text-transform:uppercase;margin-bottom:8px;text-align:center">${day}</div>`;
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(mon); d.setDate(mon.getDate() + i); d.setHours(0,0,0,0);
+    const isToday = d.getTime() === today.getTime();
+    const dayLabel = `${_JOURS_FR[i]} ${String(d.getDate()).padStart(2,'0')}`;
+    const labelStyle = isToday
+      ? 'color:var(--b600);font-weight:800'
+      : 'color:var(--g400);font-weight:700';
+    html += `<div style="background:var(--white);padding:10px 8px;min-height:150px"><div style="font-size:10px;letter-spacing:1.5px;${labelStyle};text-transform:uppercase;margin-bottom:8px;text-align:center">${dayLabel}</div>`;
     COURSES.filter(c => c.d === i).forEach(c => {
       html += `<div onclick="showCourse(${COURSES.indexOf(c)},COURSES)" style="background:${c.c};border-radius:2px;padding:5px 6px;margin-bottom:4px;cursor:pointer"><div style="font-size:11px;font-weight:700;color:white;line-height:1.3;margin-bottom:1px">${c.n}</div><div style="font-size:10px;color:rgba(255,255,255,.75)">${c.s}–${c.e}</div></div>`;
     });
     html += '</div>';
-  });
+  }
   html += '</div>';
   wrap.innerHTML = html;
 }
 function showCourse(idx, courseList) {
   const c = courseList[idx];
+  const _mon = _getMondayOfWeek();
+  const _dc  = new Date(_mon); _dc.setDate(_mon.getDate() + c.d);
+  const _dateStr = `${_JOURS_FR[c.d]} ${String(_dc.getDate()).padStart(2,'0')} ${_MOIS_FR[_dc.getMonth()]}`;
   document.getElementById('cbox-name').textContent = c.n;
   document.getElementById('cbox-head').style.background = c.c;
   document.getElementById('cbox-body').innerHTML = `
-    <div class="cbox-row"><div class="cbox-label">Date</div><div class="cbox-val">${DATES[c.d]} ${c.s} – ${c.e}</div></div>
+    <div class="cbox-row"><div class="cbox-label">Date</div><div class="cbox-val">${_dateStr} · ${c.s} – ${c.e}</div></div>
     <div class="cbox-row"><div class="cbox-label">Type</div><div class="cbox-val">${c.type}</div></div>
     <div class="cbox-row"><div class="cbox-label">Salle</div><div class="cbox-val">${c.r}</div></div>
     <div class="cbox-row"><div class="cbox-label">Enseignant</div><div class="cbox-val">${c.t}</div></div>
@@ -3281,8 +3294,13 @@ function initTeacher() {
 function renderTeacherBoard() {
   const tbody = document.getElementById('t-today-tbody');
   if (!tbody) return;
-  // Vendredi = jour 4 dans COURSES (d:4). En prod : calculer le jour courant.
-  const todayIdx = 4;
+  const todayIdx = (new Date().getDay() || 7) - 1; // 0=lun…4=ven, ≥5=week-end
+  const titleEl = document.getElementById('t-today-title');
+  if (titleEl) {
+    const now = new Date();
+    const dowFr = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][now.getDay()];
+    titleEl.textContent = `Mes cours aujourd'hui — ${dowFr} ${now.getDate()} ${_MOIS_FR[now.getMonth()]}`;
+  }
   const todayCourses = COURSES.filter(c => c.t === TEACHER_NAME && c.d === todayIdx)
     .sort((a, b) => a.s.localeCompare(b.s));
   if (!todayCourses.length) {
