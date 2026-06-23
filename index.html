@@ -2237,8 +2237,12 @@ function _dbSnapshot() {
 
 // Restaure COURSES depuis les brouillons publiés après chaque chargement de DB
 function _restoreCoursesFromEdt() {
-  COURSES.length = 0; // Toujours vider avant de reconstruire
-  const published = DB.edt_drafts.filter(d => d.statut === 'publie');
+  COURSES.length = 0;
+  // Filtrer par classe de l'étudiant connecté — un étudiant ne doit voir que son EDT
+  const classeId = CURRENT_USER?.role === 'student' ? CURRENT_USER.classe_id : null;
+  const published = DB.edt_drafts.filter(d =>
+    d.statut === 'publie' && (!classeId || d.classe_id === classeId)
+  );
   published.forEach(d => { if (d.slots) d.slots.forEach(s => COURSES.push({...s})); });
 }
 
