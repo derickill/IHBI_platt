@@ -3905,9 +3905,10 @@ function renderDraftsList() {
     const badgeStyle = isPublie
       ? 'background:#DCFCE7;color:#15803D'
       : 'background:#FEF9C3;color:#92400E';
+    const label = d.semaine_label || (d.week_id ? _weekLabel(new Date(d.week_id + 'T00:00:00')) : d.week_id);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)">
       <div>
-        <span style="font-size:13.5px;font-weight:600;color:var(--text)">${d.semaine_label}</span>
+        <span style="font-size:13.5px;font-weight:600;color:var(--text)">${label}</span>
         <span style="margin-left:8px;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;${badgeStyle}">${isPublie ? 'Publié' : 'Brouillon'}</span>
         <div style="font-size:11px;color:var(--g400);margin-top:3px">Sauvegardé le ${fmtDatetime(d.date_saved)} · ${d.slots.length} créneaux</div>
       </div>
