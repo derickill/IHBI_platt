@@ -4642,17 +4642,40 @@ function downloadCredentialsCSV() {
 
 function closeCreateTeacher() { document.getElementById('create-teacher-modal').style.display = 'none'; }
 
-function createTeacherAccount() {
-  const nom     = document.getElementById('new-teacher-nom')?.value;
-  const prenom  = document.getElementById('new-teacher-prenom')?.value;
-  const email   = document.getElementById('new-teacher-email')?.value;
-  const matiere = document.getElementById('new-teacher-matieres')?.value || '';
+async function createTeacherAccount() {
+  const nom     = document.getElementById('new-teacher-nom')?.value?.trim();
+  const prenom  = document.getElementById('new-teacher-prenom')?.value?.trim();
+  const email   = document.getElementById('new-teacher-email')?.value?.trim();
+  const matiere = document.getElementById('new-teacher-matieres')?.value?.trim() || '';
   if (!nom || !prenom || !email) { toast('Veuillez remplir les champs obligatoires (*)', '#CC1A27'); return; }
-  const newId = Math.max(...DB.users.map(u => u.id)) + 1;
-  DB.users.push({id:newId, role:'teacher', nom, prenom, email, status:'active', matieres:[matiere], classes:[]});
-  closeCreateTeacher();
-  renderAccounts();
-  toast(`Compte enseignant créé pour ${prenom} ${nom} ✓`, '#0A3D2D');
+
+  const btn = document.querySelector('#create-teacher-modal button[onclick="createTeacherAccount()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Création en cours…'; }
+
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/admin/create-teacher', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body:    JSON.stringify({ nom, prenom, email, matiere }),
+    });
+    const data = await res.json();
+    if (!res.ok) { toast(data.error || 'Erreur serveur', '#CC1A27'); return; }
+
+    // Ajouter dans le cache local avec l'ID SQL réel
+    DB.users.push({ id: data.id, role: 'teacher', nom, prenom, email: data.email,
+      status: 'active', matieres: matiere ? [matiere] : [], classes: [] });
+
+    closeCreateTeacher();
+    renderAccounts();
+
+    // Afficher le mot de passe généré à l'admin
+    showCredentialsModal([{ ...data, classe_id: 'Enseignant' }]);
+  } catch (e) {
+    toast('Erreur réseau — compte non créé', '#CC1A27');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Créer le compte'; }
+  }
 }
 
 // ── Scolarité & Paiements ─────────────────────

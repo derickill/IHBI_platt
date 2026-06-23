@@ -576,6 +576,43 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
   res.json({ results, errors });
 });
 
+// ── POST /api/admin/create-teacher — créer un compte enseignant ─────────────
+app.post('/api/admin/create-teacher', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès réservé à l\'administrateur' });
+
+  const { nom, prenom, email, matiere } = req.body || {};
+  if (!nom || !prenom || !email) {
+    return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
+  }
+
+  try {
+    const password = generatePassword();
+    const hash     = sha256(password);
+
+    const { rows: inserted } = await pool.query(
+      `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue)
+       VALUES ('teacher', $1, $2, $3, $4, '', 'active', false)
+       ON CONFLICT (email) DO NOTHING
+       RETURNING id`,
+      [nom, prenom, email.toLowerCase().trim(), hash]
+    );
+
+    if (!inserted.length) {
+      return res.status(409).json({ error: 'Un compte avec cet email existe déjà' });
+    }
+    const sqlId = inserted[0].id;
+
+    let email_sent = false;
+    try { email_sent = await sendWelcomeEmail(email, prenom, nom, password, 'Équipe pédagogique'); }
+    catch (e) { console.error('Email teacher error:', e.message); }
+
+    res.json({ id: sqlId, email: email.toLowerCase().trim(), prenom, nom, matiere: matiere || '', password, email_sent });
+  } catch (err) {
+    console.error('Create teacher error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── DELETE /api/admin/users/:id — suppression d'un compte ──────────────────
 // On supprime par email (fiable) ET par id (fallback) pour éviter les désynchs
 app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
