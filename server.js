@@ -204,6 +204,36 @@ async function ensureTables() {
         UNIQUE (classe_id, week_id)
       )
     `);
+    // Formations publiées par l'admin
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS formations (
+        id          SERIAL PRIMARY KEY,
+        titre       TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        lieu        TEXT DEFAULT '',
+        date_debut  TEXT,
+        date_fin    TEXT,
+        places      INTEGER DEFAULT 30,
+        public      BOOLEAN DEFAULT TRUE,
+        statut      TEXT DEFAULT 'actif',
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    // Inscriptions à une formation (visiteurs non connectés)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS inscriptions_formations (
+        id           SERIAL PRIMARY KEY,
+        formation_id INTEGER NOT NULL REFERENCES formations(id) ON DELETE CASCADE,
+        nom          TEXT NOT NULL,
+        prenom       TEXT NOT NULL,
+        profession   TEXT DEFAULT '',
+        email        TEXT NOT NULL,
+        telephone    TEXT DEFAULT '',
+        date         TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (formation_id, email)
+      )
+    `);
     // Migration : ajouter is_delegue sur la table users si elle n'existe pas encore
     await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS is_delegue BOOLEAN DEFAULT FALSE
@@ -274,6 +304,30 @@ async function getFullData() {
     if (!alreadyInSql) mergedEdtDrafts.push(b);
   }
 
+  // Formations : SQL a la priorité, blob comme migration progressive
+  let sqlFormations = [];
+  try {
+    const [fRes, insRes] = await Promise.all([
+      pool.query('SELECT * FROM formations ORDER BY created_at DESC'),
+      pool.query('SELECT * FROM inscriptions_formations ORDER BY created_at ASC'),
+    ]);
+    sqlFormations = fRes.rows.map(f => ({
+      id: f.id, titre: f.titre, description: f.description || '',
+      lieu: f.lieu || '', date_debut: f.date_debut, date_fin: f.date_fin || f.date_debut,
+      places: f.places, public: f.public, statut: f.statut,
+      inscrits: insRes.rows
+        .filter(i => i.formation_id === f.id)
+        .map(i => ({ nom: i.nom, prenom: i.prenom, profession: i.profession || '', email: i.email, telephone: i.telephone || '', date: i.date })),
+    }));
+  } catch (e) {
+    console.error('[getFullData] formations not available yet:', e.message);
+  }
+  const blobFormations = Array.isArray(base.formations) ? base.formations : [];
+  const mergedFormations = [...sqlFormations];
+  for (const b of blobFormations) {
+    if (!sqlFormations.some(s => s.id === b.id)) mergedFormations.push(b);
+  }
+
   return {
     ...base,
     users,
@@ -293,6 +347,7 @@ async function getFullData() {
       date: isoStr(r.date), lu: !!r.lu,
     })),
     edt_drafts: mergedEdtDrafts,
+    formations: mergedFormations,
   };
 }
 
@@ -310,7 +365,7 @@ app.get('/api/data', authMiddleware, async (req, res) => {
 app.post('/api/data', authMiddleware, async (req, res) => {
   try {
     // On retire les clés gérées par leurs propres tables pour éviter les conflits
-    const { annonces, messages_teacher, messages_delegates, edt_drafts, ...blob } = req.body;
+    const { annonces, messages_teacher, messages_delegates, edt_drafts, formations, ...blob } = req.body;
     await pool.query(
       `INSERT INTO app_data (key, value, updated_at)
        VALUES ('main', $1, NOW())
@@ -534,18 +589,41 @@ app.patch('/api/admin/users/:id/delegue', authMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/formations/:id/inscrits — liste fraîche des inscrits (admin) ───
-// Toujours lu depuis Railway → pas de problème de cache mémoire côté client
+// ── POST /api/formations — créer une formation (admin) ─────────────────────
+app.post('/api/formations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { titre, description, lieu, date_debut, date_fin, places, public: pub } = req.body || {};
+  if (!titre || !lieu || !date_debut) {
+    return res.status(400).json({ error: 'Titre, lieu et date de début sont requis' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO formations (titre, description, lieu, date_debut, date_fin, places, public, statut)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'actif')
+       RETURNING *`,
+      [titre, description || '', lieu, date_debut, date_fin || date_debut, parseInt(places) || 30, pub !== false]
+    );
+    res.json({ ...rows[0], inscrits: [] });
+  } catch (err) {
+    console.error('Create formation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/formations/:id/inscrits — liste des inscrits depuis SQL (admin) ─
 app.get('/api/formations/:id/inscrits', authMiddleware, async (req, res) => {
   const fid = parseInt(req.params.id);
   if (!fid) return res.status(400).json({ error: 'ID formation invalide' });
   try {
-    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
-    const data = snap.rows.length ? snap.rows[0].value : {};
-    const formations = data.formations || [];
-    const f = formations.find(x => x.id === fid);
-    if (!f) return res.status(404).json({ error: 'Formation introuvable' });
-    res.json({ inscrits: f.inscrits || [], titre: f.titre });
+    const [fRes, insRes] = await Promise.all([
+      pool.query('SELECT * FROM formations WHERE id = $1', [fid]),
+      pool.query('SELECT * FROM inscriptions_formations WHERE formation_id = $1 ORDER BY created_at ASC', [fid]),
+    ]);
+    if (!fRes.rows.length) return res.status(404).json({ error: 'Formation introuvable' });
+    res.json({
+      titre: fRes.rows[0].titre,
+      inscrits: insRes.rows.map(i => ({ nom: i.nom, prenom: i.prenom, profession: i.profession || '', email: i.email, telephone: i.telephone || '', date: i.date })),
+    });
   } catch (err) {
     console.error('Get inscrits error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -553,54 +631,29 @@ app.get('/api/formations/:id/inscrits', authMiddleware, async (req, res) => {
 });
 
 // ── POST /api/formations/:id/inscriptions — public (sans auth) ─────────────
-// Permet à un visiteur non connecté de s'inscrire à une formation.
-// Les données sont stockées dans app_data.formations[x].inscrits → visibles en admin.
 app.post('/api/formations/:id/inscriptions', async (req, res) => {
   const fid = parseInt(req.params.id);
   if (!fid) return res.status(400).json({ error: 'ID formation invalide' });
-
   const { nom, prenom, profession, email, telephone } = req.body || {};
   if (!nom || !prenom || !email) {
     return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
   }
-
   try {
-    // Charger le snapshot courant
-    const snap = await pool.query("SELECT value FROM app_data WHERE key = 'main'");
-    const data = snap.rows.length ? snap.rows[0].value : {};
-
-    const formations = data.formations || [];
-    const f = formations.find(x => x.id === fid);
-    if (!f) return res.status(404).json({ error: 'Formation introuvable' });
-
-    if (!Array.isArray(f.inscrits)) f.inscrits = [];
-    if (f.inscrits.length >= (f.places || 0)) {
+    const fRes = await pool.query('SELECT * FROM formations WHERE id = $1', [fid]);
+    if (!fRes.rows.length) return res.status(404).json({ error: 'Formation introuvable' });
+    const f = fRes.rows[0];
+    const countRes = await pool.query('SELECT COUNT(*) FROM inscriptions_formations WHERE formation_id = $1', [fid]);
+    if (parseInt(countRes.rows[0].count) >= f.places) {
       return res.status(400).json({ error: 'Formation complète' });
     }
-
-    // Anti-doublon sur l'email
-    if (f.inscrits.find(i => i.email?.toLowerCase() === email.toLowerCase())) {
-      return res.status(409).json({ error: 'Vous êtes déjà inscrit(e) à cette formation' });
-    }
-
-    f.inscrits.push({
-      nom,
-      prenom,
-      profession: profession || '',
-      email,
-      telephone: telephone || '',
-      date: new Date().toISOString().split('T')[0],
-    });
-
-    // Sauvegarder le snapshot mis à jour
     await pool.query(
-      `INSERT INTO app_data (key, value, updated_at)
-       VALUES ('main', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [JSON.stringify(data)]
+      `INSERT INTO inscriptions_formations (formation_id, nom, prenom, profession, email, telephone, date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (formation_id, email) DO NOTHING`,
+      [fid, nom, prenom, profession || '', email, telephone || '', new Date().toISOString().split('T')[0]]
     );
-
-    res.json({ ok: true, inscrits: f.inscrits.length });
+    const totalRes = await pool.query('SELECT COUNT(*) FROM inscriptions_formations WHERE formation_id = $1', [fid]);
+    res.json({ ok: true, inscrits: parseInt(totalRes.rows[0].count) });
   } catch (err) {
     console.error('Inscription formation error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });

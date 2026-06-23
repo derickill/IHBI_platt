@@ -2247,7 +2247,7 @@ function _restoreCoursesFromEdt() {
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
-const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts'];
+const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations'];
 
 function saveDB() {
   // 1. localStorage garde tout (fallback hors ligne)
@@ -4052,16 +4052,28 @@ function renderAdminFormations() {
   </tbody></table>`;
 }
 
-function createFormation() {
-  const titre = document.getElementById('new-form-titre')?.value;
-  const lieu  = document.getElementById('new-form-lieu')?.value;
+async function createFormation() {
+  const titre = document.getElementById('new-form-titre')?.value?.trim();
+  const lieu  = document.getElementById('new-form-lieu')?.value?.trim();
   const debut = document.getElementById('new-form-debut')?.value;
   const fin   = document.getElementById('new-form-fin')?.value;
   const places= parseInt(document.getElementById('new-form-places')?.value || 30);
   const desc  = document.getElementById('new-form-desc')?.value || '';
   if (!titre || !lieu || !debut) { toast('Titre, lieu et date de début sont requis', '#CC1A27'); return; }
-  const newId = Math.max(...DB.formations.map(f => f.id)) + 1;
-  DB.formations.push({id:newId, titre, description:desc, lieu, date_debut:debut, date_fin:fin||debut, places, inscrits:[], public:true, statut:'actif'});
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/formations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ titre, description: desc, lieu, date_debut: debut, date_fin: fin || debut, places, public: true }),
+    });
+    if (!res.ok) { const e = await res.json(); toast(e.error || 'Erreur serveur', '#CC1A27'); return; }
+    const newF = await res.json();
+    DB.formations.push(newF);
+  } catch (e) {
+    toast('Erreur réseau — formation non créée', '#CC1A27');
+    return;
+  }
   document.getElementById('new-form-titre').value = '';
   document.getElementById('new-form-lieu').value  = '';
   document.getElementById('new-form-desc').value  = '';
@@ -4141,7 +4153,7 @@ function renderAllFormations() {
     </div>`).join('');
 }
 
-function inscrireFormation() {
+async function inscrireFormation() {
   const nom        = document.getElementById('form-inscrit-nom')?.value?.trim();
   const prenom     = document.getElementById('form-inscrit-prenom')?.value?.trim();
   const profession = document.getElementById('form-inscrit-profession')?.value?.trim() || '';
@@ -4154,24 +4166,36 @@ function inscrireFormation() {
 
   const inscrit = { nom, prenom, profession, email, telephone: tel, date: new Date().toISOString().split('T')[0] };
 
-  // 1. Mise à jour locale immédiate (affichage instantané)
+  // Mise à jour locale immédiate pour un affichage instantané
   if (!Array.isArray(f.inscrits)) f.inscrits = [];
   f.inscrits.push(inscrit);
-  saveDB(); // localStorage + Railway si l'admin est connecté
-
-  // 2. Persistance Railway via API publique (fonctionne même sans token)
-  fetch('/api/formations/' + currentFormationId + '/inscriptions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nom, prenom, profession, email, telephone: tel }),
-  }).then(r => {
-    if (!r.ok) r.json().then(e => console.warn('Inscription API:', e.error));
-  }).catch(e => console.warn('Inscription API non joignable:', e.message));
-
   closeFormationModal();
   renderPublicFormations();
   renderAdminFormations();
   if (document.getElementById('all-formations-modal')?.classList.contains('on')) renderAllFormations();
+
+  // Persistance Railway via table SQL dédiée (fonctionne même sans token)
+  try {
+    const res = await fetch('/api/formations/' + currentFormationId + '/inscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, prenom, profession, email, telephone: tel }),
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      // Doublon : l'inscription existe déjà côté DB — pas une erreur critique
+      if (res.status === 409) { toast('Vous êtes déjà inscrit(e) à cette formation.', '#CC1A27'); }
+      else { console.warn('Inscription API:', e.error); }
+      // Rollback local
+      f.inscrits = f.inscrits.filter(i => i.email !== email);
+      renderPublicFormations();
+      renderAdminFormations();
+      return;
+    }
+  } catch (e) {
+    console.warn('Inscription API non joignable:', e.message);
+  }
+
   toast('Inscription confirmée ! Votre demande a bien été enregistrée.', '#0A3D2D');
 }
 
