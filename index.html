@@ -2238,7 +2238,7 @@ function _restoreCoursesFromEdt() {
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
-const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations'];
+const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations', 'contact_submissions'];
 
 function saveDB() {
   // 1. localStorage garde tout (fallback hors ligne)
@@ -4237,8 +4237,7 @@ function exportFormationInscrits(fid) {
 function exportRegistrations(filename) { exportFormationInscrits(1); }
 
 // ── Candidature publique (formulaire Admissions → page d'accueil) ────────────
-// En prod : POST /api/candidatures → table SQL contact_submissions
-function submitCandidature() {
+async function submitCandidature() {
   const prenom      = document.getElementById('adm-prenom')?.value?.trim();
   const nom         = document.getElementById('adm-nom')?.value?.trim();
   const email       = document.getElementById('adm-email')?.value?.trim();
@@ -4248,21 +4247,39 @@ function submitCandidature() {
   const message     = document.getElementById('adm-message')?.value?.trim() || '';
   if (!prenom || !nom || !email) { toast('Prénom, nom et email sont obligatoires (*)', '#CC1A27'); return; }
   if (!filiere) { toast('Veuillez sélectionner une filière souhaitée', '#CC1A27'); return; }
-  const newId = DB.contact_submissions.length
-    ? Math.max(...DB.contact_submissions.map(c => c.id)) + 1 : 1;
+
+  // Persistance Railway via table SQL (sans auth — fonctionne pour tous les visiteurs)
+  let sqlId = null;
+  try {
+    const res = await fetch('/api/candidatures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, prenom, email, telephone, filiere, email_parent: emailParent, message: message || '(pas de message)' }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      sqlId = json.id;
+    } else {
+      const e = await res.json();
+      toast(e.error || 'Erreur lors de l\'envoi', '#CC1A27');
+      return;
+    }
+  } catch (e) {
+    toast('Erreur réseau — veuillez réessayer', '#CC1A27');
+    return;
+  }
+
+  // Mise à jour locale avec l'ID SQL réel
   DB.contact_submissions.unshift({
-    id: newId, nom, prenom, email, telephone, filiere,
+    id: sqlId, nom, prenom, email, telephone, filiere,
     email_parent: emailParent,
     message: message || '(pas de message)',
     date: new Date().toISOString().split('T')[0],
     statut: 'nouveau'
   });
-  // Mise à jour immédiate du panel admin contacts si ouvert
   renderContacts(contactFilter);
-  // Mise à jour du badge "nouveaux contacts" dans le sidebar admin
   const badge = document.getElementById('contacts-count-badge');
   if (badge) badge.textContent = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
-  // Réinitialiser le formulaire
   ['adm-prenom','adm-nom','adm-email','adm-tel','adm-email-parent','adm-message'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
@@ -4332,6 +4349,12 @@ function markContactDone(cid) {
   if (c) c.statut = 'traité';
   renderContacts(contactFilter);
   toast('Contact marqué comme traité ✓', '#0A3D2D');
+  const token = sessionStorage.getItem('ihbi_token');
+  fetch('/api/candidatures/' + cid + '/statut', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ statut: 'traité' }),
+  }).catch(e => console.warn('markContactDone API:', e.message));
 }
 
 async function sendRelance() {
@@ -4357,7 +4380,14 @@ async function sendRelance() {
 
     // Succès
     document.getElementById('relance-modal').style.display = 'none';
-    if (c) { c.statut = 'traité'; saveDB(); }
+    if (c) {
+      c.statut = 'traité';
+      fetch('/api/candidatures/' + c.id + '/statut', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ statut: 'traité' }),
+      }).catch(() => {});
+    }
     renderContacts(contactFilter);
     toast('Relance envoyée avec succès ✓', '#0A3D2D');
   } catch (err) {

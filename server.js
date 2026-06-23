@@ -204,6 +204,22 @@ async function ensureTables() {
         UNIQUE (classe_id, week_id)
       )
     `);
+    // Candidatures / demandes de contact (formulaire page d'accueil)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_submissions (
+        id           SERIAL PRIMARY KEY,
+        nom          TEXT NOT NULL,
+        prenom       TEXT NOT NULL,
+        email        TEXT NOT NULL,
+        telephone    TEXT DEFAULT '',
+        filiere      TEXT DEFAULT '',
+        email_parent TEXT DEFAULT '',
+        message      TEXT DEFAULT '',
+        date         TEXT,
+        statut       TEXT DEFAULT 'nouveau',
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
     // Formations publiées par l'admin
     await pool.query(`
       CREATE TABLE IF NOT EXISTS formations (
@@ -304,6 +320,25 @@ async function getFullData() {
     if (!alreadyInSql) mergedEdtDrafts.push(b);
   }
 
+  // Candidatures : SQL a la priorité, blob comme migration progressive
+  let sqlContacts = [];
+  try {
+    const csRes = await pool.query('SELECT * FROM contact_submissions ORDER BY created_at DESC');
+    sqlContacts = csRes.rows.map(r => ({
+      id: r.id, nom: r.nom, prenom: r.prenom, email: r.email,
+      telephone: r.telephone || '', filiere: r.filiere || '',
+      email_parent: r.email_parent || '', message: r.message || '',
+      date: r.date, statut: r.statut,
+    }));
+  } catch (e) {
+    console.error('[getFullData] contact_submissions not available yet:', e.message);
+  }
+  const blobContacts = Array.isArray(base.contact_submissions) ? base.contact_submissions : [];
+  const mergedContacts = [...sqlContacts];
+  for (const b of blobContacts) {
+    if (!sqlContacts.some(s => s.id === b.id)) mergedContacts.push(b);
+  }
+
   // Formations : SQL a la priorité, blob comme migration progressive
   let sqlFormations = [];
   try {
@@ -348,6 +383,7 @@ async function getFullData() {
     })),
     edt_drafts: mergedEdtDrafts,
     formations: mergedFormations,
+    contact_submissions: mergedContacts,
   };
 }
 
@@ -365,7 +401,7 @@ app.get('/api/data', authMiddleware, async (req, res) => {
 app.post('/api/data', authMiddleware, async (req, res) => {
   try {
     // On retire les clés gérées par leurs propres tables pour éviter les conflits
-    const { annonces, messages_teacher, messages_delegates, edt_drafts, formations, ...blob } = req.body;
+    const { annonces, messages_teacher, messages_delegates, edt_drafts, formations, contact_submissions, ...blob } = req.body;
     await pool.query(
       `INSERT INTO app_data (key, value, updated_at)
        VALUES ('main', $1, NOW())
@@ -677,6 +713,40 @@ app.post('/api/formations/:id/inscriptions', async (req, res) => {
     res.json({ ok: true, inscrits: parseInt(totalRes.rows[0].count) });
   } catch (err) {
     console.error('Inscription formation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/candidatures — soumettre une candidature (public, sans auth) ───
+app.post('/api/candidatures', async (req, res) => {
+  const { nom, prenom, email, telephone, filiere, email_parent, message } = req.body || {};
+  if (!nom || !prenom || !email) return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
+  if (!filiere) return res.status(400).json({ error: 'Filière requise' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO contact_submissions (nom, prenom, email, telephone, filiere, email_parent, message, date, statut)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau')
+       RETURNING *`,
+      [nom, prenom, email, telephone || '', filiere, email_parent || '', message || '', new Date().toISOString().split('T')[0]]
+    );
+    res.json({ ok: true, id: rows[0].id });
+  } catch (err) {
+    console.error('Create candidature error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PATCH /api/candidatures/:id/statut — marquer traité (admin) ─────────────
+app.patch('/api/candidatures/:id/statut', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const id = parseInt(req.params.id);
+  const { statut } = req.body || {};
+  if (!id || !statut) return res.status(400).json({ error: 'ID et statut requis' });
+  try {
+    await pool.query('UPDATE contact_submissions SET statut = $1 WHERE id = $2', [statut, id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Update candidature statut error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
