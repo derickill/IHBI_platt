@@ -1979,15 +1979,6 @@ tr:hover td{background:var(--navy-l)}
       <div class="kpi" style="border-top-color:#15803D"><div class="kpi-l">Traités</div><div class="kpi-v" style="color:#15803D" id="contacts-kpi-done">1</div><div class="kpi-s">Contacts traités</div></div>
     </div>
 
-    <!-- Messages des délégués de classe -->
-    <div class="bx" style="margin-bottom:16px">
-      <div class="bx-h">
-        <span class="bx-t">Messages des délégués de classe</span>
-        <span id="admin-delegue-badge" style="margin-left:8px;background:#CC1A27;color:white;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;display:none">0</span>
-      </div>
-      <div id="admin-delegue-list" style="padding:0 0 4px"></div>
-    </div>
-
     <div class="bx">
       <div class="bx-h">
         <span class="bx-t">Demandes reçues</span>
@@ -3135,7 +3126,7 @@ function renderTeacherDelegateMsgs() {
 }
 
 // ── INBOX DÉLÉGUÉS — Admin ────────────────────
-// Rend dans DEUX conteneurs : a-contacts ET a-annonces (ann-delegue-list)
+// Rend uniquement dans a-annonces (ann-delegue-list)
 function renderAdminDelegateMsgs() {
   const msgs = (DB.messages_delegates || [])
     .filter(m => m.to_role === 'admin')
@@ -3155,12 +3146,6 @@ function renderAdminDelegateMsgs() {
       </tr>`;
     }).join('') + '</tbody></table>'
   ) : emptyHtml;
-  // a-contacts (existant)
-  const listContacts = document.getElementById('admin-delegue-list');
-  const badgeContacts = document.getElementById('admin-delegue-badge');
-  if (listContacts) listContacts.innerHTML = tableHtml;
-  if (badgeContacts) { badgeContacts.textContent = unread; badgeContacts.style.display = unread > 0 ? '' : 'none'; }
-  // a-annonces (nouveau)
   const listAnn = document.getElementById('ann-delegue-list');
   const badgeAnn = document.getElementById('ann-delegue-badge');
   if (listAnn) listAnn.innerHTML = tableHtml;
