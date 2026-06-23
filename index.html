@@ -2243,7 +2243,7 @@ function _restoreCoursesFromEdt() {
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
-const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates'];
+const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts'];
 
 function saveDB() {
   // 1. localStorage garde tout (fallback hors ligne)
@@ -3060,7 +3060,7 @@ async function sendDelegueMsg() {
     });
     if (!Array.isArray(DB.messages_delegates)) DB.messages_delegates = [];
     DB.messages_delegates.push({ ...m, lu: false });
-    saveDB(); // persiste le message en localStorage → visible après refresh
+    try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
     document.getElementById('stu-msg-sujet').value = '';
     document.getElementById('stu-msg-corps').value = '';
     renderDelegateSentMsgs(); // mettre à jour l'historique immédiatement
@@ -3635,8 +3635,24 @@ function initAdminEdt() {
   initEdtWeekSelector();
   if (adminEdtBuilt) return;
   adminEdtBuilt = true;
-  const weekSel = document.getElementById('admin-edt-week');
-  const mon = weekSel?.value ? new Date(weekSel.value + 'T00:00:00') : _getMondayOfWeek();
+  const classeId = document.getElementById('admin-edt-class')?.value || 'FCGE2';
+  const weekSel  = document.getElementById('admin-edt-week');
+  const weekId   = weekSel?.value || _weekKey(_getMondayOfWeek());
+  const mon      = new Date(weekId + 'T00:00:00');
+
+  const draft = DB.edt_drafts.find(d => d.classe_id === classeId && d.week_id === weekId);
+  const badge = document.getElementById('edt-status-badge');
+  if (draft) {
+    edtSlots = draft.slots.map(s => ({...s}));
+    edtDraftStatus = draft.statut;
+    if (badge) badge.innerHTML = draft.statut === 'publie'
+      ? '<span class="badge-publie">Publié</span>'
+      : '<span class="badge-draft">Brouillon non publié</span>';
+  } else {
+    edtSlots = [];
+    edtDraftStatus = 'vide';
+    if (badge) badge.innerHTML = '<span style="font-size:11px;color:var(--g400)">Aucun brouillon pour cette semaine</span>';
+  }
   _updateAdminEdtHeader(mon);
   buildEdtRows();
   renderDraftsList();
@@ -3764,90 +3780,100 @@ function saveSlot() {
   toast('Créneau ajouté — brouillon mis à jour ✓');
 }
 
-function saveDraftEdt() {
-  // En prod : POST /api/edt-drafts (ou PUT /api/edt-drafts/:id si mise à jour)
+async function saveDraftEdt() {
   const classeId  = document.getElementById('admin-edt-class')?.value || 'FCGE2';
   const weekSel   = document.getElementById('admin-edt-week');
-  const weekId    = weekSel?.value || 'S23';
+  const weekId    = weekSel?.value || _weekKey(_getMondayOfWeek());
   const weekLabel = weekSel?.options[weekSel.selectedIndex]?.text || weekId;
-  const idx = DB.edt_drafts.findIndex(d => d.classe_id === classeId && d.week_id === weekId);
-  const newId = idx >= 0 ? DB.edt_drafts[idx].id
-              : (DB.edt_drafts.length ? Math.max(...DB.edt_drafts.map(d => d.id)) + 1 : 1);
-  const draft = {
-    id: newId, classe_id: classeId, week_id: weekId,
-    semaine_label: weekLabel,
-    slots: edtSlots.map(s => ({...s})), // sérialisation JSON en prod
-    date_saved: new Date().toISOString(),
-    statut: 'brouillon'
-  };
-  if (idx >= 0) DB.edt_drafts[idx] = draft; else DB.edt_drafts.push(draft);
-  edtDraftStatus = 'brouillon';
-  const badge = document.getElementById('edt-status-badge');
-  if (badge) badge.innerHTML = '<span class="badge-draft">Brouillon sauvegardé</span>';
-  renderDraftsList();
-  toast('Brouillon sauvegardé ✓ — rechargeable depuis le panel ci-dessous');
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch('/api/edt-drafts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ classe_id: classeId, week_id: weekId, slots: edtSlots.map(s => ({...s})), statut: 'brouillon' })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const saved = await res.json();
+    const idx = DB.edt_drafts.findIndex(d => d.classe_id === classeId && d.week_id === weekId);
+    const draft = { ...saved, semaine_label: weekLabel };
+    if (idx >= 0) DB.edt_drafts[idx] = draft; else DB.edt_drafts.push(draft);
+    try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
+    edtDraftStatus = 'brouillon';
+    const badge = document.getElementById('edt-status-badge');
+    if (badge) badge.innerHTML = '<span class="badge-draft">Brouillon sauvegardé</span>';
+    renderDraftsList();
+    toast('Brouillon sauvegardé ✓ — rechargeable depuis le panel ci-dessous');
+  } catch(err) {
+    console.error('[saveDraftEdt]', err);
+    toast('Erreur lors de la sauvegarde', '#CC1A27');
+  }
 }
 
-function publishEdt() {
-  // En prod : PUT /api/edt-drafts/:id/publish + POST /api/notifications
+async function publishEdt() {
   const classSel    = document.getElementById('admin-edt-class');
   const weekSel     = document.getElementById('admin-edt-week');
   const classeId    = classSel?.value || 'FCGE2';
-  const weekId      = weekSel?.value  || 'S23';
+  const weekId      = weekSel?.value  || _weekKey(_getMondayOfWeek());
   const classeLabel = classSel?.options[classSel.selectedIndex]?.text || 'la classe';
   const weekLabel   = weekSel?.options[weekSel.selectedIndex]?.text   || weekId;
-  // 1. Sauvegarder le brouillon comme publié
-  const idx   = DB.edt_drafts.findIndex(d => d.classe_id === classeId && d.week_id === weekId);
-  const newId = idx >= 0 ? DB.edt_drafts[idx].id
-              : (DB.edt_drafts.length ? Math.max(...DB.edt_drafts.map(d => d.id)) + 1 : 1);
-  const draft = {
-    id: newId, classe_id: classeId, week_id: weekId, semaine_label: weekLabel,
-    slots: edtSlots.map(s => ({...s})), date_saved: new Date().toISOString(), statut: 'publie'
-  };
-  if (idx >= 0) DB.edt_drafts[idx] = draft; else DB.edt_drafts.push(draft);
-  // 2. Créer une notification pour la classe
-  const notifId = DB.notifications.length ? Math.max(...DB.notifications.map(n => n.id)) + 1 : 1;
-  DB.notifications.push({
-    id: notifId, type: 'edt',
-    cible_classe_id: classeId, cible_label: classeLabel,
-    message: `Votre emploi du temps (${weekLabel}) vient d'être mis à jour. Consultez votre espace étudiant.`,
-    date: new Date().toISOString().split('T')[0], lu: false
-  });
-  edtDraftStatus = 'publie';
-  const badge = document.getElementById('edt-status-badge');
-  if (badge) badge.innerHTML = '<span class="badge-publie">Publié</span>';
-  renderDraftsList();
-  // Sync calendrier étudiant si la classe publiée correspond à l'étudiant demo
-  if (classeId === CURRENT_USER.classe_id) {
-    COURSES.length = 0;
-    edtSlots.forEach(s => COURSES.push({...s}));
-    // Forcer la reconstruction du calendrier étudiant (reset des flags "déjà construit")
-    ['cal-times','cal-day-0','cal-day-1','cal-day-2','cal-day-3','cal-day-4'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch('/api/edt-drafts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ classe_id: classeId, week_id: weekId, slots: edtSlots.map(s => ({...s})), statut: 'publie' })
     });
-    const mc = document.getElementById('mini-cal');
-    if (mc) { mc.innerHTML = ''; mc.removeAttribute('data-built'); }
-    // Reconstruire immédiatement si l'espace étudiant est actif
-    if (document.getElementById('pg-dash')?.style.display === 'block') renderCal();
-    renderStudentNotifs(); // afficher la notification dans le dashboard étudiant
+    if (!res.ok) throw new Error(await res.text());
+    const saved = await res.json();
+    // 1. Mettre à jour DB.edt_drafts local
+    const idx = DB.edt_drafts.findIndex(d => d.classe_id === classeId && d.week_id === weekId);
+    const draft = { ...saved, semaine_label: weekLabel };
+    if (idx >= 0) DB.edt_drafts[idx] = draft; else DB.edt_drafts.push(draft);
+    try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
+    // 2. Créer une notification pour la classe
+    const notifId = DB.notifications.length ? Math.max(...DB.notifications.map(n => n.id)) + 1 : 1;
+    DB.notifications.push({
+      id: notifId, type: 'edt',
+      cible_classe_id: classeId, cible_label: classeLabel,
+      message: `Votre emploi du temps (${weekLabel}) vient d'être mis à jour. Consultez votre espace étudiant.`,
+      date: new Date().toISOString().split('T')[0], lu: false
+    });
+    edtDraftStatus = 'publie';
+    const badge = document.getElementById('edt-status-badge');
+    if (badge) badge.innerHTML = '<span class="badge-publie">Publié</span>';
+    renderDraftsList();
+    // Sync calendrier étudiant si la classe publiée correspond à l'étudiant connecté
+    if (classeId === CURRENT_USER.classe_id) {
+      COURSES.length = 0;
+      edtSlots.forEach(s => COURSES.push({...s}));
+      ['cal-times','cal-day-0','cal-day-1','cal-day-2','cal-day-3','cal-day-4'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
+      });
+      const mc = document.getElementById('mini-cal');
+      if (mc) { mc.innerHTML = ''; mc.removeAttribute('data-built'); }
+      if (document.getElementById('pg-dash')?.style.display === 'block') renderCal();
+      renderStudentNotifs();
+    }
+    // Sync enseignant
+    if (document.getElementById('pg-teacher')?.style.display === 'block') {
+      renderTeacherBoard();
+      if (document.getElementById('t-planning')?.classList.contains('active')) renderTeacherCal();
+    }
+    // 3. Ajouter un message dans la boîte de réception des étudiants
+    const msgId = DB.messages_teacher.length ? Math.max(...DB.messages_teacher.map(m => m.id)) + 1 : 1;
+    DB.messages_teacher.push({
+      id: msgId, de: 'Administration', vers: classeId,
+      sujet: `Emploi du temps mis à jour — ${weekLabel}`,
+      corps: `L'emploi du temps de la semaine ${weekLabel} a été mis à jour pour la classe ${classeLabel}. Connectez-vous à votre espace étudiant pour consulter les nouveaux créneaux.`,
+      date: new Date().toISOString()
+    });
+    if (document.getElementById('pg-dash')?.style.display === 'block') renderStudentMessages();
+    toast(`Emploi du temps publié — Notification envoyée à ${classeLabel} ✓`, '#0A3D2D');
+  } catch(err) {
+    console.error('[publishEdt]', err);
+    toast('Erreur lors de la publication', '#CC1A27');
   }
-  // Sync enseignant — recalculer son planning depuis le nouveau COURSES
-  if (document.getElementById('pg-teacher')?.style.display === 'block') {
-    renderTeacherBoard();
-    // Si l'onglet planning est ouvert, forcer le re-rendu
-    if (document.getElementById('t-planning')?.classList.contains('active')) renderTeacherCal();
-  }
-  // 3. Ajouter un message dans la boîte de réception des étudiants
-  const msgId = DB.messages_teacher.length ? Math.max(...DB.messages_teacher.map(m => m.id)) + 1 : 1;
-  DB.messages_teacher.push({
-    id: msgId, de: 'Administration', vers: classeId,
-    sujet: `Emploi du temps mis à jour — ${weekLabel}`,
-    corps: `L'emploi du temps de la semaine ${weekLabel} a été mis à jour pour la classe ${classeLabel}. Connectez-vous à votre espace étudiant pour consulter les nouveaux créneaux.`,
-    date: new Date().toISOString()
-  });
-  if (document.getElementById('pg-dash')?.style.display === 'block') renderStudentMessages();
-  toast(`Emploi du temps publié — Notification envoyée à ${classeLabel} ✓`, '#0A3D2D');
 }
 
 // ── Brouillons EDT ────────────────────────────

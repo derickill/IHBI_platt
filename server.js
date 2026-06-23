@@ -192,8 +192,19 @@ async function ensureTables() {
         lu         BOOLEAN DEFAULT FALSE
       )
     `);
+    // Brouillons / emplois du temps publiés par classe et semaine
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS edt_drafts (
+        id         SERIAL PRIMARY KEY,
+        classe_id  TEXT NOT NULL,
+        week_id    TEXT NOT NULL,
+        slots      JSONB DEFAULT '[]',
+        statut     TEXT DEFAULT 'brouillon',
+        date_saved TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (classe_id, week_id)
+      )
+    `);
     // Migration : ajouter is_delegue sur la table users si elle n'existe pas encore
-    // (la table users n'est pas créée ici mais elle peut manquer cette colonne)
     await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS is_delegue BOOLEAN DEFAULT FALSE
     `);
@@ -207,11 +218,12 @@ async function ensureTables() {
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
 async function getFullData() {
   const isoStr = d => (d ? new Date(d).toISOString() : null);
-  const [snap, annR, mtR, mdR] = await Promise.all([
+  const [snap, annR, mtR, mdR, edtR] = await Promise.all([
     pool.query("SELECT value FROM app_data WHERE key = 'main'"),
     pool.query('SELECT * FROM annonces ORDER BY created_at DESC'),
     pool.query('SELECT * FROM messages_teacher ORDER BY date DESC'),
     pool.query('SELECT * FROM messages_delegates ORDER BY date DESC'),
+    pool.query('SELECT * FROM edt_drafts ORDER BY date_saved DESC'),
   ]);
   const base = snap.rows.length ? snap.rows[0].value : {};
   const blobUsers = base.users || [];
@@ -259,6 +271,11 @@ async function getFullData() {
       to_name: r.to_name, sujet: r.sujet || '', corps: r.corps || '',
       date: isoStr(r.date), lu: !!r.lu,
     })),
+    edt_drafts: edtR.rows.map(r => ({
+      id: r.id, classe_id: r.classe_id, week_id: r.week_id,
+      slots: r.slots || [], statut: r.statut,
+      date_saved: isoStr(r.date_saved),
+    })),
   };
 }
 
@@ -286,6 +303,32 @@ app.post('/api/data', authMiddleware, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Save data error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/edt-drafts — sauvegarder / publier un emploi du temps ────────
+app.post('/api/edt-drafts', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { classe_id, week_id, slots, statut } = req.body;
+  if (!classe_id || !week_id) return res.status(400).json({ error: 'classe_id et week_id requis' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO edt_drafts (classe_id, week_id, slots, statut)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (classe_id, week_id)
+       DO UPDATE SET slots = $3, statut = $4, date_saved = NOW()
+       RETURNING *`,
+      [classe_id, week_id, JSON.stringify(slots || []), statut || 'brouillon']
+    );
+    const r = rows[0];
+    res.json({
+      id: r.id, classe_id: r.classe_id, week_id: r.week_id,
+      slots: r.slots || [], statut: r.statut,
+      date_saved: r.date_saved ? new Date(r.date_saved).toISOString() : null,
+    });
+  } catch (err) {
+    console.error('[POST /api/edt-drafts]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
