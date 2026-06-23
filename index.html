@@ -2252,7 +2252,7 @@ function saveDB() {
   // 2. Railway : blob sans les clés SQL (elles ont leurs propres endpoints)
   const blob = {};
   _DB_KEYS.forEach(k => { if (!_SQL_KEYS.includes(k)) blob[k] = DB[k]; });
-  const token = localStorage.getItem('ihbi_token');
+  const token = sessionStorage.getItem('ihbi_token');
   if (token) {
     fetch('/api/data', {
       method: 'POST',
@@ -2264,8 +2264,8 @@ function saveDB() {
 
 function resetDB() {
   localStorage.removeItem('ihbi_db_v2');
-  localStorage.removeItem('ihbi_token');
-  localStorage.removeItem('ihbi_user');
+  sessionStorage.removeItem('ihbi_token');
+  sessionStorage.removeItem('ihbi_user');
   location.reload();
 }
 
@@ -2375,8 +2375,8 @@ async function goDash() {
       // Enrichir user avec les champs issus de app_data.users[]
       // (is_delegue, email_parent…) car la table SQL users ne les reflète pas toujours
       user = _enrichUser(user);
-      localStorage.setItem('ihbi_token', json.token);
-      localStorage.setItem('ihbi_user',  JSON.stringify(user));
+      sessionStorage.setItem('ihbi_token', json.token);
+      sessionStorage.setItem('ihbi_user',  JSON.stringify(user));
     }
   } catch (_) {
     // Serveur inaccessible → authentification locale (fallback dev)
@@ -2404,7 +2404,8 @@ async function goDash() {
 // La table SQL users peut ne pas avoir is_delegue à jour — app_data est la source de vérité
 function _enrichUser(user) {
   if (!user) return user;
-  const dbUser = DB.users.find(u => u.id === user.id);
+  const dbUser = DB.users.find(u => u.id === user.id)
+    || DB.users.find(u => u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase());
   if (!dbUser) return user;
   return Object.assign({}, user, {
     is_delegue:   !!dbUser.is_delegue,
@@ -2417,8 +2418,8 @@ function _enrichUser(user) {
 function goSite() {
   stopPolling();
   CURRENT_USER = null;
-  localStorage.removeItem('ihbi_token');
-  localStorage.removeItem('ihbi_user');
+  sessionStorage.removeItem('ihbi_token');
+  sessionStorage.removeItem('ihbi_user');
   ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
     document.getElementById(id).style.display = 'none');
   document.getElementById('pg-site').style.display = 'block';
@@ -2442,7 +2443,7 @@ function stopPolling() {
 }
 
 async function _pollRefresh() {
-  const t = localStorage.getItem('ihbi_token');
+  const t = sessionStorage.getItem('ihbi_token');
   if (!t || !CURRENT_USER) { stopPolling(); return; }
   try {
     const res = await fetch('/api/data', { headers: { 'Authorization': 'Bearer ' + t } });
@@ -2471,7 +2472,7 @@ function _rerenderActiveSections() {
     // Si le modal inscrits est ouvert, rafraîchir son contenu via API
     const inscModal = document.getElementById('event-reg-modal');
     if (_openInscritsFid && inscModal?.style.display === 'flex') {
-      const t = localStorage.getItem('ihbi_token');
+      const t = sessionStorage.getItem('ihbi_token');
       fetch('/api/formations/' + _openInscritsFid + '/inscrits', {
         headers: { 'Authorization': 'Bearer ' + t }
       }).then(r => r.ok ? r.json() : null).then(json => {
@@ -2505,8 +2506,8 @@ function _rerenderActiveSections() {
 
 // Auto-restauration de session au rechargement
 (async function autoRestoreSession() {
-  const token     = localStorage.getItem('ihbi_token');
-  const savedUser = localStorage.getItem('ihbi_user');
+  const token     = sessionStorage.getItem('ihbi_token');
+  const savedUser = sessionStorage.getItem('ihbi_user');
   if (!token || !savedUser) return;
   let u;
   try { u = JSON.parse(savedUser); } catch(_) { return; }
@@ -2524,8 +2525,8 @@ function _rerenderActiveSections() {
     if (res.status === 401 || res.status === 403) {
       // Token vraiment expiré/révoqué → déconnexion propre
       goSite();
-      localStorage.removeItem('ihbi_token');
-      localStorage.removeItem('ihbi_user');
+      sessionStorage.removeItem('ihbi_token');
+      sessionStorage.removeItem('ihbi_user');
       return;
     }
     if (res.ok) {
@@ -2538,7 +2539,7 @@ function _rerenderActiveSections() {
       const enriched = _enrichUser(CURRENT_USER);
       if (enriched.is_delegue !== CURRENT_USER.is_delegue) {
         CURRENT_USER = enriched;
-        localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
+        sessionStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
         initStudentMessaging(); // re-init le panneau délégué si besoin
       }
       _rerenderActiveSections(); // mettre à jour l'UI avec les données fraîches
@@ -2566,8 +2567,8 @@ window.addEventListener('popstate', function(e) {
     if (CURRENT_USER) {
       stopPolling();
       CURRENT_USER = null;
-      localStorage.removeItem('ihbi_token');
-      localStorage.removeItem('ihbi_user');
+      sessionStorage.removeItem('ihbi_token');
+      sessionStorage.removeItem('ihbi_user');
       ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
         document.getElementById(id).style.display = 'none');
       document.getElementById('pg-site').style.display = 'block';
@@ -2964,12 +2965,13 @@ function initStudentMessaging() {
   const compose = document.getElementById('student-delegate-compose');
   const note    = document.getElementById('student-delegate-note');
   // DB.users est la source de vérité (rechargé depuis Railway) — CURRENT_USER peut être stale
-  const dbUser    = DB.users.find(u => u.id === CURRENT_USER?.id);
+  const dbUser    = DB.users.find(u => u.id === CURRENT_USER?.id)
+    || DB.users.find(u => u.email && CURRENT_USER?.email && u.email.toLowerCase() === CURRENT_USER.email.toLowerCase());
   const isDelegue = dbUser ? !!dbUser.is_delegue : !!CURRENT_USER?.is_delegue;
   // Synchroniser CURRENT_USER et localStorage avec la valeur fraîche
   if (CURRENT_USER && CURRENT_USER.is_delegue !== isDelegue) {
     CURRENT_USER.is_delegue = isDelegue;
-    localStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
+    sessionStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
   }
   // Badge "Délégué" sous le nom de l'étudiant dans le profil
   const durEl = document.querySelector('#dash-avatar .dur');
@@ -3001,7 +3003,7 @@ function initStudentMessaging() {
 
 // Helper — POST vers /api/messages/delegate
 async function _postDelegateMsg(payload) {
-  const t = localStorage.getItem('ihbi_token');
+  const t = sessionStorage.getItem('ihbi_token');
   const res = await fetch('/api/messages/delegate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
@@ -3140,7 +3142,7 @@ function readDelegueMsg(id, ctx) {
   if (!m.lu) {
     m.lu = true;
     // Marquer comme lu dans la vraie table SQL (fire-and-forget)
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     fetch('/api/messages/delegate/' + id + '/read', {
       method: 'PATCH', headers: { 'Authorization': 'Bearer ' + t }
     }).catch(() => {});
@@ -3513,7 +3515,7 @@ async function sendTeacherMsg() {
   const senderName = (CURRENT_USER?.prenom && CURRENT_USER?.nom)
     ? CURRENT_USER.prenom + ' ' + CURRENT_USER.nom : 'Enseignant';
   try {
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     const res = await fetch('/api/messages/teacher', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
@@ -3922,7 +3924,7 @@ async function publishAnnonce() {
   const expir = document.getElementById('ann-expir')?.value || null;
   if (!titre || !corps) { toast('Veuillez remplir le titre et le contenu', '#CC1A27'); return; }
   try {
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     const res = await fetch('/api/annonces', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
@@ -3953,7 +3955,7 @@ function viewAnnonce(id) {
 
 async function deleteAnnonce(id) {
   try {
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     const res = await fetch('/api/annonces/' + id, {
       method: 'DELETE', headers: { 'Authorization': 'Bearer ' + t }
     });
@@ -4127,7 +4129,7 @@ async function showFormationInscrits(fid) {
 
   // Puis rafraîchir depuis Railway (données réelles, toujours à jour)
   try {
-    const token = localStorage.getItem('ihbi_token');
+    const token = sessionStorage.getItem('ihbi_token');
     const res   = await fetch('/api/formations/' + fid + '/inscrits', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
@@ -4271,7 +4273,7 @@ async function sendRelance() {
   if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
 
   try {
-    const token = localStorage.getItem('ihbi_token');
+    const token = sessionStorage.getItem('ihbi_token');
     const res   = await fetch('/api/admin/send-relance', {
       method:  'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -4381,7 +4383,7 @@ async function deleteAccount(userId) {
 
   // Supprimer en base de données — on envoie aussi l'email pour garantir la suppression
   try {
-    const token = localStorage.getItem('ihbi_token');
+    const token = sessionStorage.getItem('ihbi_token');
     await fetch(`/api/admin/users/${userId}`, {
       method:  'DELETE',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -4408,7 +4410,7 @@ async function assignDelegue(userId, classeId) {
   saveDB(); // blob + localStorage
   // Persister dans la table SQL users → visible depuis n'importe quel navigateur
   try {
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     await fetch('/api/admin/users/' + userId + '/delegue', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
@@ -4428,7 +4430,7 @@ async function removeDelegue(userId) {
   saveDB(); // blob + localStorage
   // Persister dans la table SQL users
   try {
-    const t = localStorage.getItem('ihbi_token');
+    const t = sessionStorage.getItem('ihbi_token');
     await fetch('/api/admin/users/' + userId + '/delegue', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
@@ -4469,7 +4471,7 @@ async function createStudentAccounts() {
   btn.textContent = 'Création en cours…';
 
   try {
-    const token = localStorage.getItem('ihbi_token');
+    const token = sessionStorage.getItem('ihbi_token');
     const res   = await fetch('/api/admin/create-students', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
