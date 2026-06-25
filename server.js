@@ -6,7 +6,7 @@ const crypto  = require('crypto');
 const path    = require('path');
 
 const app = express();
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname)));
 
 // ── Base de données PostgreSQL ──────────────────────────────────────────────
@@ -307,6 +307,58 @@ async function ensureTables() {
     await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT TRUE
     `);
+    // Migration : matière enseignée par l'enseignant
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS matiere TEXT DEFAULT ''
+    `);
+    // Classes assignées à un enseignant (relation N-N)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS teacher_classes (
+        teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        classe_id  TEXT    NOT NULL REFERENCES classes(id),
+        PRIMARY KEY (teacher_id, classe_id)
+      )
+    `);
+    // Évaluations créées par un enseignant
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS evaluations (
+        id         SERIAL PRIMARY KEY,
+        teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        classe_id  TEXT    NOT NULL,
+        matiere    TEXT    NOT NULL,
+        intitule   TEXT    NOT NULL,
+        type       TEXT    DEFAULT 'Devoir',
+        coeff      REAL    DEFAULT 1,
+        bareme     INTEGER DEFAULT 20,
+        date       TEXT,
+        statut     TEXT    DEFAULT 'brouillon',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    // Notes individuelles (une par étudiant par évaluation)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id          SERIAL PRIMARY KEY,
+        eval_id     INTEGER NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
+        etudiant_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        note        REAL,
+        commentaire TEXT DEFAULT '',
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (eval_id, etudiant_id)
+      )
+    `);
+    // Documents de correction joints à une évaluation (stockés en base64)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS documents (
+        id         SERIAL PRIMARY KEY,
+        eval_id    INTEGER NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
+        name       TEXT    NOT NULL,
+        type       TEXT    DEFAULT 'application/pdf',
+        data       TEXT    NOT NULL,
+        size       INTEGER,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
     console.error('[DB] ensureTables error:', e.message);
@@ -338,7 +390,7 @@ async function getFullData() {
   let users = blobUsers; // fallback : blob si SQL échoue
   try {
     const usersR = await pool.query(
-      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue, profile_complete FROM users'
+      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue, profile_complete, matiere FROM users'
     );
     // Fusionner SQL (IDs réels + is_delegue à jour) avec blob (matieres, classes, poste…)
     users = usersR.rows.map(sqlU => {
@@ -354,6 +406,7 @@ async function getFullData() {
         status:           sqlU.status,
         is_delegue:       !!sqlU.is_delegue,
         profile_complete: sqlU.profile_complete !== false,
+        matiere:          sqlU.matiere || '',
       });
     });
   } catch (e) {
@@ -636,7 +689,7 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
 app.post('/api/admin/create-teacher', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès réservé à l\'administrateur' });
 
-  const { nom, prenom, email, matiere } = req.body || {};
+  const { nom, prenom, email, matiere, classes } = req.body || {};
   if (!nom || !prenom || !email) {
     return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
   }
@@ -646,11 +699,11 @@ app.post('/api/admin/create-teacher', authMiddleware, async (req, res) => {
     const hash     = sha256(password);
 
     const { rows: inserted } = await pool.query(
-      `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue)
-       VALUES ('teacher', $1, $2, $3, $4, '', 'active', false)
+      `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue, matiere)
+       VALUES ('teacher', $1, $2, $3, $4, '', 'active', false, $5)
        ON CONFLICT (email) DO NOTHING
        RETURNING id`,
-      [nom, prenom, email.toLowerCase().trim(), hash]
+      [nom, prenom, email.toLowerCase().trim(), hash, matiere || '']
     );
 
     if (!inserted.length) {
@@ -658,11 +711,21 @@ app.post('/api/admin/create-teacher', authMiddleware, async (req, res) => {
     }
     const sqlId = inserted[0].id;
 
+    // Assigner les classes à l'enseignant
+    if (Array.isArray(classes) && classes.length) {
+      for (const classeId of classes) {
+        await pool.query(
+          `INSERT INTO teacher_classes (teacher_id, classe_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [sqlId, classeId]
+        );
+      }
+    }
+
     let email_sent = false;
     try { email_sent = await sendWelcomeEmail(email, prenom, nom, password, 'Équipe pédagogique'); }
     catch (e) { console.error('Email teacher error:', e.message); }
 
-    res.json({ id: sqlId, email: email.toLowerCase().trim(), prenom, nom, matiere: matiere || '', password, email_sent });
+    res.json({ id: sqlId, email: email.toLowerCase().trim(), prenom, nom, matiere: matiere || '', classes: classes || [], password, email_sent });
   } catch (err) {
     console.error('Create teacher error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -725,6 +788,274 @@ app.get('/api/classes', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Get classes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/teacher/classes — classes assignées à l'enseignant connecté ──────
+app.get('/api/teacher/classes', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query(`
+      SELECT c.id, c.nom,
+             COUNT(u.id)::int AS student_count
+      FROM   teacher_classes tc
+      JOIN   classes c  ON c.id  = tc.classe_id
+      LEFT JOIN users u ON u.classe_id = tc.classe_id
+                        AND u.role = 'student'
+                        AND u.status = 'active'
+      WHERE  tc.teacher_id = $1
+      GROUP  BY c.id, c.nom
+      ORDER  BY c.id
+    `, [req.user.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Get teacher classes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/teacher/classes/:id/students — étudiants d'une classe ───────────
+app.get('/api/teacher/classes/:id/students', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const classeId = req.params.id;
+  try {
+    const access = await pool.query(
+      'SELECT 1 FROM teacher_classes WHERE teacher_id = $1 AND classe_id = $2',
+      [req.user.id, classeId]
+    );
+    if (!access.rows.length) return res.status(403).json({ error: 'Accès refusé à cette classe' });
+    const { rows } = await pool.query(
+      `SELECT id, nom, prenom, email FROM users
+       WHERE classe_id = $1 AND role = 'student' AND status = 'active'
+       ORDER BY nom, prenom`,
+      [classeId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get class students error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/teacher/evaluations — évaluations de l'enseignant ───────────────
+app.get('/api/teacher/evaluations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query(`
+      SELECT e.*,
+             COUNT(DISTINCT n.id)::int          AS notes_count,
+             AVG(n.note)                         AS moyenne,
+             (SELECT id FROM documents WHERE eval_id = e.id LIMIT 1) AS has_document
+      FROM   evaluations e
+      LEFT JOIN notes n ON n.eval_id = e.id
+      WHERE  e.teacher_id = $1
+      GROUP  BY e.id
+      ORDER  BY e.created_at DESC
+    `, [req.user.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Get evaluations error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/teacher/evaluations — créer une évaluation ─────────────────────
+app.post('/api/teacher/evaluations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const { classe_id, matiere, intitule, type, coeff, bareme, date, statut } = req.body || {};
+  if (!classe_id || !matiere || !intitule) {
+    return res.status(400).json({ error: 'classe_id, matiere et intitule sont requis' });
+  }
+  try {
+    const access = await pool.query(
+      'SELECT 1 FROM teacher_classes WHERE teacher_id = $1 AND classe_id = $2',
+      [req.user.id, classe_id]
+    );
+    if (!access.rows.length) return res.status(403).json({ error: 'Accès refusé à cette classe' });
+    const { rows } = await pool.query(
+      `INSERT INTO evaluations (teacher_id, classe_id, matiere, intitule, type, coeff, bareme, date, statut)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [req.user.id, classe_id, matiere, intitule,
+       type || 'Devoir', parseFloat(coeff) || 1, parseInt(bareme) || 20,
+       date || new Date().toISOString().split('T')[0],
+       statut || 'brouillon']
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Create evaluation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PUT /api/teacher/evaluations/:id — modifier statut/infos d'une évaluation ─
+app.put('/api/teacher/evaluations/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const evalId = parseInt(req.params.id);
+  const { statut, intitule, type, coeff, bareme, date } = req.body || {};
+  try {
+    const check = await pool.query(
+      'SELECT id FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+    );
+    if (!check.rows.length) return res.status(403).json({ error: 'Évaluation introuvable' });
+    const updates = [];
+    const vals    = [];
+    let idx = 1;
+    if (statut   !== undefined) { updates.push(`statut = $${idx++}`);   vals.push(statut); }
+    if (intitule !== undefined) { updates.push(`intitule = $${idx++}`); vals.push(intitule); }
+    if (type     !== undefined) { updates.push(`type = $${idx++}`);     vals.push(type); }
+    if (coeff    !== undefined) { updates.push(`coeff = $${idx++}`);    vals.push(parseFloat(coeff)); }
+    if (bareme   !== undefined) { updates.push(`bareme = $${idx++}`);   vals.push(parseInt(bareme)); }
+    if (date     !== undefined) { updates.push(`date = $${idx++}`);     vals.push(date); }
+    if (!updates.length) return res.json({ ok: true });
+    vals.push(evalId);
+    await pool.query(`UPDATE evaluations SET ${updates.join(', ')} WHERE id = $${idx}`, vals);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Update evaluation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── DELETE /api/teacher/evaluations/:id — supprimer une évaluation ────────────
+app.delete('/api/teacher/evaluations/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const evalId = parseInt(req.params.id);
+  try {
+    const check = await pool.query(
+      'SELECT id FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+    );
+    if (!check.rows.length) return res.status(403).json({ error: 'Évaluation introuvable' });
+    await pool.query('DELETE FROM evaluations WHERE id = $1', [evalId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete evaluation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/teacher/evaluations/:id/notes — sauvegarder notes en masse ──────
+app.post('/api/teacher/evaluations/:id/notes', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const evalId = parseInt(req.params.id);
+  const { notes, statut } = req.body || {};
+  try {
+    const check = await pool.query(
+      'SELECT id FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+    );
+    if (!check.rows.length) return res.status(403).json({ error: 'Évaluation introuvable' });
+    for (const n of (notes || [])) {
+      if (n.note === null || n.note === undefined || n.note === '') continue;
+      await pool.query(
+        `INSERT INTO notes (eval_id, etudiant_id, note, commentaire)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (eval_id, etudiant_id) DO UPDATE SET note = $3, commentaire = $4`,
+        [evalId, n.etudiant_id, parseFloat(n.note), n.commentaire || '']
+      );
+    }
+    if (statut) {
+      await pool.query('UPDATE evaluations SET statut = $1 WHERE id = $2', [statut, evalId]);
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Save notes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/teacher/evaluations/:id/notes — lire notes d'une évaluation ──────
+app.get('/api/teacher/evaluations/:id/notes', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const evalId = parseInt(req.params.id);
+  try {
+    const check = await pool.query(
+      'SELECT * FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+    );
+    if (!check.rows.length) return res.status(403).json({ error: 'Évaluation introuvable' });
+    const { rows } = await pool.query(
+      'SELECT * FROM notes WHERE eval_id = $1', [evalId]
+    );
+    res.json({ eval: check.rows[0], notes: rows });
+  } catch (err) {
+    console.error('Get notes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/teacher/evaluations/:id/document — uploader document correction ─
+app.post('/api/teacher/evaluations/:id/document', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  const evalId = parseInt(req.params.id);
+  const { name, type, data } = req.body || {};
+  if (!name || !data) return res.status(400).json({ error: 'name et data (base64) requis' });
+  try {
+    const check = await pool.query(
+      'SELECT id FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+    );
+    if (!check.rows.length) return res.status(403).json({ error: 'Évaluation introuvable' });
+    await pool.query('DELETE FROM documents WHERE eval_id = $1', [evalId]);
+    const { rows } = await pool.query(
+      `INSERT INTO documents (eval_id, name, type, data, size)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, name, type, size`,
+      [evalId, name, type || 'application/octet-stream', data, data.length]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Upload document error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/teacher/evaluations/:id/document — télécharger document correction
+app.get('/api/teacher/evaluations/:id/document', authMiddleware, async (req, res) => {
+  const evalId = parseInt(req.params.id);
+  try {
+    let authorized = false;
+    if (req.user.role === 'teacher') {
+      const c = await pool.query(
+        'SELECT 1 FROM evaluations WHERE id = $1 AND teacher_id = $2', [evalId, req.user.id]
+      );
+      authorized = c.rows.length > 0;
+    } else if (req.user.role === 'student') {
+      const c = await pool.query(
+        `SELECT 1 FROM evaluations e
+         WHERE  e.id = $1 AND e.statut = 'publie'
+           AND  e.classe_id = (SELECT classe_id FROM users WHERE id = $2)`,
+        [evalId, req.user.id]
+      );
+      authorized = c.rows.length > 0;
+    }
+    if (!authorized) return res.status(403).json({ error: 'Accès refusé' });
+    const { rows } = await pool.query('SELECT name, type, data FROM documents WHERE eval_id = $1', [evalId]);
+    if (!rows.length) return res.status(404).json({ error: 'Document introuvable' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Download document error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/student/notes — notes publiées pour l'étudiant connecté ──────────
+app.get('/api/student/notes', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'student') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const userRes = await pool.query('SELECT classe_id FROM users WHERE id = $1', [req.user.id]);
+    if (!userRes.rows.length) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    const { classe_id } = userRes.rows[0];
+    const { rows } = await pool.query(`
+      SELECT e.id, e.classe_id, e.matiere, e.intitule, e.type, e.coeff, e.bareme, e.date,
+             n.note, n.commentaire,
+             u.nom AS teacher_nom, u.prenom AS teacher_prenom,
+             (SELECT id FROM documents WHERE eval_id = e.id LIMIT 1) AS document_id
+      FROM   evaluations e
+      LEFT JOIN notes n ON n.eval_id = e.id AND n.etudiant_id = $1
+      LEFT JOIN users  u ON u.id = e.teacher_id
+      WHERE  e.classe_id = $2 AND e.statut = 'publie'
+      ORDER  BY e.date DESC, e.created_at DESC
+    `, [req.user.id, classe_id]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Get student notes error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

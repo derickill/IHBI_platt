@@ -1337,8 +1337,8 @@ tr:hover td{background:var(--navy-l)}
   </div>
   <div class="bx">
     <div class="bx-h"><span class="bx-t">Détail de toutes les évaluations</span></div>
-    <table><thead><tr><th>Date</th><th>Matière</th><th>Type</th><th>Note</th><th>Coeff.</th></tr></thead>
-    <tbody><tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr></tbody></table>
+    <table><thead><tr><th>Date</th><th>Matière</th><th>Type</th><th>Note</th><th>Coeff.</th><th>Correction</th></tr></thead>
+    <tbody><tr><td colspan="6" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr></tbody></table>
   </div>
 </div>
 
@@ -1531,29 +1531,8 @@ tr:hover td{background:var(--navy-l)}
   <div id="t-classes" class="ds">
     <div class="ds-title">Mes classes</div>
     <div class="ds-sub">Classes encadrées — Année académique 2024–2025</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-      <div class="bx" style="margin:0;cursor:pointer" onclick="showClassDetail('FCGE1')">
-        <div class="bx-h"><span class="bx-t">FCGE 1</span><span class="bdg bl">22 étudiants</span></div>
-        <div style="padding:16px 18px">
-          <div style="font-size:14px;color:var(--g600);margin-bottom:8px">Finances Comptabilité Gestion des Entreprises — 1ère année</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span style="font-size:12px;background:var(--b100);color:var(--b600);padding:3px 10px;font-weight:600">Comptabilité générale</span>
-            <span style="font-size:12px;background:var(--b100);color:var(--b600);padding:3px 10px;font-weight:600">Gestion financière</span>
-          </div>
-          <div style="margin-top:12px;font-size:12.5px;color:var(--g400)">2 notes en brouillon · Cliquer pour voir les étudiants</div>
-        </div>
-      </div>
-      <div class="bx" style="margin:0;cursor:pointer" onclick="showClassDetail('FCGE2')">
-        <div class="bx-h"><span class="bx-t">FCGE 2</span><span class="bdg bl">20 étudiants</span></div>
-        <div style="padding:16px 18px">
-          <div style="font-size:14px;color:var(--g600);margin-bottom:8px">Finances Comptabilité Gestion des Entreprises — 2ème année</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span style="font-size:12px;background:var(--b100);color:var(--b600);padding:3px 10px;font-weight:600">Comptabilité générale</span>
-            <span style="font-size:12px;background:var(--b100);color:var(--b600);padding:3px 10px;font-weight:600">Gestion financière</span>
-          </div>
-          <div style="margin-top:12px;font-size:12.5px;color:var(--g400)">Toutes les notes publiées · Cliquer pour voir les étudiants</div>
-        </div>
-      </div>
+    <div id="teacher-classes-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+      <div style="color:var(--g400);font-size:14px;padding:20px 0;grid-column:1/-1">Chargement des classes…</div>
     </div>
     <div class="bx" id="class-detail-box" style="display:none">
       <div class="bx-h"><span class="bx-t" id="class-detail-title">Liste des étudiants</span><button onclick="document.getElementById('class-detail-box').style.display='none'" style="font-size:12px;background:none;border:none;color:var(--g400);cursor:pointer">Fermer ×</button></div>
@@ -1586,15 +1565,20 @@ tr:hover td{background:var(--navy-l)}
         <button onclick="hideNewEvalForm()" style="background:none;border:none;cursor:pointer;color:var(--g400);font-size:22px;line-height:1">×</button>
       </div>
       <div style="padding:18px 18px 0;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
-        <div><label class="fl">Classe</label><select class="fsel" id="grade-classe" onchange="buildGradeTable()"><option value="">Choisir</option><option value="FCGE1">FCGE 1</option><option value="FCGE2">FCGE 2</option></select></div>
-        <div><label class="fl">Matière</label><select class="fsel" id="grade-matiere" onchange="buildGradeTable()"><option value="">Choisir</option><option>Comptabilité générale</option><option>Gestion financière</option></select></div>
+        <div><label class="fl">Classe</label><select class="fsel" id="grade-classe" onchange="buildGradeTable()"><option value="">Choisir une classe</option></select></div>
+        <div><label class="fl">Matière</label><input type="text" class="fi" id="grade-matiere" readonly style="background:var(--off);cursor:default;color:var(--g600)" placeholder="—"></div>
         <div><label class="fl">Type</label><select class="fsel" id="grade-type"><option>Devoir</option><option>Examen</option><option>TP</option><option>Soutenance</option></select></div>
-        <div><label class="fl">Date</label><input type="date" class="fi" id="grade-date" value="2025-06-05"></div>
+        <div><label class="fl">Date</label><input type="date" class="fi" id="grade-date"></div>
       </div>
-      <div style="padding:12px 18px 16px;display:flex;gap:12px;align-items:flex-end">
-        <div><label class="fl">Barème</label><select class="fsel" style="width:100px"><option>/ 20</option><option>/ 10</option></select></div>
-        <div><label class="fl">Coefficient</label><input type="number" class="fi" value="2" min="1" max="10" style="width:80px"></div>
+      <div style="padding:12px 18px 16px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <div><label class="fl">Barème</label><select class="fsel" id="grade-bareme" style="width:100px"><option value="20">/ 20</option><option value="10">/ 10</option></select></div>
+        <div><label class="fl">Coefficient</label><input type="number" class="fi" id="grade-coeff" value="1" min="1" max="10" style="width:80px"></div>
         <div style="flex:1"><label class="fl">Intitulé de l'évaluation</label><input type="text" class="fi" id="grade-intitule" placeholder="ex: Devoir n°3"></div>
+        <div style="flex:1">
+          <label class="fl">Document de correction (optionnel)</label>
+          <input type="file" id="grade-document" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg" style="display:block;width:100%;padding:6px 10px;border:1px solid var(--border);font-size:12px;font-family:Inter,sans-serif;cursor:pointer">
+          <span style="font-size:11px;color:var(--g400)">PDF, Word ou image · max 10 Mo</span>
+        </div>
       </div>
       <!-- Tableau de saisie -->
       <div id="grade-table-box" style="display:none">
@@ -1605,10 +1589,10 @@ tr:hover td{background:var(--navy-l)}
             <button onclick="saveGrades('publish')" style="padding:8px 18px;background:#0A3D2D;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Publier les notes ✓</button>
           </div>
         </div>
-        <table><thead><tr><th>#</th><th>Nom</th><th>Prénom</th><th style="width:140px">Note (/ 20)</th><th>Observation</th></tr></thead>
+        <table><thead><tr><th>#</th><th>Nom</th><th>Prénom</th><th style="width:140px">Note</th><th>Observation</th></tr></thead>
         <tbody id="grade-tbody"></tbody></table>
         <div style="padding:12px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--g400)">
-          * Brouillon : notes sauvegardées mais non visibles par les étudiants. Publier rend les notes définitives.
+          * Brouillon : notes sauvegardées mais non visibles par les étudiants. Publier rend les notes définitives et visibles.
         </div>
       </div>
     </div>
@@ -2093,7 +2077,13 @@ tr:hover td{background:var(--navy-l)}
         <div><label class="fl">Nom *</label><input type="text" class="fi" id="new-teacher-nom" placeholder="Nom de famille"></div>
         <div><label class="fl">Prénom *</label><input type="text" class="fi" id="new-teacher-prenom" placeholder="Prénom"></div>
         <div style="grid-column:1/-1"><label class="fl">Email professionnel *</label><input type="email" class="fi" id="new-teacher-email" placeholder="prenom.nom@ihbi.ci"></div>
-        <div style="grid-column:1/-1"><label class="fl">Matière principale</label><input type="text" class="fi" id="new-teacher-matieres" placeholder="Ex: Droit commercial"></div>
+        <div style="grid-column:1/-1"><label class="fl">Matière enseignée *</label><input type="text" class="fi" id="new-teacher-matieres" placeholder="Ex: Droit commercial"></div>
+        <div style="grid-column:1/-1">
+          <label class="fl">Classes assignées *</label>
+          <div id="teacher-classes-checkboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:3px;padding:10px;background:var(--off)">
+            <span style="color:var(--g400);font-size:12px">Chargement des classes…</span>
+          </div>
+        </div>
       </div>
       <p style="font-size:12px;color:var(--g400);margin-bottom:14px">Un mot de passe temporaire sera généré et communiqué à l'enseignant.</p>
       <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -2252,7 +2242,7 @@ function _restoreCoursesFromEdt() {
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
-const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations', 'contact_submissions'];
+const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations', 'contact_submissions', 'evaluations', 'notes'];
 
 function saveDB() {
   // 1. localStorage garde tout (fallback hors ligne)
@@ -2632,6 +2622,8 @@ function showT(id, el) {
   document.querySelectorAll('#pg-teacher .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
   if (id === 't-planning') renderTeacherCal();
+  if (id === 't-notes')   renderEvalHistory(currentEvalFilter);
+  if (id === 't-classes') renderTeacherClasses();
   _historyPush({page:'pg-teacher', section:id});
 }
 function showA(id, el) {
@@ -2937,27 +2929,37 @@ function showStudentMsg(type, id, el) {
   _updateMsgBadge(_studentMsgCombined());
 }
 
-// ── NOTES ÉTUDIANT ────────────────────────────
-function renderStudentNotes() {
+// ── NOTES ÉTUDIANT — chargées depuis la DB ────────────────────────────────
+async function renderStudentNotes() {
   if (!CURRENT_USER) return;
-  const uid     = CURRENT_USER.id;
-  const myNotes = DB.notes.filter(n => n.etudiant_id === uid);
-  const pubEvals = DB.evaluations.filter(e => e.statut === 'publie');
+  const token = sessionStorage.getItem('ihbi_token');
+
+  let evals = [];
+  try {
+    const res = await fetch('/api/student/notes', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) evals = await res.json();
+  } catch (e) {}
+
+  // Notes avec valeur uniquement
+  const notedEvals = evals.filter(ev => ev.note !== null && ev.note !== undefined);
 
   // Calcul moyenne générale pondérée
   let totW = 0, totC = 0;
   const byMat = {};
-  myNotes.forEach(n => {
-    const ev = pubEvals.find(e => e.id === n.eval_id);
-    if (!ev) return;
-    const c = ev.coeff || 1;
-    totW += n.note * c; totC += c;
-    if (!byMat[ev.matiere]) byMat[ev.matiere] = { notes: [], coeff: c, teacher: ev.teacher || '—' };
-    byMat[ev.matiere].notes.push({ note: n.note, commentaire: n.commentaire, ev });
+  notedEvals.forEach(ev => {
+    const c = parseFloat(ev.coeff) || 1;
+    totW += ev.note * c; totC += c;
+    if (!byMat[ev.matiere]) {
+      const teacher = [(ev.teacher_prenom||''), (ev.teacher_nom||'')].join(' ').trim() || '—';
+      byMat[ev.matiere] = { notes: [], coeff: c, teacher };
+    }
+    byMat[ev.matiere].notes.push({ note: ev.note, commentaire: ev.commentaire||'' });
   });
   const avg = totC > 0 ? (totW / totC) : null;
 
-  // KPI dashboard
+  // KPI tableau de bord
   const kpiMoy = document.getElementById('kpi-moy-gen');
   if (kpiMoy) kpiMoy.innerHTML = avg !== null
     ? `${avg.toFixed(1)}<span style="font-size:15px;color:var(--g400)">/20</span>`
@@ -2978,28 +2980,53 @@ function renderStudentNotes() {
   kpiNotes.innerHTML = `
     <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v" style="${avg===null?'color:var(--g400)':''}">${avg!==null ? avg.toFixed(2)+'/20' : '—'}</div><div class="kpi-s">${avg===null?'Aucune note':avg>=10?'Admis':'En difficulté'}</div></div>
     <div class="kpi"><div class="kpi-l">Meilleure matière</div><div class="kpi-v" style="font-size:${bestMat?'16px':'18px'};${!bestMat?'color:var(--g400)':''}">${bestMat ? bestMat[0] : '—'}</div><div class="kpi-s">${bestMat ? (bestMat[1].notes.reduce((s,x)=>s+x.note,0)/bestMat[1].notes.length).toFixed(1)+'/20' : 'Aucune note'}</div></div>
-    <div class="kpi"><div class="kpi-l">Évaluations passées</div><div class="kpi-v" style="${!myNotes.length?'color:var(--g400)':''}">${myNotes.length}</div><div class="kpi-s">${myNotes.length ? myNotes.length+' note(s) enregistrée(s)' : 'Aucune évaluation'}</div></div>`;
+    <div class="kpi"><div class="kpi-l">Évaluations passées</div><div class="kpi-v" style="${!notedEvals.length?'color:var(--g400)':''}">${notedEvals.length}</div><div class="kpi-s">${notedEvals.length ? notedEvals.length+' note(s) enregistrée(s)' : 'Aucune évaluation'}</div></div>`;
 
   // Tableau moyennes par matière
   const bxes = document.querySelectorAll('#ds-notes .bx');
   if (bxes[0]) {
     const matRows = Object.entries(byMat).map(([mat, data]) => {
       const moy = data.notes.reduce((s,x)=>s+x.note,0)/data.notes.length;
-      const pct = Math.round(moy*5);
+      const pct = Math.min(100, Math.round(moy*5));
       return `<tr><td>${mat}</td><td>${data.teacher}</td><td><strong>${moy.toFixed(2)}/20</strong></td><td>${data.coeff}</td><td><div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%"><div style="background:${moy>=10?'#0A3D2D':'#CC1A27'};width:${pct}%;height:100%;border-radius:4px"></div></div></td></tr>`;
     }).join('');
     bxes[0].querySelector('tbody').innerHTML = matRows || '<tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune note disponible.</td></tr>';
   }
 
-  // Tableau détail toutes évaluations
+  // Tableau détail toutes évaluations (avec bouton télécharger si document)
   if (bxes[1]) {
-    const detRows = myNotes.map(n => {
-      const ev = pubEvals.find(e => e.id === n.eval_id);
-      if (!ev) return '';
-      return `<tr><td>${ev.date||'—'}</td><td>${ev.matiere}</td><td>${ev.type||'—'}</td><td><strong>${n.note}/20</strong>${n.commentaire?` <span style="font-size:11px;color:var(--g400)">(${n.commentaire})</span>`:''}</td><td>${ev.coeff}</td></tr>`;
+    const detRows = notedEvals.map(ev => {
+      const hasDoc = !!ev.document_id;
+      return `<tr>
+        <td>${ev.date||'—'}</td>
+        <td>${ev.matiere}</td>
+        <td>${ev.type||'—'}</td>
+        <td><strong>${ev.note}/${ev.bareme||20}</strong>${ev.commentaire ? ` <span style="font-size:11px;color:var(--g400)">(${ev.commentaire})</span>` : ''}</td>
+        <td>${ev.coeff}</td>
+        <td>${hasDoc ? `<button onclick="downloadDocument(${ev.id})" style="padding:4px 10px;background:var(--b600);color:white;border:none;font-size:11px;cursor:pointer;font-weight:600;border-radius:2px">Télécharger</button>` : '—'}</td>
+      </tr>`;
     }).join('');
-    bxes[1].querySelector('tbody').innerHTML = detRows || '<tr><td colspan="5" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr>';
+    bxes[1].querySelector('tbody').innerHTML = detRows || '<tr><td colspan="6" style="text-align:center;color:var(--g400);padding:16px">Aucune évaluation.</td></tr>';
   }
+}
+
+async function downloadDocument(evalId) {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/evaluations/${evalId}/document`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { toast('Document introuvable', '#CC1A27'); return; }
+    const { name, type, data } = await res.json();
+    const byteChars = atob(data);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: type || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch (e) { toast('Erreur téléchargement', '#CC1A27'); }
 }
 
 // ── STUDENT MESSAGING — règle délégué ─────────
@@ -3301,30 +3328,77 @@ function markNotifRead(notifId) {
 // ══════════════════════════════════════════════
 // ESPACE ENSEIGNANT
 // ══════════════════════════════════════════════
-// En prod : GET /api/users?role=student&classe_id=X
-const STUDENTS_FCGE2 = [];
-const STUDENTS_FCGE1 = [];
+// Données enseignant — chargées depuis la DB
+let _teacherClasses = []; // classes assignées à cet enseignant
+let _evalsList      = []; // cache évaluations chargées
 
-const TEACHER_NAME = 'M. Diallo'; // En prod : CURRENT_USER.nom
+async function initTeacher() {
+  // Charger les classes de l'enseignant et pré-remplir les selects
+  await renderTeacherClasses();
+  // Pré-remplir le champ matière dans le formulaire de notes
+  const gradeMatiere = document.getElementById('grade-matiere');
+  if (gradeMatiere) gradeMatiere.value = CURRENT_USER?.matiere || '';
+  // Initialiser la date du formulaire à aujourd'hui
+  const gradeDate = document.getElementById('grade-date');
+  if (gradeDate && !gradeDate.value) gradeDate.value = new Date().toISOString().split('T')[0];
 
-function initTeacher() {
   renderEvalHistory('all');
   renderTmsgList();
   renderTeacherBoard();
-  renderTeacherDelegateMsgs(); // inbox messages délégués
+  renderTeacherDelegateMsgs();
+}
+
+async function renderTeacherClasses() {
+  const grid = document.getElementById('teacher-classes-grid');
+  if (!grid) return;
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch('/api/teacher/classes', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { grid.innerHTML = '<div style="color:#CC1A27;grid-column:1/-1">Erreur de chargement des classes.</div>'; return; }
+    _teacherClasses = await res.json();
+
+    // Peupler le select grade-classe avec seulement les classes de l'enseignant
+    const gradeSel = document.getElementById('grade-classe');
+    if (gradeSel) {
+      gradeSel.innerHTML = '<option value="">Choisir une classe</option>'
+        + _teacherClasses.map(c => `<option value="${c.id}">${c.id} — ${c.nom}</option>`).join('');
+    }
+
+    if (!_teacherClasses.length) {
+      grid.innerHTML = '<div style="color:var(--g400);font-size:14px;padding:20px 0;grid-column:1/-1">Aucune classe assignée. Contactez l\'administration.</div>';
+      return;
+    }
+    const matiere = CURRENT_USER?.matiere || '—';
+    grid.innerHTML = _teacherClasses.map(c => `
+      <div class="bx" style="margin:0;cursor:pointer" onclick="showClassDetail('${c.id}')">
+        <div class="bx-h"><span class="bx-t">${c.id}</span><span class="bdg bl">${c.student_count} étudiant${c.student_count != 1 ? 's' : ''}</span></div>
+        <div style="padding:16px 18px">
+          <div style="font-size:14px;color:var(--g600);margin-bottom:8px">${c.nom}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;background:var(--b100);color:var(--b600);padding:3px 10px;font-weight:600">${matiere}</span>
+          </div>
+          <div style="margin-top:12px;font-size:12.5px;color:var(--g400)">Cliquer pour voir les étudiants</div>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    if (grid) grid.innerHTML = '<div style="color:#CC1A27;grid-column:1/-1">Erreur réseau.</div>';
+  }
 }
 
 function renderTeacherBoard() {
   const tbody = document.getElementById('t-today-tbody');
   if (!tbody) return;
-  const todayIdx = (new Date().getDay() || 7) - 1; // 0=lun…4=ven, ≥5=week-end
+  const todayIdx = (new Date().getDay() || 7) - 1;
   const titleEl = document.getElementById('t-today-title');
   if (titleEl) {
     const now = new Date();
     const dowFr = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][now.getDay()];
     titleEl.textContent = `Mes cours aujourd'hui — ${dowFr} ${now.getDate()} ${_MOIS_FR[now.getMonth()]}`;
   }
-  const todayCourses = COURSES.filter(c => c.t === TEACHER_NAME && c.d === todayIdx)
+  const teacherName = CURRENT_USER ? (CURRENT_USER.prenom + ' ' + CURRENT_USER.nom) : '';
+  const todayCourses = COURSES.filter(c => c.t === teacherName && c.d === todayIdx)
     .sort((a, b) => a.s.localeCompare(b.s));
   if (!todayCourses.length) {
     tbody.innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center">Aucun cours aujourd\'hui.</td></tr>';
@@ -3338,7 +3412,8 @@ function renderTeacherBoard() {
 }
 
 function renderTeacherCal() {
-  const teacherSlots = COURSES.filter(c => c.t === TEACHER_NAME);
+  const teacherName = CURRENT_USER ? (CURRENT_USER.prenom + ' ' + CURRENT_USER.nom) : '';
+  const teacherSlots = COURSES.filter(c => c.t === teacherName);
   ['tcal-times','tcal-day-0','tcal-day-1','tcal-day-2','tcal-day-3','tcal-day-4'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
@@ -3349,7 +3424,7 @@ function renderTeacherCal() {
   buildCalColumn('tcal-day-', 'tcal-times', teacherSlots, todayCol < 5 ? todayCol : -1);
 }
 
-// ── Brouillons d'évaluations ──────────────────
+// ── Évaluations enseignant — tout en base SQL ─────────────────────────────
 let currentEvalFilter = 'all';
 let loadedEvalId = null;
 
@@ -3360,32 +3435,44 @@ function setEvalFilter(filter, el) {
   renderEvalHistory(filter);
 }
 
-function renderEvalHistory(filter) {
+async function renderEvalHistory(filter) {
+  currentEvalFilter = filter || 'all';
   const container = document.getElementById('eval-history');
   if (!container) return;
-  const list = filter && filter !== 'all'
-    ? DB.evaluations.filter(e => e.statut === filter)
-    : DB.evaluations;
-
-  if (list.length === 0) {
+  container.innerHTML = '<div style="color:var(--g400);font-size:14px;padding:20px 0">Chargement…</div>';
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch('/api/teacher/evaluations', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { container.innerHTML = '<div style="color:#CC1A27">Erreur de chargement.</div>'; return; }
+    _evalsList = await res.json();
+  } catch (e) {
+    container.innerHTML = '<div style="color:#CC1A27">Erreur réseau.</div>'; return;
+  }
+  const list = currentEvalFilter === 'all' ? _evalsList : _evalsList.filter(e => e.statut === currentEvalFilter);
+  if (!list.length) {
     container.innerHTML = '<div style="color:var(--g400);font-size:14px;padding:20px 0">Aucune évaluation trouvée.</div>';
     return;
   }
   container.innerHTML = list.map(ev => {
     const isDraft = ev.statut === 'brouillon';
+    const moy = ev.notes_count > 0 ? parseFloat(ev.moyenne).toFixed(2) : null;
     return `
     <div class="eval-card ${ev.statut}">
       <div class="eval-card-header">
-        <span class="eval-card-title">${ev.titre}</span>
+        <span class="eval-card-title">${ev.intitule}</span>
         <span class="bdg ${isDraft ? 'ba' : 'bg'}">${isDraft ? 'Brouillon' : 'Publié'}</span>
       </div>
       <div class="eval-card-meta">${ev.classe_id} · ${ev.matiere} · ${ev.type} · Coeff. ${ev.coeff} · ${fmtDate(ev.date)}</div>
-      ${ev.moy !== null ? `<div style="font-size:13px;color:var(--g600);margin-bottom:8px">Moyenne : <strong>${ev.moy}/20</strong></div>` : '<div style="font-size:13px;color:var(--g400);margin-bottom:8px">Aucune note encore saisie</div>'}
+      ${moy !== null ? `<div style="font-size:13px;color:var(--g600);margin-bottom:8px">Moyenne : <strong>${moy}/20</strong> · ${ev.notes_count} note(s) saisie(s)</div>` : '<div style="font-size:13px;color:var(--g400);margin-bottom:8px">Aucune note saisie</div>'}
+      ${ev.has_document ? '<div style="font-size:12px;color:var(--g400);margin-bottom:8px">📎 Document correction joint</div>' : ''}
       <div class="eval-card-actions">
         ${isDraft
           ? `<button onclick="loadEvalDraft(${ev.id})" style="padding:6px 14px;background:var(--b600);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">Modifier &amp; Saisir notes</button>
-             <button onclick="publishEvalDirect(${ev.id})" style="padding:6px 14px;background:#0A3D2D;color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">Publier</button>`
-          : `<button onclick="toast('Consultation des notes — disponible après développement')" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Voir les notes</button>`
+             <button onclick="publishEvalDirect(${ev.id})" style="padding:6px 14px;background:#0A3D2D;color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">Publier</button>
+             <button onclick="deleteEval(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:#CC1A27">Supprimer</button>`
+          : `<button onclick="loadEvalDraft(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Voir les notes</button>`
         }
       </div>
     </div>`;
@@ -3393,117 +3480,259 @@ function renderEvalHistory(filter) {
 }
 
 function showNewEvalForm() {
+  loadedEvalId = null;
   document.getElementById('eval-form-box').style.display = 'block';
   document.getElementById('eval-form-title').textContent = 'Nouvelle évaluation';
-  loadedEvalId = null;
+  document.getElementById('grade-table-box').style.display = 'none';
+  document.getElementById('grade-intitule').value = '';
+  const gradeDate = document.getElementById('grade-date');
+  if (gradeDate) gradeDate.value = new Date().toISOString().split('T')[0];
+  const fileInput = document.getElementById('grade-document');
+  if (fileInput) fileInput.value = '';
   document.getElementById('eval-form-box').scrollIntoView({behavior:'smooth', block:'start'});
 }
+
 function hideNewEvalForm() {
   document.getElementById('eval-form-box').style.display = 'none';
   document.getElementById('grade-table-box').style.display = 'none';
   loadedEvalId = null;
 }
 
-function loadEvalDraft(evalId) {
-  const ev = DB.evaluations.find(e => e.id === evalId);
-  if (!ev) return;
+async function loadEvalDraft(evalId) {
+  const ev = _evalsList.find(e => e.id === evalId);
   loadedEvalId = evalId;
   showNewEvalForm();
-  document.getElementById('eval-form-title').textContent = `Modifier : ${ev.titre}`;
-  setTimeout(() => {
-    document.getElementById('grade-classe').value = ev.classe_id;
-    document.getElementById('grade-matiere').value = ev.matiere;
-    document.getElementById('grade-type').value = ev.type;
-    document.getElementById('grade-date').value = ev.date;
-    document.getElementById('grade-intitule').value = ev.titre;
-    buildGradeTable();
-  }, 50);
-  toast(`Brouillon chargé : ${ev.titre}`, '#0A3D2D');
-}
-
-function publishEvalDirect(evalId) {
-  const ev = DB.evaluations.find(e => e.id === evalId);
-  if (!ev) return;
-  ev.statut = 'publie';
-  renderEvalHistory(currentEvalFilter);
-  toast('Notes publiées — visibles par les étudiants ✓', '#0A3D2D');
-}
-
-function saveGrades(mode) {
-  const intitule = document.getElementById('grade-intitule')?.value || 'Évaluation';
-  const classe   = document.getElementById('grade-classe')?.value;
-  const matiere  = document.getElementById('grade-matiere')?.value;
-  const type     = document.getElementById('grade-type')?.value;
-  const date     = document.getElementById('grade-date')?.value;
-  const coeff    = parseInt(document.querySelector('.fi[min="1"]')?.value || 2);
-
-  let evalId = loadedEvalId;
-  if (loadedEvalId) {
-    const ev = DB.evaluations.find(e => e.id === loadedEvalId);
-    if (ev) { ev.titre = intitule; ev.classe_id = classe; ev.matiere = matiere; ev.type = type; ev.date = date; ev.coeff = coeff; ev.statut = mode === 'draft' ? 'brouillon' : 'publie'; }
-  } else {
-    evalId = DB.evaluations.length ? Math.max(...DB.evaluations.map(e => e.id)) + 1 : 1;
-    DB.evaluations.push({ id: evalId, titre: intitule, classe_id: classe, matiere, type, coeff, date, statut: mode === 'draft' ? 'brouillon' : 'publie' });
-    loadedEvalId = evalId;
+  loadedEvalId = evalId; // showNewEvalForm remet à null, on restore
+  if (ev) {
+    document.getElementById('eval-form-title').textContent =
+      ev.statut === 'brouillon' ? `Modifier : ${ev.intitule}` : `Consulter : ${ev.intitule}`;
+    const gradeClasse = document.getElementById('grade-classe');
+    if (gradeClasse) gradeClasse.value = ev.classe_id;
+    const gradeType = document.getElementById('grade-type');
+    if (gradeType) gradeType.value = ev.type;
+    document.getElementById('grade-date').value = ev.date || '';
+    document.getElementById('grade-intitule').value = ev.intitule;
+    const coeffEl = document.getElementById('grade-coeff');
+    if (coeffEl) coeffEl.value = ev.coeff;
+    const baremeEl = document.getElementById('grade-bareme');
+    if (baremeEl) baremeEl.value = ev.bareme;
+    await buildGradeTable();
   }
+}
 
-  // Sauvegarder les notes individuelles dans DB.notes
-  if (mode === 'publie') {
+async function publishEvalDirect(evalId) {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/evaluations/${evalId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ statut: 'publie' }),
+    });
+    if (!res.ok) { toast('Erreur lors de la publication', '#CC1A27'); return; }
+    await renderEvalHistory(currentEvalFilter);
+    toast('Notes publiées — visibles par les étudiants ✓', '#0A3D2D');
+  } catch (e) { toast('Erreur réseau', '#CC1A27'); }
+}
+
+async function deleteEval(evalId) {
+  if (!confirm('Supprimer cette évaluation et toutes ses notes ?')) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/evaluations/${evalId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    if (!res.ok) { toast('Erreur lors de la suppression', '#CC1A27'); return; }
+    await renderEvalHistory(currentEvalFilter);
+    toast('Évaluation supprimée ✓', '#0A3D2D');
+  } catch (e) { toast('Erreur réseau', '#CC1A27'); }
+}
+
+async function saveGrades(mode) {
+  const intitule = document.getElementById('grade-intitule')?.value?.trim() || '';
+  const classe   = document.getElementById('grade-classe')?.value;
+  const matiere  = CURRENT_USER?.matiere || '';
+  const type     = document.getElementById('grade-type')?.value || 'Devoir';
+  const date     = document.getElementById('grade-date')?.value || new Date().toISOString().split('T')[0];
+  const coeff    = parseFloat(document.getElementById('grade-coeff')?.value || 1);
+  const bareme   = parseInt(document.getElementById('grade-bareme')?.value || 20);
+  const statut   = mode === 'draft' ? 'brouillon' : 'publie';
+
+  if (!classe) { toast('Choisissez une classe', '#CC1A27'); return; }
+  if (!intitule) { toast('Saisissez un intitulé', '#CC1A27'); return; }
+
+  const token = sessionStorage.getItem('ihbi_token');
+  const btns = document.querySelectorAll('#grade-table-box button');
+  btns.forEach(b => b.disabled = true);
+
+  try {
+    let evalId = loadedEvalId;
+
+    if (!evalId) {
+      // Créer l'évaluation
+      const res = await fetch('/api/teacher/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ classe_id: classe, matiere, intitule, type, coeff, bareme, date, statut }),
+      });
+      if (!res.ok) { const e = await res.json(); toast(e.error || 'Erreur création', '#CC1A27'); return; }
+      const ev = await res.json();
+      evalId = ev.id;
+      loadedEvalId = evalId;
+    } else {
+      // Mettre à jour le statut
+      await fetch(`/api/teacher/evaluations/${evalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ statut, intitule, type, coeff, bareme, date }),
+      });
+    }
+
+    // Collecter et envoyer les notes
+    const notes = [];
     document.querySelectorAll('#grade-tbody tr[data-student-id]').forEach(row => {
-      const studentId = parseInt(row.dataset.studentId);
-      const noteVal   = parseFloat(row.querySelector('input[type="number"]')?.value);
-      const comment   = row.querySelector('input[type="text"]')?.value || '';
-      if (isNaN(noteVal)) return; // note vide = ignorée
-      const existing = DB.notes.find(n => n.etudiant_id === studentId && n.eval_id === evalId);
-      if (existing) { existing.note = noteVal; existing.commentaire = comment; }
-      else {
-        const nid = DB.notes.length ? Math.max(...DB.notes.map(n => n.id)) + 1 : 1;
-        DB.notes.push({ id: nid, eval_id: evalId, etudiant_id: studentId, note: noteVal, commentaire: comment });
+      const etudiant_id = parseInt(row.dataset.studentId);
+      const noteVal = row.querySelector('input[type="number"]')?.value;
+      const commentaire = row.querySelector('input[type="text"]')?.value || '';
+      if (noteVal !== '' && noteVal !== null && noteVal !== undefined) {
+        notes.push({ etudiant_id, note: parseFloat(noteVal), commentaire });
       }
     });
-  }
 
-  renderEvalHistory(currentEvalFilter);
-  if (mode === 'draft') {
-    toast('Brouillon enregistré ✓', '#0A3D2D');
-  } else {
-    hideNewEvalForm();
-    toast('Notes publiées et enregistrées en base ✓', '#0A3D2D');
+    if (notes.length) {
+      await fetch(`/api/teacher/evaluations/${evalId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ notes, statut }),
+      });
+    }
+
+    // Uploader le document de correction si présent
+    const fileInput = document.getElementById('grade-document');
+    if (fileInput?.files?.length) {
+      const file = fileInput.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        toast('Document trop volumineux (max 10 Mo)', '#CC1A27');
+      } else {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        await fetch(`/api/teacher/evaluations/${evalId}/document`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ name: file.name, type: file.type, data: base64 }),
+        });
+      }
+    }
+
+    await renderEvalHistory(currentEvalFilter);
+    if (mode === 'draft') {
+      toast('Brouillon enregistré en base ✓', '#0A3D2D');
+    } else {
+      hideNewEvalForm();
+      toast('Notes publiées et visibles par les étudiants ✓', '#0A3D2D');
+    }
+  } catch (e) {
+    toast('Erreur réseau — réessayez', '#CC1A27');
+  } finally {
+    btns.forEach(b => b.disabled = false);
   }
 }
 
-function buildGradeTable() {
+async function buildGradeTable() {
   const cls = document.getElementById('grade-classe')?.value;
-  const mat = document.getElementById('grade-matiere')?.value;
-  if (!cls || !mat) return;
-  // Utiliser DB.users (source de vérité) plutôt que les tableaux statiques
-  const students = DB.users.filter(u => u.role === 'student' && u.classe_id === cls && u.status === 'active');
+  const mat = CURRENT_USER?.matiere || '';
+  if (!cls) return;
+
   document.getElementById('grade-table-title').textContent = `Saisie — ${mat} · ${cls}`;
-  if (!students.length) {
-    document.getElementById('grade-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center;padding:16px">Aucun étudiant enregistré dans cette classe.</td></tr>';
-    document.getElementById('grade-table-box').style.display = 'block';
-    return;
-  }
-  document.getElementById('grade-tbody').innerHTML = students.map((s, i) => {
-    const existing = loadedEvalId ? DB.notes.find(n => n.etudiant_id === s.id && n.eval_id === loadedEvalId) : null;
-    return `<tr data-student-id="${s.id}">
-      <td>${i + 1}</td><td><strong>${s.nom}</strong></td><td>${s.prenom}</td>
-      <td><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${existing ? existing.note : ''}" style="width:90px;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:14px;text-align:center"></td>
-      <td><input type="text" placeholder="Absent / Bien…" value="${existing ? (existing.commentaire||'') : ''}" style="width:100%;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:13px"></td>
-    </tr>`;
-  }).join('');
+  document.getElementById('grade-tbody').innerHTML =
+    '<tr><td colspan="5" style="text-align:center;color:var(--g400)">Chargement…</td></tr>';
   document.getElementById('grade-table-box').style.display = 'block';
+
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/classes/${cls}/students`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      document.getElementById('grade-tbody').innerHTML =
+        '<tr><td colspan="5" style="color:#CC1A27;text-align:center">Erreur serveur</td></tr>';
+      return;
+    }
+    const students = await res.json();
+
+    // Récupérer les notes existantes si on édite
+    let existingNotes = {};
+    if (loadedEvalId) {
+      try {
+        const nr = await fetch(`/api/teacher/evaluations/${loadedEvalId}/notes`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (nr.ok) {
+          const nd = await nr.json();
+          nd.notes.forEach(n => { existingNotes[n.etudiant_id] = n; });
+        }
+      } catch(e) {}
+    }
+
+    if (!students.length) {
+      document.getElementById('grade-tbody').innerHTML =
+        '<tr><td colspan="5" style="color:var(--g400);text-align:center;padding:16px">Aucun étudiant dans cette classe.</td></tr>';
+      return;
+    }
+
+    document.getElementById('grade-tbody').innerHTML = students.map((s, i) => {
+      const ex = existingNotes[s.id];
+      const nomDisp = s.nom === 'À compléter' ? '<span style="color:var(--g400);font-style:italic">À compléter</span>' : `<strong>${s.nom}</strong>`;
+      const prenomDisp = s.prenom === 'À compléter' ? '<span style="color:var(--g400);font-style:italic">À compléter</span>' : s.prenom;
+      return `<tr data-student-id="${s.id}">
+        <td>${i+1}</td><td>${nomDisp}</td><td>${prenomDisp}</td>
+        <td><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${ex ? ex.note : ''}" style="width:90px;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:14px;text-align:center"></td>
+        <td><input type="text" placeholder="Absent / Bien…" value="${ex ? (ex.commentaire||'') : ''}" style="width:100%;padding:6px 10px;border:1px solid var(--border);font-family:Inter,sans-serif;font-size:13px"></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('grade-tbody').innerHTML =
+      '<tr><td colspan="5" style="color:#CC1A27;text-align:center">Erreur réseau</td></tr>';
+  }
 }
 
-function showClassDetail(classId) {
-  const students = classId === 'FCGE2' ? STUDENTS_FCGE2 : STUDENTS_FCGE1;
-  document.getElementById('class-detail-title').textContent = 'Étudiants — ' + classId;
-  let html = '';
-  students.forEach((s, i) => {
-    html += `<tr><td>${i + 1}</td><td><strong>${s.nom}</strong></td><td>${s.prenom}</td><td>${s.email}</td><td>${s.moy}/20</td><td><span class="bdg bg">Actif</span></td></tr>`;
-  });
-  document.getElementById('class-detail-tbody').innerHTML = html;
+async function showClassDetail(classeId) {
+  document.getElementById('class-detail-title').textContent = 'Étudiants — ' + classeId;
+  document.getElementById('class-detail-tbody').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;color:var(--g400)">Chargement…</td></tr>';
   document.getElementById('class-detail-box').style.display = 'block';
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/classes/${classeId}/students`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      document.getElementById('class-detail-tbody').innerHTML =
+        '<tr><td colspan="6" style="color:#CC1A27;text-align:center">Erreur serveur</td></tr>';
+      return;
+    }
+    const students = await res.json();
+    if (!students.length) {
+      document.getElementById('class-detail-tbody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;color:var(--g400);padding:16px">Aucun étudiant dans cette classe.</td></tr>';
+      return;
+    }
+    document.getElementById('class-detail-tbody').innerHTML = students.map((s, i) => {
+      const nomDisp   = s.nom   === 'À compléter' ? '<span style="color:var(--g400);font-style:italic">À compléter</span>' : `<strong>${s.nom}</strong>`;
+      const prenomDisp = s.prenom === 'À compléter' ? '<span style="color:var(--g400);font-style:italic">À compléter</span>' : s.prenom;
+      return `<tr>
+        <td>${i+1}</td><td>${nomDisp}</td><td>${prenomDisp}</td>
+        <td>${s.email}</td><td>—</td><td><span class="bdg bg">Actif</span></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('class-detail-tbody').innerHTML =
+      '<tr><td colspan="6" style="color:#CC1A27;text-align:center">Erreur réseau</td></tr>';
+  }
 }
 
 // ── Messagerie enseignant ─────────────────────
@@ -4620,13 +4849,14 @@ async function _loadClasses() {
       if (prev && edtSel.querySelector(`option[value="${prev}"]`)) edtSel.value = prev;
     }
 
-    // Select notes enseignant (grade-classe)
-    const gradeSel = document.getElementById('grade-classe');
-    if (gradeSel) {
-      const prev = gradeSel.value;
-      gradeSel.innerHTML = '<option value="">Choisir</option>'
-        + _IHBI_CLASSES.map(c => `<option value="${c.id}">${c.id} — ${c.nom}</option>`).join('');
-      if (prev) gradeSel.value = prev;
+    // Checkboxes classes dans le modal création enseignant
+    const teacherCb = document.getElementById('teacher-classes-checkboxes');
+    if (teacherCb) {
+      teacherCb.innerHTML = _IHBI_CLASSES.map(c =>
+        `<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none">
+           <input type="checkbox" value="${c.id}" style="cursor:pointer"> <span>${c.id} — ${c.nom}</span>
+         </label>`
+      ).join('');
     }
 
     // Select filtre paiements
@@ -4731,14 +4961,32 @@ function downloadCredentialsCSV() {
   a.click();
 }
 
-function closeCreateTeacher() { document.getElementById('create-teacher-modal').style.display = 'none'; }
+function closeCreateTeacher() {
+  document.getElementById('create-teacher-modal').style.display = 'none';
+  // Réinitialiser le formulaire
+  ['new-teacher-nom','new-teacher-prenom','new-teacher-email','new-teacher-matieres'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const cb = document.getElementById('teacher-classes-checkboxes');
+  if (cb) cb.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+}
 
 async function createTeacherAccount() {
   const nom     = document.getElementById('new-teacher-nom')?.value?.trim();
   const prenom  = document.getElementById('new-teacher-prenom')?.value?.trim();
   const email   = document.getElementById('new-teacher-email')?.value?.trim();
   const matiere = document.getElementById('new-teacher-matieres')?.value?.trim() || '';
+
+  // Collecter les classes cochées
+  const classes = [];
+  document.querySelectorAll('#teacher-classes-checkboxes input[type="checkbox"]:checked').forEach(cb => {
+    classes.push(cb.value);
+  });
+
   if (!nom || !prenom || !email) { toast('Veuillez remplir les champs obligatoires (*)', '#CC1A27'); return; }
+  if (!matiere) { toast('La matière est obligatoire', '#CC1A27'); return; }
+  if (!classes.length) { toast('Assignez au moins une classe à l\'enseignant', '#CC1A27'); return; }
 
   const btn = document.querySelector('#create-teacher-modal button[onclick="createTeacherAccount()"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Création en cours…'; }
@@ -4748,20 +4996,20 @@ async function createTeacherAccount() {
     const res   = await fetch('/api/admin/create-teacher', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body:    JSON.stringify({ nom, prenom, email, matiere }),
+      body:    JSON.stringify({ nom, prenom, email, matiere, classes }),
     });
     const data = await res.json();
     if (!res.ok) { toast(data.error || 'Erreur serveur', '#CC1A27'); return; }
 
     // Ajouter dans le cache local avec l'ID SQL réel
     DB.users.push({ id: data.id, role: 'teacher', nom, prenom, email: data.email,
-      status: 'active', matieres: matiere ? [matiere] : [], classes: [] });
+      status: 'active', matiere, classes });
 
     closeCreateTeacher();
     renderAccounts();
 
     // Afficher le mot de passe généré à l'admin
-    showCredentialsModal([{ ...data, classe_id: 'Enseignant' }]);
+    showCredentialsModal([{ ...data, classe_id: 'Enseignant — ' + classes.join(', ') }]);
   } catch (e) {
     toast('Erreur réseau — compte non créé', '#CC1A27');
   } finally {
