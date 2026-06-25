@@ -4280,6 +4280,7 @@ function renderAdminFormations() {
       <td>
         <button onclick="showFormationInscrits(${f.id})" style="padding:4px 10px;background:none;border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Inscrits</button>
         <button onclick="exportFormationInscrits(${f.id})" style="padding:4px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer;margin-left:4px">Export .csv</button>
+        <button onclick="deleteFormation(${f.id})" style="padding:4px 10px;background:none;border:1px solid #CC1A27;font-size:12px;cursor:pointer;color:#CC1A27;margin-left:4px">Supprimer</button>
       </td>
     </tr>`).join('')}
   </tbody></table>`;
@@ -4314,6 +4315,24 @@ async function createFormation() {
   renderPublicFormations();
   if (document.getElementById('all-formations-modal')?.classList.contains('on')) renderAllFormations();
   toast('Formation créée et publiée sur la page d\'accueil ✓', '#0A3D2D');
+}
+
+async function deleteFormation(fid) {
+  if (!confirm('Supprimer cette formation ? Les inscriptions associées seront également supprimées.')) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/formations/${fid}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    if (!res.ok) { const e = await res.json(); toast(e.error || 'Erreur serveur', '#CC1A27'); return; }
+    DB.formations = DB.formations.filter(f => f.id !== fid);
+    renderAdminFormations();
+    renderPublicFormations();
+    toast('Formation supprimée ✓', '#0A3D2D');
+  } catch (e) {
+    toast('Erreur réseau — réessayez', '#CC1A27');
+  }
 }
 
 function renderPublicFormations() {

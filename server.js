@@ -1118,6 +1118,20 @@ app.post('/api/formations', authMiddleware, async (req, res) => {
   }
 });
 
+// ── DELETE /api/formations/:id — supprimer une formation (admin) ─────────────
+app.delete('/api/formations/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const fid = parseInt(req.params.id);
+  if (!fid) return res.status(400).json({ error: 'ID invalide' });
+  try {
+    await pool.query('DELETE FROM formations WHERE id = $1', [fid]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete formation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── GET /api/formations/:id/inscrits — liste des inscrits depuis SQL (admin) ─
 app.get('/api/formations/:id/inscrits', authMiddleware, async (req, res) => {
   const fid = parseInt(req.params.id);
