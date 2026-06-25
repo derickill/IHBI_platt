@@ -1617,7 +1617,7 @@ tr:hover td{background:var(--navy-l)}
           </div>
           <div><label class="fl" id="msg-dest-label">Classe</label>
             <select class="fsel" id="msg-dest-val">
-              <option>FCGE 1</option><option>FCGE 2</option>
+              <option value="">Chargement…</option>
             </select>
           </div>
         </div>
@@ -2504,8 +2504,9 @@ function _rerenderActiveSections() {
     renderStudentAnnonces();
     if (isOn('notes')) renderStudentNotes();
   } else if (role === 'teacher') {
+    renderTeacherDelegateMsgs(); // toujours — met à jour le badge même si l'onglet n'est pas actif
     if (isOn('t-planning')) renderTeacherCal();
-    if (isOn('t-msg'))      renderTeacherDelegateMsgs();
+    if (isOn('t-notes'))    renderEvalHistory(currentEvalFilter);
   }
 }
 
@@ -2624,6 +2625,7 @@ function showT(id, el) {
   if (id === 't-planning') renderTeacherCal();
   if (id === 't-notes')   renderEvalHistory(currentEvalFilter);
   if (id === 't-classes') renderTeacherClasses();
+  if (id === 't-msg')     { renderTeacherDelegateMsgs(); renderTmsgList(); }
   _historyPush({page:'pg-teacher', section:id});
 }
 function showA(id, el) {
@@ -3058,7 +3060,7 @@ function initStudentMessaging() {
       const teachers = DB.users.filter(u => u.role === 'teacher' && u.status !== 'inactive');
       sel.innerHTML = '<option value="admin">🏛 Administration</option>'
         + teachers.map(t => {
-          const mat = t.matieres?.length ? ' — ' + t.matieres[0] : '';
+          const mat = t.matiere ? ' — ' + t.matiere : '';
           return `<option value="${t.id}">${t.prenom} ${t.nom}${mat}</option>`;
         }).join('');
     }
@@ -3335,6 +3337,8 @@ let _evalsList      = []; // cache évaluations chargées
 async function initTeacher() {
   // Charger les classes de l'enseignant et pré-remplir les selects
   await renderTeacherClasses();
+  // Initialiser la liste des destinataires de messagerie avec les classes réelles
+  updateDestList();
   // Pré-remplir le champ matière dans le formulaire de notes
   const gradeMatiere = document.getElementById('grade-matiere');
   if (gradeMatiere) gradeMatiere.value = CURRENT_USER?.matiere || '';
@@ -3807,10 +3811,22 @@ function updateDestList() {
   const type = document.getElementById('msg-dest-type')?.value;
   const label = document.getElementById('msg-dest-label');
   const sel   = document.getElementById('msg-dest-val');
-  if (!type) return;
-  if (type === 'classe')      { if(label) label.textContent = 'Classe';      if(sel) sel.innerHTML = '<option>FCGE 1</option><option>FCGE 2</option><option>IDA 1</option>'; }
-  else if (type === 'promo')  { if(label) label.textContent = 'Promotion';   if(sel) sel.innerHTML = '<option>BTS 1ère année</option><option>BTS 2ème année</option>'; }
-  else                        { if(label) label.textContent = 'Enseignant';  if(sel) sel.innerHTML = '<option>Mme Traoré</option><option>M. Koné</option><option>M. Bamba</option>'; }
+  if (!type || !sel) return;
+  if (type === 'classe') {
+    if (label) label.textContent = 'Classe';
+    sel.innerHTML = _teacherClasses.length
+      ? _teacherClasses.map(c => `<option value="${c.id}">${c.id}${c.nom ? ' — ' + c.nom : ''}</option>`).join('')
+      : '<option value="">Aucune classe assignée</option>';
+  } else if (type === 'promo') {
+    if (label) label.textContent = 'Promotion';
+    sel.innerHTML = '<option value="BTS1">BTS 1ère année</option><option value="BTS2">BTS 2ème année</option>';
+  } else {
+    if (label) label.textContent = 'Enseignant';
+    const teachers = (DB.users || []).filter(u => u.role === 'teacher' && u.status !== 'inactive');
+    sel.innerHTML = teachers.length
+      ? teachers.map(t => `<option value="${t.id}">${t.prenom} ${t.nom}${t.matiere ? ' — ' + t.matiere : ''}</option>`).join('')
+      : '<option value="">Aucun enseignant</option>';
+  }
 }
 
 // ══════════════════════════════════════════════
