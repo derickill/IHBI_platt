@@ -250,9 +250,62 @@ async function ensureTables() {
         UNIQUE (formation_id, email)
       )
     `);
+    // Table des classes IHBI (liste fixe, ne peut pas être modifiée par les admins)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS classes (
+        id  TEXT PRIMARY KEY,
+        nom TEXT NOT NULL
+      )
+    `);
+    await pool.query(`
+      INSERT INTO classes (id, nom) VALUES
+      ('2MA1',  '1ère année Moteur et Mécanique Automobile'),
+      ('2MA2',  '2ème année Moteur et Mécanique Automobile'),
+      ('FCGE1', '1ère année Finances Comptabilité Gestion des Entreprises'),
+      ('FCGE2', '2ème année Finances Comptabilité Gestion des Entreprises'),
+      ('GEC1',  '1ère année Gestion Commerciale'),
+      ('GEC2',  '2ème année Gestion Commerciale'),
+      ('IDA1',  '1ère année Informatique et Développeur d''Applications'),
+      ('IDA2',  '2ème année Informatique et Développeur d''Applications'),
+      ('MSP1',  '1ère année Maintenance des Systèmes de Production'),
+      ('MSP2',  '2ème année Maintenance des Systèmes de Production'),
+      ('RHC1',  '1ère année Ressources Humaines et Communication'),
+      ('RHC2',  '2ème année Ressources Humaines et Communication'),
+      ('RIT1',  '1ère année Réseaux Informatique et Télécommunication'),
+      ('RIT2',  '2ème année Réseaux Informatique et Télécommunication'),
+      ('ELT1',  '1ère année Electrotechnique'),
+      ('ELT2',  '2ème année Electrotechnique'),
+      ('TH1',   '1ère année Tourisme-Hôtellerie'),
+      ('TH2',   '2ème année Tourisme-Hôtellerie'),
+      ('ATA1',  '1ère année Agriculture Tropicale option Animale'),
+      ('ATA2',  '2ème année Agriculture Tropicale option Animale'),
+      ('ATV1',  '1ère année Agriculture Tropicale option Végétale'),
+      ('ATV2',  '2ème année Agriculture Tropicale option Végétale'),
+      ('SEI1',  '1ère année Systèmes Électroniques et Informatiques'),
+      ('SEI2',  '2ème année Systèmes Électroniques et Informatiques'),
+      ('GBAT1', '1ère année Génie Civil option Bâtiment'),
+      ('GBAT2', '2ème année Génie Civil option Bâtiment'),
+      ('GTP1',  '1ère année Génie Civil option Travaux Publics'),
+      ('GTP2',  '2ème année Génie Civil option Travaux Publics'),
+      ('GGT1',  '1ère année Génie Civil option Géomètre-Topographe'),
+      ('GGT2',  '2ème année Génie Civil option Géomètre-Topographe'),
+      ('MGP1',  '1ère année Mines Géologie Pétrole'),
+      ('MGP2',  '2ème année Mines Géologie Pétrole'),
+      ('CV1',   '1ère année Communication Visuelle'),
+      ('CV2',   '2ème année Communication Visuelle'),
+      ('AD1',   '1ère année Assistanat de Direction'),
+      ('AD2',   '2ème année Assistanat de Direction'),
+      ('LOG1',  '1ère année Logistique'),
+      ('LOG2',  '2ème année Logistique')
+      ON CONFLICT (id) DO NOTHING
+    `);
     // Migration : ajouter is_delegue sur la table users si elle n'existe pas encore
     await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS is_delegue BOOLEAN DEFAULT FALSE
+    `);
+    // Migration : ajouter profile_complete — TRUE pour les comptes existants, FALSE pour les nouveaux étudiants
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT TRUE
     `);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
@@ -285,21 +338,22 @@ async function getFullData() {
   let users = blobUsers; // fallback : blob si SQL échoue
   try {
     const usersR = await pool.query(
-      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue FROM users'
+      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue, profile_complete FROM users'
     );
     // Fusionner SQL (IDs réels + is_delegue à jour) avec blob (matieres, classes, poste…)
     users = usersR.rows.map(sqlU => {
       const blobU = blobUsers.find(u => (u.email || '').toLowerCase() === (sqlU.email || '').toLowerCase());
       const { pwd_hash, ...blobSafe } = blobU || {}; // ne jamais retourner le hash
       return Object.assign({}, blobSafe, {
-        id:         sqlU.id,
-        role:       sqlU.role,
-        nom:        sqlU.nom,
-        prenom:     sqlU.prenom,
-        email:      sqlU.email,
-        classe_id:  sqlU.classe_id || (blobU && blobU.classe_id) || '',
-        status:     sqlU.status,
-        is_delegue: !!sqlU.is_delegue,
+        id:               sqlU.id,
+        role:             sqlU.role,
+        nom:              sqlU.nom,
+        prenom:           sqlU.prenom,
+        email:            sqlU.email,
+        classe_id:        sqlU.classe_id || (blobU && blobU.classe_id) || '',
+        status:           sqlU.status,
+        is_delegue:       !!sqlU.is_delegue,
+        profile_complete: sqlU.profile_complete !== false,
       });
     });
   } catch (e) {
@@ -548,14 +602,16 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
     try {
       const password = generatePassword();
       const hash     = sha256(password);
-      const { prenom, nom } = nameFromEmail(email);
+      // Le prénom/nom réel sera renseigné par l'étudiant à sa 1ère connexion
+      // On dérive un prénom d'affichage depuis l'email uniquement pour l'email de bienvenue
+      const { prenom: emailPrenom } = nameFromEmail(email);
 
       const { rows: inserted } = await pool.query(
-        `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue)
-         VALUES ('student', $1, $2, $3, $4, $5, 'active', false)
+        `INSERT INTO users (role, nom, prenom, email, pwd_hash, classe_id, status, is_delegue, profile_complete)
+         VALUES ('student', 'À compléter', 'À compléter', $1, $2, $3, 'active', false, false)
          ON CONFLICT (email) DO NOTHING
          RETURNING id`,
-        [nom, prenom, email, hash, classe_id]
+        [email, hash, classe_id]
       );
 
       // RETURNING renvoie 0 ligne si ON CONFLICT DO NOTHING s'est déclenché
@@ -563,10 +619,10 @@ app.post('/api/admin/create-students', authMiddleware, async (req, res) => {
       const sqlId = inserted[0].id;
 
       let email_sent = false;
-      try { email_sent = await sendWelcomeEmail(email, prenom, nom, password, classe_id); }
+      try { email_sent = await sendWelcomeEmail(email, emailPrenom, '', password, classe_id); }
       catch (e) { console.error('Email error for', email, ':', e.message); }
 
-      results.push({ id: sqlId, email, prenom, nom, classe_id, password, email_sent });
+      results.push({ id: sqlId, email, prenom: 'À compléter', nom: 'À compléter', classe_id, password, email_sent });
     } catch (err) {
       console.error('Create student error:', err.message);
       errors.push({ email, error: err.message });
@@ -658,6 +714,33 @@ app.patch('/api/admin/users/:id/delegue', authMiddleware, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Set delegue error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/classes — liste fixe des classes IHBI (sans auth) ──────────────
+app.get('/api/classes', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM classes ORDER BY id');
+    res.json(rows);
+  } catch (err) {
+    console.error('Get classes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PATCH /api/users/me/profile — compléter son profil (1ère connexion étudiant)
+app.patch('/api/users/me/profile', authMiddleware, async (req, res) => {
+  const { nom, prenom } = req.body || {};
+  if (!nom || !prenom) return res.status(400).json({ error: 'Nom et prénom requis' });
+  try {
+    await pool.query(
+      'UPDATE users SET nom = $1, prenom = $2, profile_complete = true WHERE id = $3',
+      [nom.trim(), prenom.trim(), req.user.id]
+    );
+    res.json({ ok: true, nom: nom.trim(), prenom: prenom.trim() });
+  } catch (err) {
+    console.error('Complete profile error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

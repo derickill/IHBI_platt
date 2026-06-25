@@ -2107,6 +2107,20 @@ tr:hover td{background:var(--navy-l)}
 </div>
 </div>
 
+<!-- Modal complétion de profil — 1ère connexion étudiant (obligatoire, pas de fermeture) -->
+<div class="overlay-modal" id="profile-completion-modal" style="display:none;z-index:3000;background:rgba(0,0,0,.7)">
+  <div class="obox" style="max-width:440px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">👋</div>
+    <div class="obox-title" style="margin-bottom:6px">Bienvenue à l'IHBI !</div>
+    <p style="font-size:13.5px;color:var(--g600);margin-bottom:22px">Pour accéder à votre espace, veuillez renseigner votre vrai nom et prénom. Ces informations seront visibles par l'administration.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;text-align:left">
+      <div><label class="fl">Nom *</label><input type="text" class="fi" id="profile-nom" placeholder="Votre nom de famille" autocomplete="family-name"></div>
+      <div><label class="fl">Prénom *</label><input type="text" class="fi" id="profile-prenom" placeholder="Votre prénom" autocomplete="given-name"></div>
+    </div>
+    <button id="btn-complete-profile" onclick="completeProfile()" style="width:100%;padding:12px;background:#250D42;color:white;border:none;font-size:14px;font-weight:600;cursor:pointer;border-radius:3px">Confirmer et accéder à mon espace →</button>
+  </div>
+</div>
+
 <!-- Modal inscription formation — niveau global (visible page publique ET admin) -->
 <div class="overlay-modal" id="formation-modal" onclick="if(event.target===this)closeFormationModal()">
   <div class="obox" style="max-width:460px">
@@ -2305,6 +2319,11 @@ async function _sha256(str) {
 
 // Navigue vers l'espace correspondant au rôle et met à jour l'UI
 function _navigateAfterLogin(user) {
+  // Étudiant sans profil complété → modal obligatoire avant le dashboard
+  if (user.role === 'student' && user.profile_complete === false) {
+    document.getElementById('profile-completion-modal').style.display = 'flex';
+    return;
+  }
   const fullName = user.prenom + ' ' + user.nom;
   const initials = (user.prenom[0] + user.nom[0]).toUpperCase();
   if (user.role === 'student') {
@@ -4544,16 +4563,88 @@ async function removeDelegue(userId) {
   toast('Rôle délégué retiré ✓');
 }
 
+// ── Complétion de profil — 1ère connexion étudiant ───────────────────────
+async function completeProfile() {
+  const nom    = document.getElementById('profile-nom')?.value?.trim();
+  const prenom = document.getElementById('profile-prenom')?.value?.trim();
+  if (!nom || !prenom) { toast('Nom et prénom sont requis', '#CC1A27'); return; }
+
+  const btn = document.getElementById('btn-complete-profile');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/users/me/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ nom, prenom }),
+    });
+    if (!res.ok) { const e = await res.json(); toast(e.error || 'Erreur', '#CC1A27'); return; }
+
+    CURRENT_USER.nom              = nom;
+    CURRENT_USER.prenom           = prenom;
+    CURRENT_USER.profile_complete = true;
+    sessionStorage.setItem('ihbi_user', JSON.stringify(CURRENT_USER));
+
+    // Mettre à jour l'entrée dans DB.users (pour le poll)
+    const u = DB.users.find(x => x.id === CURRENT_USER.id);
+    if (u) { u.nom = nom; u.prenom = prenom; u.profile_complete = true; }
+
+    document.getElementById('profile-completion-modal').style.display = 'none';
+    _navigateAfterLogin(CURRENT_USER);
+  } catch (e) {
+    toast('Erreur réseau — réessayez', '#CC1A27');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmer et accéder à mon espace →'; }
+  }
+}
+
+// ── Classes IHBI — liste fixe chargée depuis la DB ────────────────────────
+let _IHBI_CLASSES = []; // peuplé par _loadClasses() au chargement de page
+
+async function _loadClasses() {
+  try {
+    const res = await fetch('/api/classes');
+    if (!res.ok) return;
+    _IHBI_CLASSES = await res.json(); // [{id, nom}, ...]
+
+    // Datalist création étudiants
+    const dl = document.getElementById('bulk-classe-list');
+    if (dl) dl.innerHTML = _IHBI_CLASSES.map(c => `<option value="${c.id}">${c.id} — ${c.nom}</option>`).join('');
+
+    // Select EDT admin — remplace les options hardcodées
+    const edtSel = document.getElementById('admin-edt-class');
+    if (edtSel) {
+      const prev = edtSel.value;
+      edtSel.innerHTML = _IHBI_CLASSES.map(c => `<option value="${c.id}">${c.id} — ${c.nom}</option>`).join('');
+      if (prev && edtSel.querySelector(`option[value="${prev}"]`)) edtSel.value = prev;
+    }
+
+    // Select notes enseignant (grade-classe)
+    const gradeSel = document.getElementById('grade-classe');
+    if (gradeSel) {
+      const prev = gradeSel.value;
+      gradeSel.innerHTML = '<option value="">Choisir</option>'
+        + _IHBI_CLASSES.map(c => `<option value="${c.id}">${c.id} — ${c.nom}</option>`).join('');
+      if (prev) gradeSel.value = prev;
+    }
+
+    // Select filtre paiements
+    const paySel = document.getElementById('pay-filter-classe');
+    if (paySel) {
+      const prev = paySel.value;
+      paySel.innerHTML = '<option value="all">Toutes les classes</option>'
+        + _IHBI_CLASSES.map(c => `<option value="${c.id}">${c.id}</option>`).join('');
+      if (prev) paySel.value = prev;
+    }
+  } catch (e) { /* silencieux si hors ligne */ }
+}
+
 // ── Création de comptes étudiants en masse ────────────────────────────────
 function openCreateStudentsModal() {
-  // Peupler la datalist avec les classes existantes
-  const dl = document.getElementById('bulk-classe-list');
-  if (dl) {
-    const classes = [...new Set(DB.users.filter(u => u.classe_id).map(u => u.classe_id))];
-    dl.innerHTML = classes.map(c => `<option value="${c}">`).join('');
-  }
-  document.getElementById('bulk-emails').value  = '';
-  document.getElementById('bulk-classe').value  = '';
+  // La datalist est déjà peuplée par _loadClasses() au chargement de page
+  document.getElementById('bulk-emails').value = '';
+  document.getElementById('bulk-classe').value = '';
   document.getElementById('create-students-modal').style.display = 'flex';
 }
 function closeCreateStudentsModal() {
@@ -4790,9 +4881,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-// ── INIT PUBLIC FORMATIONS ────────────────────
-// Affichage instantané depuis localStorage, puis remplacement par données fraîches depuis DB
+// ── INIT AU CHARGEMENT ───────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  _loadClasses(); // charge la liste fixe des classes depuis la DB (peuple tous les selects)
   renderPublicFormations(); // rendu immédiat (localStorage)
   // Fetch public — sans auth, fonctionne pour tous les visiteurs
   fetch('/api/formations')
