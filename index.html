@@ -2676,6 +2676,7 @@ function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '�
 // En prod : GET /api/edt?classe_id=X&week=Y → remplace ce tableau
 const COURSES = [];
 let _studentWeekOffset = 0;
+let _miniCalCourses = []; // cours semaine courante pour le widget dashboard
 const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
 
@@ -2804,25 +2805,47 @@ function renderCal() {
 function renderMiniCal() {
   const wrap = document.getElementById('mini-cal');
   if (!wrap) return;
-  wrap.dataset.built = '1';
-  const mon = _getMondayOfWeek(_studentWeekOffset);
+  // Toujours afficher la semaine courante (offset=0) dans le widget dashboard
+  const mon = _getMondayOfWeek(0);
   const today = new Date(); today.setHours(0,0,0,0);
+  // Charger les cours de la semaine courante depuis edt_drafts
+  const weekId = _weekKey(mon);
+  const classeId = CURRENT_USER?.classe_id;
+  const draft = (DB.edt_drafts || []).find(d =>
+    d.statut === 'publie' && d.classe_id === classeId && d.week_id === weekId
+  );
+  _miniCalCourses = draft ? draft.slots.map(s => ({...s})) : [];
   let html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border)">';
   for (let i = 0; i < 5; i++) {
     const d = new Date(mon); d.setDate(mon.getDate() + i); d.setHours(0,0,0,0);
     const isToday = d.getTime() === today.getTime();
     const dayLabel = `${_JOURS_FR[i]} ${String(d.getDate()).padStart(2,'0')}`;
-    const labelStyle = isToday
-      ? 'color:var(--b600);font-weight:800'
-      : 'color:var(--g400);font-weight:700';
+    const labelStyle = isToday ? 'color:var(--b600);font-weight:800' : 'color:var(--g400);font-weight:700';
     html += `<div style="background:var(--white);padding:10px 8px;min-height:150px"><div style="font-size:10px;letter-spacing:1.5px;${labelStyle};text-transform:uppercase;margin-bottom:8px;text-align:center">${dayLabel}</div>`;
-    COURSES.filter(c => c.d === i).forEach(c => {
-      html += `<div onclick="showCourse(${COURSES.indexOf(c)},COURSES)" style="background:${c.c};border-radius:2px;padding:5px 6px;margin-bottom:4px;cursor:pointer"><div style="font-size:11px;font-weight:700;color:white;line-height:1.3;margin-bottom:1px">${c.n}</div><div style="font-size:10px;color:rgba(255,255,255,.75)">${c.s}–${c.e}</div></div>`;
+    _miniCalCourses.forEach((c, idx) => {
+      if (c.d !== i) return;
+      html += `<div onclick="showMiniCalCourse(${idx})" style="background:${c.c};border-radius:2px;padding:5px 6px;margin-bottom:4px;cursor:pointer"><div style="font-size:11px;font-weight:700;color:white;line-height:1.3;margin-bottom:1px">${c.n}</div><div style="font-size:10px;color:rgba(255,255,255,.75)">${c.s}–${c.e}</div></div>`;
     });
     html += '</div>';
   }
   html += '</div>';
   wrap.innerHTML = html;
+}
+function showMiniCalCourse(idx) {
+  const c = _miniCalCourses[idx];
+  if (!c) return;
+  const _mon = _getMondayOfWeek(0);
+  const _dc  = new Date(_mon); _dc.setDate(_mon.getDate() + c.d);
+  const _dateStr = `${_JOURS_FR[c.d]} ${String(_dc.getDate()).padStart(2,'0')} ${_MOIS_FR[_dc.getMonth()]}`;
+  document.getElementById('cbox-name').textContent = c.n;
+  document.getElementById('cbox-head').style.background = c.c;
+  document.getElementById('cbox-body').innerHTML = `
+    <div class="cbox-row"><div class="cbox-label">Date</div><div class="cbox-val">${_dateStr} · ${c.s} – ${c.e}</div></div>
+    <div class="cbox-row"><div class="cbox-label">Type</div><div class="cbox-val">${c.type||'—'}</div></div>
+    <div class="cbox-row"><div class="cbox-label">Salle</div><div class="cbox-val">${c.r||'—'}</div></div>
+    <div class="cbox-row"><div class="cbox-label">Enseignant</div><div class="cbox-val">${c.t||'—'}</div></div>
+    <div class="cbox-row"><div class="cbox-label">Groupe</div><div class="cbox-val">${c.grp||'—'}</div></div>`;
+  document.getElementById('course-popup').classList.add('on');
 }
 function showCourse(idx, courseList) {
   const c = courseList[idx];
@@ -4123,33 +4146,16 @@ async function publishEdt() {
     const badge = document.getElementById('edt-status-badge');
     if (badge) badge.innerHTML = '<span class="badge-publie">Publié</span>';
     renderDraftsList();
-    // Sync calendrier étudiant si la classe publiée correspond à l'étudiant connecté
-    if (classeId === CURRENT_USER.classe_id) {
-      COURSES.length = 0;
-      edtSlots.forEach(s => COURSES.push({...s}));
-      ['cal-times','cal-day-0','cal-day-1','cal-day-2','cal-day-3','cal-day-4'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
-      });
-      const mc = document.getElementById('mini-cal');
-      if (mc) { mc.innerHTML = ''; mc.removeAttribute('data-built'); }
-      if (document.getElementById('pg-dash')?.style.display === 'block') renderCal();
+    // Sync calendrier et mini-cal (renderCal lit DB.edt_drafts directement)
+    _restoreCoursesFromEdt();
+    if (document.getElementById('pg-dash')?.style.display === 'block') {
+      renderCal();
       renderStudentNotifs();
     }
-    // Sync enseignant
     if (document.getElementById('pg-teacher')?.style.display === 'block') {
       renderTeacherBoard();
       if (document.getElementById('t-planning')?.classList.contains('active')) renderTeacherCal();
     }
-    // 3. Ajouter un message dans la boîte de réception des étudiants
-    const msgId = DB.messages_teacher.length ? Math.max(...DB.messages_teacher.map(m => m.id)) + 1 : 1;
-    DB.messages_teacher.push({
-      id: msgId, de: 'Administration', vers: classeId,
-      sujet: `Emploi du temps mis à jour — ${weekLabel}`,
-      corps: `L'emploi du temps de la semaine ${weekLabel} a été mis à jour pour la classe ${classeLabel}. Connectez-vous à votre espace étudiant pour consulter les nouveaux créneaux.`,
-      date: new Date().toISOString()
-    });
-    if (document.getElementById('pg-dash')?.style.display === 'block') renderStudentMessages();
     toast(`Emploi du temps publié — Notification envoyée à ${classeLabel} ✓`, '#0A3D2D');
   } catch(err) {
     console.error('[publishEdt]', err);
