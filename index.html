@@ -1292,11 +1292,11 @@ tr:hover td{background:var(--navy-l)}
   <div class="cal-outer">
     <div class="cal-nav">
       <div style="display:flex;align-items:center;gap:6px">
-        <button class="cal-btn">‹</button>
-        <button class="cal-btn">Aujourd'hui</button>
-        <button class="cal-btn">›</button>
+        <button class="cal-btn" onclick="changeStudentWeek(-1)">‹</button>
+        <button class="cal-btn" onclick="changeStudentWeek(0)">Aujourd'hui</button>
+        <button class="cal-btn" onclick="changeStudentWeek(1)">›</button>
       </div>
-      <div class="cal-nav-title">Semaine 23 — Juin 2025</div>
+      <div class="cal-nav-title" id="cal-nav-title">Semaine 23 — Juin 2025</div>
       <div class="cal-nav-btns"><button class="cal-btn on">Semaine</button><button class="cal-btn">Jour</button></div>
     </div>
     <div class="cal-scroll">
@@ -2675,6 +2675,7 @@ function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '�
 // ══════════════════════════════════════════════
 // En prod : GET /api/edt?classe_id=X&week=Y → remplace ce tableau
 const COURSES = [];
+let _studentWeekOffset = 0;
 const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
 
@@ -2758,8 +2759,13 @@ function buildCalColumn(containerId, timesId, courses, todayColIdx) {
     }
   }
 }
+function changeStudentWeek(delta) {
+  if (delta === 0) _studentWeekOffset = 0;
+  else _studentWeekOffset += delta;
+  renderCal();
+}
+
 function renderCal() {
-  // Réinitialiser les éléments pour permettre le rebuild (même logique que renderTeacherCal)
   ['cal-times','cal-day-0','cal-day-1','cal-day-2','cal-day-3','cal-day-4'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
@@ -2767,16 +2773,31 @@ function renderCal() {
   const mc = document.getElementById('mini-cal');
   if (mc) { mc.innerHTML = ''; mc.removeAttribute('data-built'); }
 
-  const mon = _getMondayOfWeek();
+  const mon = _getMondayOfWeek(_studentWeekOffset);
   _updateCalHeaders('#ds-edt .cal-days', mon);
-  const todayCol = (new Date().getDay() || 7) - 1; // 0=lun…4=ven, ≥5=week-end
-  buildCalColumn('cal-day-', 'cal-times', COURSES, todayCol < 5 ? todayCol : -1);
-  // Sous-titre dynamique
+
+  // Charger uniquement les cours de la semaine affichée
+  const weekId = _weekKey(mon);
+  const classeId = CURRENT_USER?.classe_id;
+  const draft = (DB.edt_drafts || []).find(d =>
+    d.statut === 'publie' && d.classe_id === classeId && d.week_id === weekId
+  );
+  const weekCourses = draft ? draft.slots.map(s => ({...s})) : [];
+
+  // Marqueur "aujourd'hui" uniquement sur la semaine courante
+  const isCurrentWeek = _studentWeekOffset === 0;
+  const todayCol = isCurrentWeek ? ((new Date().getDay() || 7) - 1) : -1;
+  buildCalColumn('cal-day-', 'cal-times', weekCourses, todayCol < 5 ? todayCol : -1);
+
+  // Sous-titre et titre de navigation
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const cls = classeId ? ' · ' + classeId : '';
   const sub = document.querySelector('#ds-edt .ds-sub');
-  if (sub) {
-    const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
-    const cls = CURRENT_USER?.classe_id ? ' · ' + CURRENT_USER.classe_id : '';
-    sub.textContent = `Semaine ${_isoWeekNum(mon)} · du ${mon.getDate()} au ${fri.getDate()} ${_MOIS_FR[fri.getMonth()]} ${fri.getFullYear()}${cls}`;
+  if (sub) sub.textContent = `Semaine ${_isoWeekNum(mon)} · du ${mon.getDate()} au ${fri.getDate()} ${_MOIS_FR[fri.getMonth()]} ${fri.getFullYear()}${cls}`;
+  const navTitle = document.getElementById('cal-nav-title');
+  if (navTitle) {
+    const moisCap = _MOIS_FR[mon.getMonth()].charAt(0).toUpperCase() + _MOIS_FR[mon.getMonth()].slice(1);
+    navTitle.textContent = `Semaine ${_isoWeekNum(mon)} — ${moisCap} ${mon.getFullYear()}`;
   }
   renderMiniCal();
 }
@@ -2784,7 +2805,7 @@ function renderMiniCal() {
   const wrap = document.getElementById('mini-cal');
   if (!wrap) return;
   wrap.dataset.built = '1';
-  const mon = _getMondayOfWeek();
+  const mon = _getMondayOfWeek(_studentWeekOffset);
   const today = new Date(); today.setHours(0,0,0,0);
   let html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border)">';
   for (let i = 0; i < 5; i++) {
@@ -2805,7 +2826,8 @@ function renderMiniCal() {
 }
 function showCourse(idx, courseList) {
   const c = courseList[idx];
-  const _mon = _getMondayOfWeek();
+  const offset = CURRENT_USER?.role === 'teacher' ? 0 : _studentWeekOffset;
+  const _mon = _getMondayOfWeek(offset);
   const _dc  = new Date(_mon); _dc.setDate(_mon.getDate() + c.d);
   const _dateStr = `${_JOURS_FR[c.d]} ${String(_dc.getDate()).padStart(2,'0')} ${_MOIS_FR[_dc.getMonth()]}`;
   document.getElementById('cbox-name').textContent = c.n;
