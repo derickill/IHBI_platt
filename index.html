@@ -1262,30 +1262,32 @@ tr:hover td{background:var(--navy-l)}
         <button class="btn-primary" onclick="showLogin(event)">Accéder à mon espace →</button>
       </div>
       <div class="reveal" style="transition-delay:.15s">
-        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:32px;backdrop-filter:blur(8px)">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-            <div style="width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center">
-              <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:28px 24px">
+          <div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px">Votre espace personnel</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)">
+              <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span style="color:rgba(255,255,255,.75);font-size:13.5px;flex:1">Emploi du temps</span>
+              <span style="color:#4ADE80;font-size:12px">✓ actif</span>
             </div>
-            <div style="color:white;font-weight:600;font-size:15px">Plateforme IHBI</div>
+            <div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)">
+              <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              <span style="color:rgba(255,255,255,.75);font-size:13.5px;flex:1">Notes &amp; résultats</span>
+              <span style="color:#4ADE80;font-size:12px">✓ actif</span>
+            </div>
+            <div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)">
+              <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              <span style="color:rgba(255,255,255,.75);font-size:13.5px;flex:1">Messagerie</span>
+              <span style="color:#4ADE80;font-size:12px">✓ actif</span>
+            </div>
+            <div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px">
+              <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.3)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+              <span style="color:rgba(255,255,255,.35);font-size:13.5px;flex:1">Ressources de cours</span>
+              <span style="color:rgba(255,255,255,.3);font-size:12px">bientôt</span>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-              <span style="color:rgba(255,255,255,.8);font-size:13px">📅 Emploi du temps</span>
-              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
-            </div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-              <span style="color:rgba(255,255,255,.8);font-size:13px">📝 Mes notes</span>
-              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
-            </div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-              <span style="color:rgba(255,255,255,.8);font-size:13px">💬 Messagerie</span>
-              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
-            </div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-              <span style="color:rgba(255,255,255,.8);font-size:13px">📂 Ressources pédagogiques</span>
-              <span style="background:#F59E0B;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Bientôt</span>
-            </div>
+          <div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)">
+            <button onclick="showLogin(event)" style="width:100%;padding:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:white;font-size:13.5px;font-weight:600;cursor:pointer;border-radius:6px;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.18)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">Se connecter à mon espace</button>
           </div>
         </div>
       </div>
