@@ -1249,6 +1249,7 @@ tr:hover td{background:var(--navy-l)}
     <div class="dsb-a" onclick="showDS('notes',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Mes notes</div>
     <div class="dsb-a" onclick="showDS('scol',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Scolarité</div>
     <div class="dsb-a" onclick="showDS('msg',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messages<span id="nav-msg-badge" class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px;display:none">0</span></div>
+    <div class="dsb-a" onclick="showDS('reclamations',this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Réclamations</div>
   </nav>
   <div class="dsb-foot">
     <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
@@ -1424,6 +1425,24 @@ tr:hover td{background:var(--navy-l)}
   </div>
 </div>
 
+<!-- ══ RÉCLAMATIONS ══ -->
+<div id="ds-reclamations" class="ds">
+  <div class="ds-title">Réclamations</div>
+  <div class="ds-sub">Soumettez une réclamation à l'administration</div>
+  <div class="bx" style="margin-bottom:20px">
+    <div class="bx-h"><span class="bx-t">Nouvelle réclamation</span></div>
+    <div style="padding:18px;display:grid;gap:14px">
+      <div><label class="fl">Sujet</label><input type="text" class="fi" id="recl-sujet" placeholder="Ex : Erreur sur ma note de comptabilité"></div>
+      <div><label class="fl">Description</label><textarea class="fta" rows="4" id="recl-corps" placeholder="Décrivez votre réclamation en détail…"></textarea></div>
+      <div><button onclick="submitReclamation()" style="padding:9px 24px;background:var(--b600);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">Envoyer la réclamation</button></div>
+    </div>
+  </div>
+  <div class="bx">
+    <div class="bx-h"><span class="bx-t">Mes réclamations</span></div>
+    <div id="recl-list" style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+  </div>
+</div>
+
 </main>
 </div>
 </div>
@@ -1460,6 +1479,8 @@ tr:hover td{background:var(--navy-l)}
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Mon planning</div>
     <div class="dsb-a" onclick="showT('t-msg',this)">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Messagerie</div>
+    <div class="dsb-a" onclick="showT('t-volume',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Volume horaire</div>
   </nav>
   <div class="dsb-foot"><div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div></div>
 </aside>
@@ -1649,6 +1670,15 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
+  <!-- ── VOLUME HORAIRE ── -->
+  <div id="t-volume" class="ds">
+    <div class="ds-title">Volume horaire</div>
+    <div class="ds-sub">Heures effectuées et restantes par classe</div>
+    <div id="t-volume-content">
+      <div style="padding:20px;color:var(--g400);font-size:13px">Chargement…</div>
+    </div>
+  </div>
+
 </main>
 </div>
 </div>
@@ -1683,6 +1713,10 @@ tr:hover td{background:var(--navy-l)}
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Scolarité &amp; Paiements</div>
     <div class="dsb-a" onclick="showA('a-accounts',this)">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Gestion des comptes</div>
+    <div class="dsb-a" onclick="showA('a-reclamations',this)" style="position:relative">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Réclamations
+      <span id="recl-admin-badge" class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px;display:none">0</span>
+    </div>
   </nav>
   <div class="dsb-foot">
     <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
@@ -2008,6 +2042,7 @@ tr:hover td{background:var(--navy-l)}
       <input type="text" class="fi" placeholder="Rechercher un compte…" style="max-width:260px" oninput="filterAccounts(this.value)">
       <button onclick="openCreateStudentsModal()" style="padding:9px 18px;background:#0A3D2D;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">+ Créer comptes étudiants</button>
       <button onclick="document.getElementById('create-teacher-modal').style.display='flex'" style="padding:9px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">+ Créer compte enseignant</button>
+      <button onclick="openCreateParentModal()" style="padding:9px 18px;background:#7C3AED;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:2px">+ Créer compte parent</button>
     </div>
     <div id="acc-students"><div id="acc-students-content"></div></div>
     <div id="acc-teachers" style="display:none"><div id="acc-teachers-content"></div></div>
@@ -2068,6 +2103,77 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
+  <!-- ── RÉCLAMATIONS ADMIN ── -->
+  <div id="a-reclamations" class="ds">
+    <div class="ds-title">Réclamations</div>
+    <div class="ds-sub">Réclamations soumises par les étudiants</div>
+    <div class="bx">
+      <div class="bx-h">
+        <span class="bx-t">Liste des réclamations</span>
+        <div style="display:flex;gap:8px">
+          <select class="fsel" id="recl-filter" onchange="renderAdminReclamations()" style="font-size:12px;padding:5px 10px">
+            <option value="all">Toutes</option>
+            <option value="nouveau">Nouvelles</option>
+            <option value="en_cours">En cours</option>
+            <option value="resolu">Résolues</option>
+          </select>
+        </div>
+      </div>
+      <div id="recl-admin-list" style="padding:14px 0">
+        <div style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal réponse réclamation -->
+  <div class="overlay-modal" id="recl-reply-modal" onclick="if(event.target===this)document.getElementById('recl-reply-modal').style.display='none'">
+    <div class="obox" style="max-width:500px">
+      <button class="obox-close" onclick="document.getElementById('recl-reply-modal').style.display='none'">×</button>
+      <div class="obox-title">Répondre à la réclamation</div>
+      <input type="hidden" id="recl-reply-id">
+      <div id="recl-reply-context" style="background:var(--off);padding:12px;border-radius:4px;margin-bottom:14px;font-size:13px;color:var(--g600)"></div>
+      <div style="margin-bottom:12px">
+        <label class="fl">Réponse</label>
+        <textarea class="fta" rows="4" id="recl-reply-corps" placeholder="Votre réponse à l'étudiant…"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="fl">Statut</label>
+        <select class="fsel" id="recl-reply-statut">
+          <option value="en_cours">En cours de traitement</option>
+          <option value="resolu">Résolu</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('recl-reply-modal').style.display='none'" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer">Annuler</button>
+        <button onclick="sendReclReply()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Envoyer la réponse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal créer compte parent -->
+  <div class="overlay-modal" id="create-parent-modal" onclick="if(event.target===this)document.getElementById('create-parent-modal').style.display='none'">
+    <div class="obox" style="max-width:440px">
+      <button class="obox-close" onclick="document.getElementById('create-parent-modal').style.display='none'">×</button>
+      <div class="obox-title">Créer un compte parent</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div><label class="fl">Nom *</label><input type="text" class="fi" id="new-parent-nom" placeholder="Nom"></div>
+        <div><label class="fl">Prénom *</label><input type="text" class="fi" id="new-parent-prenom" placeholder="Prénom"></div>
+        <div style="grid-column:1/-1"><label class="fl">Email *</label><input type="email" class="fi" id="new-parent-email" placeholder="parent@email.com"></div>
+        <div style="grid-column:1/-1">
+          <label class="fl">Étudiant lié *</label>
+          <select class="fsel" id="new-parent-student">
+            <option value="">Sélectionner un étudiant…</option>
+          </select>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--g400);margin-bottom:14px">Un mot de passe temporaire sera généré et envoyé par email.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('create-parent-modal').style.display='none'" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer">Annuler</button>
+        <button onclick="createParentAccount()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Créer le compte</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal créer compte enseignant -->
   <div class="overlay-modal" id="create-teacher-modal" onclick="if(event.target===this)closeCreateTeacher()">
     <div class="obox" style="max-width:480px">
@@ -2091,6 +2197,68 @@ tr:hover td{background:var(--navy-l)}
         <button onclick="createTeacherAccount()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Créer le compte</button>
       </div>
     </div>
+  </div>
+
+</main>
+</div>
+</div>
+
+<!-- ═══════════════ ESPACE PARENT ═══════════════ -->
+<div id="pg-parent" style="display:none">
+<div class="dash-layout">
+<aside class="dsb" style="background:linear-gradient(180deg,#3B0764 0%,#4C1D95 55%,#5B21B6 100%)">
+  <div class="dsb-top">
+    <div class="dsb-logo">IHBI</div>
+    <div class="dsb-user">
+      <div class="dash-avatar" id="parent-avatar">
+        <div class="dav">P</div>
+        <div><div class="dun" id="parent-name">Parent</div><div class="dur">Parent / Tuteur</div></div>
+      </div>
+    </div>
+  </div>
+  <nav class="dsb-nav">
+    <div class="dsb-a on" onclick="showP('p-board',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Tableau de bord</div>
+    <div class="dsb-a" onclick="showP('p-edt',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Emploi du temps</div>
+    <div class="dsb-a" onclick="showP('p-notes',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Notes de l'enfant</div>
+  </nav>
+  <div class="dsb-foot">
+    <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
+  </div>
+</aside>
+<main class="dash-main">
+
+  <!-- TABLEAU DE BORD PARENT -->
+  <div id="p-board" class="ds active">
+    <div class="ds-title">Tableau de bord</div>
+    <div class="ds-sub" id="p-board-sub">Informations de votre enfant</div>
+    <div id="p-child-info" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+      <div style="padding:20px;color:var(--g400);font-size:13px;grid-column:1/-1">Chargement…</div>
+    </div>
+    <div class="bx">
+      <div class="bx-h"><span class="bx-t">Emploi du temps — Cette semaine</span><span onclick="showP('p-edt',document.querySelectorAll('#pg-parent .dsb-a')[1])" style="font-size:12px;font-weight:600;color:#7C3AED;cursor:pointer">Voir complet →</span></div>
+      <div id="p-mini-edt" style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+    </div>
+    <div class="bx" style="margin-top:16px">
+      <div class="bx-h"><span class="bx-t">Dernières notes</span><span onclick="showP('p-notes',document.querySelectorAll('#pg-parent .dsb-a')[2])" style="font-size:12px;font-weight:600;color:#7C3AED;cursor:pointer">Voir toutes →</span></div>
+      <div id="p-recent-notes" style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+    </div>
+  </div>
+
+  <!-- EMPLOI DU TEMPS PARENT -->
+  <div id="p-edt" class="ds">
+    <div class="ds-title">Emploi du temps</div>
+    <div class="ds-sub" id="p-edt-sub">EDT de l'enfant</div>
+    <div id="p-edt-content" style="padding:20px 0;color:var(--g400);font-size:13px">Chargement…</div>
+  </div>
+
+  <!-- NOTES PARENT -->
+  <div id="p-notes" class="ds">
+    <div class="ds-title">Notes de l'enfant</div>
+    <div class="ds-sub" id="p-notes-sub">Résultats académiques</div>
+    <div id="p-notes-content" style="padding:20px 0;color:var(--g400);font-size:13px">Chargement…</div>
   </div>
 
 </main>
@@ -2332,7 +2500,7 @@ function _navigateAfterLogin(user) {
     if (av) av.innerHTML = '<div class="dav" style="background:#0A3D2D">' + initials + '</div><div>'
       + '<div class="dun">' + fullName + '</div><div class="dur">Enseignant</div></div>';
   }
-  ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id =>
+  ['pg-site','pg-dash','pg-teacher','pg-admin','pg-parent'].forEach(id =>
     document.getElementById(id).style.display = 'none');
   if (user.role === 'student') {
     document.getElementById('pg-dash').style.display = 'block';
@@ -2340,6 +2508,9 @@ function _navigateAfterLogin(user) {
   } else if (user.role === 'teacher') {
     document.getElementById('pg-teacher').style.display = 'block';
     initTeacher();
+  } else if (user.role === 'parent') {
+    document.getElementById('pg-parent').style.display = 'block';
+    initParent();
   } else {
     document.getElementById('pg-admin').style.display = 'block';
     initAdmin();
@@ -2504,9 +2675,16 @@ function _rerenderActiveSections() {
     renderStudentAnnonces();
     if (isOn('notes')) renderStudentNotes();
   } else if (role === 'teacher') {
-    renderTeacherDelegateMsgs(); // toujours — met à jour le badge même si l'onglet n'est pas actif
+    renderTeacherDelegateMsgs();
     if (isOn('t-planning')) renderTeacherCal();
     if (isOn('t-notes'))    renderEvalHistory(currentEvalFilter);
+  } else if (role === 'parent') {
+    // Recharger les données enfant puis mettre à jour les sections actives
+    loadParentChildData().then(() => {
+      renderParentDashboard();
+      if (isOn('p-edt'))   renderParentEdt();
+      if (isOn('p-notes')) renderParentNotes();
+    });
   }
 }
 
@@ -2583,27 +2761,32 @@ window.addEventListener('popstate', function(e) {
       CURRENT_USER = null;
       sessionStorage.removeItem('ihbi_token');
       sessionStorage.removeItem('ihbi_user');
-      ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
+      ['pg-dash','pg-teacher','pg-admin','pg-parent'].forEach(id =>
         document.getElementById(id).style.display = 'none');
       document.getElementById('pg-site').style.display = 'block';
       renderPublicFormations();
       window.scrollTo(0,0);
     }
   } else if (s.page === 'pg-dash') {
-    ['pg-site','pg-teacher','pg-admin'].forEach(id =>
+    ['pg-site','pg-teacher','pg-admin','pg-parent'].forEach(id =>
       document.getElementById(id).style.display = 'none');
     document.getElementById('pg-dash').style.display = 'block';
     if (s.section) showDS(s.section, null);
   } else if (s.page === 'pg-teacher') {
-    ['pg-site','pg-dash','pg-admin'].forEach(id =>
+    ['pg-site','pg-dash','pg-admin','pg-parent'].forEach(id =>
       document.getElementById(id).style.display = 'none');
     document.getElementById('pg-teacher').style.display = 'block';
     if (s.section) showT(s.section, null);
   } else if (s.page === 'pg-admin') {
-    ['pg-site','pg-dash','pg-teacher'].forEach(id =>
+    ['pg-site','pg-dash','pg-teacher','pg-parent'].forEach(id =>
       document.getElementById(id).style.display = 'none');
     document.getElementById('pg-admin').style.display = 'block';
     if (s.section) showA(s.section, null);
+  } else if (s.page === 'pg-parent') {
+    ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id =>
+      document.getElementById(id).style.display = 'none');
+    document.getElementById('pg-parent').style.display = 'block';
+    if (s.section) showP(s.section, null);
   }
   _skipHistory = false;
 });
@@ -2613,8 +2796,9 @@ function showDS(id, el) {
   document.getElementById('ds-' + id).classList.add('active');
   document.querySelectorAll('#pg-dash .dsb-a').forEach(a => a.classList.remove('on'));
   if (el) el.classList.add('on');
-  if (id === 'notes') renderStudentNotes();
-  if (id === 'msg')   { initStudentMessaging(); } // re-check délégué à chaque ouverture
+  if (id === 'notes')        renderStudentNotes();
+  if (id === 'msg')          { initStudentMessaging(); }
+  if (id === 'reclamations') { renderStudentReclamations(); }
   _historyPush({page:'pg-dash', section:id});
 }
 function showT(id, el) {
@@ -2626,6 +2810,7 @@ function showT(id, el) {
   if (id === 't-notes')   renderEvalHistory(currentEvalFilter);
   if (id === 't-classes') renderTeacherClasses();
   if (id === 't-msg')     { renderTeacherDelegateMsgs(); renderTmsgList(); }
+  if (id === 't-volume')  renderTeacherVolume();
   _historyPush({page:'pg-teacher', section:id});
 }
 function showA(id, el) {
@@ -2635,11 +2820,12 @@ function showA(id, el) {
   if (el) el.classList.add('on');
   // lazy-init sections
   if (id === 'a-edt') initAdminEdt();
-  if (id === 'a-contacts')  renderContacts('all');
-  if (id === 'a-annonces')  { renderAdminAnnonces(); renderAdminDelegateMsgs(); }
-  if (id === 'a-events')    renderAdminFormations();
-  if (id === 'a-accounts')  renderAccounts();
-  if (id === 'a-payments')  renderPayments();
+  if (id === 'a-contacts')      renderContacts('all');
+  if (id === 'a-annonces')      { renderAdminAnnonces(); renderAdminDelegateMsgs(); }
+  if (id === 'a-events')        renderAdminFormations();
+  if (id === 'a-accounts')      renderAccounts();
+  if (id === 'a-payments')      renderPayments();
+  if (id === 'a-reclamations')  renderAdminReclamations();
   _historyPush({page:'pg-admin', section:id});
 }
 
@@ -3521,7 +3707,8 @@ async function renderEvalHistory(filter) {
           ? `<button onclick="loadEvalDraft(${ev.id})" style="padding:6px 14px;background:var(--b600);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">Modifier &amp; Saisir notes</button>
              <button onclick="publishEvalDirect(${ev.id})" style="padding:6px 14px;background:#0A3D2D;color:white;border:none;font-size:12px;font-weight:600;cursor:pointer">Publier</button>
              <button onclick="deleteEval(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:#CC1A27">Supprimer</button>`
-          : `<button onclick="loadEvalDraft(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Voir les notes</button>`
+          : `<button onclick="loadEvalDraft(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Voir les notes</button>
+             <button onclick="exportNotesCSV(${ev.id})" style="padding:6px 14px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--b600)">Exporter CSV</button>`
         }
       </div>
     </div>`;
@@ -5207,6 +5394,302 @@ window.addEventListener('DOMContentLoaded', () => {
     })
     .catch(() => {});
 });
+
+// ══════════════════════════════════════════════
+// RÉCLAMATIONS ÉTUDIANTS
+// ══════════════════════════════════════════════
+async function submitReclamation() {
+  const sujet = document.getElementById('recl-sujet')?.value?.trim();
+  const corps = document.getElementById('recl-corps')?.value?.trim();
+  if (!sujet || !corps) { toast('Remplissez le sujet et la description', '#CC1A27'); return; }
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/student/reclamations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ sujet, corps })
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('recl-sujet').value = '';
+    document.getElementById('recl-corps').value = '';
+    toast('Réclamation envoyée ✓', '#0A3D2D');
+    renderStudentReclamations();
+  } catch(e) { toast('Erreur lors de l\'envoi', '#CC1A27'); }
+}
+
+async function renderStudentReclamations() {
+  const listEl = document.getElementById('recl-list');
+  if (!listEl) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/student/reclamations', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = res.ok ? await res.json() : [];
+    if (!data.length) { listEl.innerHTML = '<div style="color:var(--g400);font-size:13px">Aucune réclamation envoyée.</div>'; return; }
+    const statusColor = { nouveau:'#CC1A27', en_cours:'#F59E0B', resolu:'#15803D' };
+    const statusLabel = { nouveau:'Nouvelle', en_cours:'En cours', resolu:'Résolue' };
+    listEl.innerHTML = '<table><thead><tr><th>Date</th><th>Sujet</th><th>Statut</th><th>Réponse</th></tr></thead><tbody>'
+      + data.map(r => `<tr>
+          <td style="white-space:nowrap">${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+          <td>${r.sujet}</td>
+          <td><span style="font-size:11px;padding:2px 8px;border-radius:2px;font-weight:600;background:${statusColor[r.statut]}22;color:${statusColor[r.statut]}">${statusLabel[r.statut]||r.statut}</span></td>
+          <td style="font-size:12px;color:var(--g600)">${r.reponse || '<span style="color:var(--g400)">En attente</span>'}</td>
+        </tr>`).join('')
+      + '</tbody></table>';
+  } catch(e) { listEl.innerHTML = '<div style="color:#CC1A27;font-size:13px">Erreur de chargement.</div>'; }
+}
+
+// ── Réclamations Admin ──────────────────────────
+async function renderAdminReclamations() {
+  const listEl = document.getElementById('recl-admin-list');
+  if (!listEl) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  const filter = document.getElementById('recl-filter')?.value || 'all';
+  try {
+    const res = await fetch('/api/admin/reclamations', { headers: { 'Authorization': 'Bearer ' + token } });
+    let data = res.ok ? await res.json() : [];
+    if (filter !== 'all') data = data.filter(r => r.statut === filter);
+    // Mettre à jour le badge
+    const badge = document.getElementById('recl-admin-badge');
+    const nb = data.filter(r => r.statut === 'nouveau').length;
+    if (badge) { badge.textContent = nb; badge.style.display = nb > 0 ? '' : 'none'; }
+    if (!data.length) { listEl.innerHTML = '<div style="padding:14px 18px;color:var(--g400);font-size:13px">Aucune réclamation.</div>'; return; }
+    const statusColor = { nouveau:'#CC1A27', en_cours:'#F59E0B', resolu:'#15803D' };
+    const statusLabel = { nouveau:'Nouvelle', en_cours:'En cours', resolu:'Résolue' };
+    listEl.innerHTML = '<table><thead><tr><th>Date</th><th>Étudiant</th><th>Classe</th><th>Sujet</th><th>Statut</th><th></th></tr></thead><tbody>'
+      + data.map(r => `<tr>
+          <td style="white-space:nowrap">${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+          <td>${r.etudiant_nom}</td>
+          <td>${r.classe_id||'—'}</td>
+          <td>${r.sujet}</td>
+          <td><span style="font-size:11px;padding:2px 8px;border-radius:2px;font-weight:600;background:${statusColor[r.statut]}22;color:${statusColor[r.statut]}">${statusLabel[r.statut]||r.statut}</span></td>
+          <td><button onclick="openReclReply(${r.id},'${r.sujet.replace(/'/g,"\\'")}','${(r.corps||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" style="padding:3px 10px;background:#250D42;color:white;border:none;font-size:12px;cursor:pointer;border-radius:2px">Répondre</button></td>
+        </tr>`).join('')
+      + '</tbody></table>';
+  } catch(e) { listEl.innerHTML = '<div style="padding:14px 18px;color:#CC1A27;font-size:13px">Erreur de chargement.</div>'; }
+}
+
+function openReclReply(id, sujet, corps) {
+  document.getElementById('recl-reply-id').value = id;
+  document.getElementById('recl-reply-context').innerHTML = `<strong>${sujet}</strong><br><span style="color:var(--g500)">${corps}</span>`;
+  document.getElementById('recl-reply-corps').value = '';
+  document.getElementById('recl-reply-statut').value = 'en_cours';
+  document.getElementById('recl-reply-modal').style.display = 'flex';
+}
+
+async function sendReclReply() {
+  const id = document.getElementById('recl-reply-id').value;
+  const reponse = document.getElementById('recl-reply-corps')?.value?.trim();
+  const statut = document.getElementById('recl-reply-statut')?.value;
+  if (!reponse) { toast('Rédigez une réponse', '#CC1A27'); return; }
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/admin/reclamations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ statut, reponse })
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('recl-reply-modal').style.display = 'none';
+    toast('Réponse envoyée ✓', '#0A3D2D');
+    renderAdminReclamations();
+  } catch(e) { toast('Erreur lors de l\'envoi', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// ESPACE PARENT
+// ══════════════════════════════════════════════
+function showP(id, el) {
+  document.querySelectorAll('#pg-parent .ds').forEach(d => d.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#pg-parent .dsb-a').forEach(a => a.classList.remove('on'));
+  if (el) el.classList.add('on');
+  if (id === 'p-edt')   renderParentEdt();
+  if (id === 'p-notes') renderParentNotes();
+}
+
+let _parentChildData = null;
+
+async function initParent() {
+  const nameEl = document.getElementById('parent-name');
+  if (nameEl && CURRENT_USER) nameEl.textContent = CURRENT_USER.prenom + ' ' + CURRENT_USER.nom;
+  await loadParentChildData();
+  renderParentDashboard();
+}
+
+async function loadParentChildData() {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/parent/child', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.ok) _parentChildData = await res.json();
+  } catch(e) {}
+}
+
+function renderParentDashboard() {
+  const infoEl = document.getElementById('p-child-info');
+  const subEl  = document.getElementById('p-board-sub');
+  if (!_parentChildData) {
+    if (infoEl) infoEl.innerHTML = '<div style="color:#CC1A27;font-size:13px;grid-column:1/-1">Aucun étudiant associé à ce compte. Contactez l\'administration.</div>';
+    return;
+  }
+  const { student, notes } = _parentChildData;
+  if (subEl) subEl.textContent = `Suivi de ${student.prenom} ${student.nom} · ${student.classe_id || '—'}`;
+  // KPIs enfant
+  const noted = notes.filter(n => n.note !== null);
+  let moy = '—';
+  if (noted.length) {
+    const tw = noted.reduce((s,n) => s + n.note * (parseFloat(n.coeff)||1), 0);
+    const tc = noted.reduce((s,n) => s + (parseFloat(n.coeff)||1), 0);
+    moy = (tw/tc).toFixed(2) + ' / 20';
+  }
+  if (infoEl) infoEl.innerHTML = `
+    <div class="kpi"><div class="kpi-l">Étudiant</div><div class="kpi-v" style="font-size:16px">${student.prenom} ${student.nom}</div><div class="kpi-s">${student.classe_id||'—'}</div></div>
+    <div class="kpi"><div class="kpi-l">Moyenne générale</div><div class="kpi-v ok">${moy}</div><div class="kpi-s">${noted.length} note(s) disponible(s)</div></div>`;
+  // Mini EDT semaine courante
+  const miniEl = document.getElementById('p-mini-edt');
+  if (miniEl) {
+    const classeId = student.classe_id;
+    const mon = _getMondayOfWeek(0);
+    const weekId = _weekKey(mon);
+    const draft = (DB.edt_drafts||[]).find(d => d.statut==='publie' && d.classe_id===classeId && d.week_id===weekId);
+    const slots = draft ? draft.slots : [];
+    if (!slots.length) { miniEl.innerHTML = '<div style="color:var(--g400);font-size:13px">Aucun emploi du temps publié pour cette semaine.</div>'; }
+    else {
+      miniEl.innerHTML = '<table><thead><tr><th>Jour</th><th>Horaire</th><th>Matière</th><th>Salle</th></tr></thead><tbody>'
+        + slots.sort((a,b) => a.d - b.d || a.s.localeCompare(b.s)).map(s =>
+          `<tr><td>${_JOURS_FR[s.d]||s.d}</td><td>${s.s}–${s.e}</td><td>${s.n}</td><td>${s.r||'—'}</td></tr>`
+        ).join('') + '</tbody></table>';
+    }
+  }
+  // Dernières notes
+  const notesEl = document.getElementById('p-recent-notes');
+  if (notesEl) {
+    const recent = noted.slice(0,5);
+    if (!recent.length) { notesEl.innerHTML = '<div style="color:var(--g400);font-size:13px">Aucune note disponible.</div>'; return; }
+    notesEl.innerHTML = '<table><thead><tr><th>Matière</th><th>Éval.</th><th>Note</th><th>Coeff.</th></tr></thead><tbody>'
+      + recent.map(n => `<tr><td>${n.matiere}</td><td>${n.intitule}</td><td><strong>${n.note}/${n.bareme||20}</strong></td><td>${n.coeff}</td></tr>`).join('')
+      + '</tbody></table>';
+  }
+}
+
+function renderParentEdt() {
+  const el = document.getElementById('p-edt-content');
+  const sub = document.getElementById('p-edt-sub');
+  if (!_parentChildData || !el) return;
+  const classeId = _parentChildData.student.classe_id;
+  const mon = _getMondayOfWeek(0);
+  const weekId = _weekKey(mon);
+  const draft = (DB.edt_drafts||[]).find(d => d.statut==='publie' && d.classe_id===classeId && d.week_id===weekId);
+  const slots = draft ? draft.slots : [];
+  if (sub) sub.textContent = `EDT de ${_parentChildData.student.prenom} ${_parentChildData.student.nom} · ${classeId} · Semaine ${_isoWeekNum(mon)}`;
+  if (!slots.length) { el.innerHTML = '<div style="color:var(--g400);font-size:13px">Aucun emploi du temps publié pour cette semaine.</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Jour</th><th>Horaire</th><th>Matière</th><th>Salle</th><th>Enseignant</th><th>Type</th></tr></thead><tbody>'
+    + slots.sort((a,b) => a.d - b.d || a.s.localeCompare(b.s)).map(s =>
+      `<tr><td><strong>${_JOURS_FR[s.d]||s.d}</strong></td><td>${s.s}–${s.e}</td><td>${s.n}</td><td>${s.r||'—'}</td><td>${s.t||'—'}</td><td>${s.type||'—'}</td></tr>`
+    ).join('') + '</tbody></table>';
+}
+
+function renderParentNotes() {
+  const el = document.getElementById('p-notes-content');
+  const sub = document.getElementById('p-notes-sub');
+  if (!_parentChildData || !el) return;
+  const { student, notes } = _parentChildData;
+  if (sub) sub.textContent = `Notes de ${student.prenom} ${student.nom} · ${student.classe_id||'—'}`;
+  const noted = notes.filter(n => n.note !== null);
+  if (!noted.length) { el.innerHTML = '<div style="color:var(--g400);font-size:13px">Aucune note disponible.</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Date</th><th>Matière</th><th>Évaluation</th><th>Type</th><th>Note</th><th>Coeff.</th></tr></thead><tbody>'
+    + noted.map(n => `<tr>
+        <td>${n.date||'—'}</td><td>${n.matiere}</td><td>${n.intitule}</td><td>${n.type||'—'}</td>
+        <td><strong>${n.note}/${n.bareme||20}</strong>${n.commentaire?` <span style="font-size:11px;color:var(--g400)">(${n.commentaire})</span>`:''}</td>
+        <td>${n.coeff}</td>
+      </tr>`).join('')
+    + '</tbody></table>';
+}
+
+// ── Créer compte parent (Admin) ──────────────
+function openCreateParentModal() {
+  const sel = document.getElementById('new-parent-student');
+  if (sel) {
+    const students = (DB.users||[]).filter(u => u.role === 'student' && u.status !== 'inactive');
+    sel.innerHTML = '<option value="">Sélectionner un étudiant…</option>'
+      + students.map(s => `<option value="${s.id}">${s.prenom} ${s.nom} — ${s.classe_id||'?'}</option>`).join('');
+  }
+  document.getElementById('new-parent-nom').value = '';
+  document.getElementById('new-parent-prenom').value = '';
+  document.getElementById('new-parent-email').value = '';
+  document.getElementById('create-parent-modal').style.display = 'flex';
+}
+
+async function createParentAccount() {
+  const nom       = document.getElementById('new-parent-nom')?.value?.trim();
+  const prenom    = document.getElementById('new-parent-prenom')?.value?.trim();
+  const email     = document.getElementById('new-parent-email')?.value?.trim();
+  const studentId = document.getElementById('new-parent-student')?.value;
+  if (!nom || !prenom || !email || !studentId) { toast('Remplissez tous les champs', '#CC1A27'); return; }
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/admin/create-parent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ nom, prenom, email, student_id: parseInt(studentId) })
+    });
+    const data = await res.json();
+    if (!res.ok) { toast(data.error || 'Erreur', '#CC1A27'); return; }
+    document.getElementById('create-parent-modal').style.display = 'none';
+    toast(`Compte parent créé ✓ — Mot de passe : ${data.password}`, '#0A3D2D');
+    renderAccounts();
+  } catch(e) { toast('Erreur lors de la création', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// VOLUME HORAIRE ENSEIGNANT
+// ══════════════════════════════════════════════
+async function renderTeacherVolume() {
+  const el = document.getElementById('t-volume-content');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:20px;color:var(--g400);font-size:13px">Chargement…</div>';
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/teacher/volume-horaire', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error();
+    const { total_heures, par_classe, matiere } = await res.json();
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px">
+        <div class="kpi"><div class="kpi-l">Total heures effectuées</div><div class="kpi-v ok">${total_heures.toFixed(1)}h</div><div class="kpi-s">${matiere||'—'}</div></div>
+      </div>
+      <div class="bx">
+        <div class="bx-h"><span class="bx-t">Détail par classe</span></div>
+        <table><thead><tr><th>Classe</th><th>Heures effectuées</th><th>Heures à venir</th><th>Total</th></tr></thead>
+        <tbody>${par_classe.length ? par_classe.map(c => `
+          <tr>
+            <td><strong>${c.classe_id}</strong></td>
+            <td><span style="color:#15803D;font-weight:600">${c.effectuees.toFixed(1)}h</span></td>
+            <td><span style="color:#F59E0B;font-weight:600">${c.aVenir.toFixed(1)}h</span></td>
+            <td>${(c.effectuees + c.aVenir).toFixed(1)}h</td>
+          </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--g400)">Aucun créneau trouvé dans les EDT publiés.</td></tr>'}
+        </tbody></table>
+      </div>`;
+  } catch(e) { el.innerHTML = '<div style="padding:20px;color:#CC1A27;font-size:13px">Erreur de chargement.</div>'; }
+}
+
+// ══════════════════════════════════════════════
+// EXPORT NOTES CSV
+// ══════════════════════════════════════════════
+async function exportNotesCSV(evalId) {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch(`/api/teacher/evaluations/${evalId}/notes`, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error();
+    const notes = await res.json();
+    const ev = _evalsList.find(e => e.id === evalId);
+    const header = 'Étudiant;Classe;Note;Bareme;Commentaire\n';
+    const rows = notes.map(n => `${n.prenom} ${n.nom};${n.classe_id||''};${n.note??''};${ev?.bareme||20};${n.commentaire||''}`).join('\n');
+    const blob = new Blob(['﻿' + header + rows], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `notes_${ev?.intitule||evalId}_${ev?.classe_id||''}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch(e) { toast('Erreur export CSV', '#CC1A27'); }
+}
 </script>
 </body>
 </html>

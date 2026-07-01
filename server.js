@@ -359,6 +359,22 @@ async function ensureTables() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    // Réclamations étudiants
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reclamations (
+        id           SERIAL PRIMARY KEY,
+        etudiant_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        etudiant_nom TEXT    NOT NULL,
+        classe_id    TEXT    DEFAULT '',
+        sujet        TEXT    NOT NULL,
+        corps        TEXT    NOT NULL,
+        statut       TEXT    DEFAULT 'nouveau',
+        reponse      TEXT    DEFAULT '',
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    // Lien parent → enfant
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_of INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
     console.error('[DB] ensureTables error:', e.message);
@@ -390,7 +406,7 @@ async function getFullData() {
   let users = blobUsers; // fallback : blob si SQL échoue
   try {
     const usersR = await pool.query(
-      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue, profile_complete, matiere FROM users'
+      'SELECT id, role, nom, prenom, email, classe_id, status, is_delegue, profile_complete, matiere, parent_of FROM users'
     );
     // Fusionner SQL (IDs réels + is_delegue à jour) avec blob (matieres, classes, poste…)
     users = usersR.rows.map(sqlU => {
@@ -407,6 +423,7 @@ async function getFullData() {
         is_delegue:       !!sqlU.is_delegue,
         profile_complete: sqlU.profile_complete !== false,
         matiere:          sqlU.matiere || '',
+        parent_of:        sqlU.parent_of || null,
       });
     });
   } catch (e) {
@@ -1274,6 +1291,172 @@ app.post('/api/admin/send-relance', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Send relance error:', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RÉCLAMATIONS ÉTUDIANTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// POST /api/student/reclamations — soumettre une réclamation
+app.post('/api/student/reclamations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'student') return res.status(403).json({ error: 'Accès refusé' });
+  const { sujet, corps } = req.body || {};
+  if (!sujet || !corps) return res.status(400).json({ error: 'Sujet et corps requis' });
+  try {
+    const userR = await pool.query('SELECT nom, prenom, classe_id FROM users WHERE id = $1', [req.user.id]);
+    const u = userR.rows[0];
+    const nom = u ? `${u.prenom} ${u.nom}` : 'Étudiant';
+    const { rows } = await pool.query(
+      `INSERT INTO reclamations (etudiant_id, etudiant_nom, classe_id, sujet, corps)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.user.id, nom, u?.classe_id || '', sujet, corps]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Reclamation error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/student/reclamations — voir ses propres réclamations
+app.get('/api/student/reclamations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'student') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM reclamations WHERE etudiant_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// GET /api/admin/reclamations — toutes les réclamations
+app.get('/api/admin/reclamations', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM reclamations ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// PUT /api/admin/reclamations/:id — répondre / changer statut
+app.put('/api/admin/reclamations/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { statut, reponse } = req.body || {};
+  try {
+    const { rows } = await pool.query(
+      `UPDATE reclamations SET statut = COALESCE($1, statut), reponse = COALESCE($2, reponse)
+       WHERE id = $3 RETURNING *`,
+      [statut || null, reponse ?? null, parseInt(req.params.id)]
+    );
+    res.json(rows[0] || {});
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ESPACE PARENTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// POST /api/admin/create-parent — créer un compte parent lié à un étudiant
+app.post('/api/admin/create-parent', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { nom, prenom, email, student_id } = req.body || {};
+  if (!nom || !prenom || !email || !student_id) return res.status(400).json({ error: 'Champs manquants' });
+  const password = generatePassword();
+  const hash = sha256(password);
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO users (role, nom, prenom, email, pwd_hash, status, parent_of)
+       VALUES ('parent', $1, $2, $3, $4, 'active', $5)
+       ON CONFLICT (email) DO NOTHING RETURNING id`,
+      [nom, prenom, email.toLowerCase().trim(), hash, parseInt(student_id)]
+    );
+    if (!rows.length) return res.status(409).json({ error: 'Email déjà utilisé' });
+    let email_sent = false;
+    try { email_sent = await sendWelcomeEmail(email, prenom, nom, password, 'Parent / Tuteur'); } catch(e) {}
+    res.json({ id: rows[0].id, email: email.toLowerCase().trim(), prenom, nom, password, email_sent });
+  } catch (err) {
+    console.error('Create parent error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/parent/child — infos de l'enfant (notes + classe)
+app.get('/api/parent/child', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'parent') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const parentR = await pool.query('SELECT parent_of FROM users WHERE id = $1', [req.user.id]);
+    const studentId = parentR.rows[0]?.parent_of;
+    if (!studentId) return res.status(404).json({ error: 'Aucun étudiant associé' });
+    const stuR = await pool.query(
+      'SELECT id, nom, prenom, email, classe_id, profile_complete FROM users WHERE id = $1',
+      [studentId]
+    );
+    if (!stuR.rows.length) return res.status(404).json({ error: 'Étudiant introuvable' });
+    const student = stuR.rows[0];
+    // Notes publiées
+    const notesR = await pool.query(`
+      SELECT e.intitule, e.matiere, e.type, e.coeff, e.bareme, e.date,
+             n.note, n.commentaire,
+             u.prenom AS teacher_prenom, u.nom AS teacher_nom
+      FROM notes n
+      JOIN evaluations e ON n.eval_id = e.id
+      JOIN users u ON e.teacher_id = u.id
+      WHERE n.etudiant_id = $1 AND e.statut = 'publie'
+      ORDER BY e.date DESC
+    `, [studentId]);
+    res.json({ student, notes: notesR.rows });
+  } catch (err) {
+    console.error('Parent child error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VOLUME HORAIRE ENSEIGNANT
+// ══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/teacher/volume-horaire — heures effectuées depuis les EDT publiés
+app.get('/api/teacher/volume-horaire', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'teacher') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const userR = await pool.query('SELECT matiere FROM users WHERE id = $1', [req.user.id]);
+    const matiere = userR.rows[0]?.matiere || '';
+    const classesR = await pool.query(
+      'SELECT classe_id FROM teacher_classes WHERE teacher_id = $1', [req.user.id]
+    );
+    const classes = classesR.rows.map(r => r.classe_id);
+    if (!classes.length) return res.json({ total_heures: 0, par_classe: [], matiere });
+    // Récupérer tous les slots publiés pour ces classes où l'enseignant enseigne
+    const edtR = await pool.query(
+      `SELECT classe_id, week_id, slots FROM edt_drafts
+       WHERE classe_id = ANY($1) AND statut = 'publie'`,
+      [classes]
+    );
+    const today = new Date().toISOString().split('T')[0];
+    const parClasse = {};
+    classes.forEach(c => { parClasse[c] = { effectuees: 0, aVenir: 0 }; });
+    for (const row of edtR.rows) {
+      const slots = row.slots || [];
+      const weekPassed = row.week_id <= today;
+      const teacherSlots = slots.filter(s => s.t && s.t.toLowerCase().includes(
+        userR.rows[0]?.matiere?.toLowerCase() || '___'
+      ) || (s.n && s.n.toLowerCase() === matiere.toLowerCase()));
+      for (const s of teacherSlots) {
+        const [sh, sm] = s.s.split(':').map(Number);
+        const [eh, em] = s.e.split(':').map(Number);
+        const heures = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
+        if (weekPassed) parClasse[row.classe_id].effectuees += heures;
+        else parClasse[row.classe_id].aVenir += heures;
+      }
+    }
+    const result = classes.map(c => ({ classe_id: c, ...parClasse[c] }));
+    const total = result.reduce((s, r) => s + r.effectuees, 0);
+    res.json({ total_heures: total, par_classe: result, matiere });
+  } catch (err) {
+    console.error('Volume horaire error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
