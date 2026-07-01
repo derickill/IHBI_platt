@@ -881,6 +881,9 @@ tr:hover td{background:var(--navy-l)}
       <a href="#filieres" class="nav-a">Formations</a>
       <a href="#about" class="nav-a">L'école</a>
       <a href="#admissions" class="nav-a">Admissions</a>
+      <a href="#news" class="nav-a">Événements</a>
+      <a href="#faq" class="nav-a">FAQ</a>
+      <a href="#contact" class="nav-a">Contact</a>
     </div>
     <div class="nav-right">
       <button class="btn-nav-fill" onclick="showLogin(event)">Mon espace</button>
@@ -1165,6 +1168,255 @@ tr:hover td{background:var(--navy-l)}
   </div>
 </div>
 
+<!-- ════ ACTUALITÉS & ÉVÉNEMENTS ════ -->
+<section class="sec sec-light" id="news">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="section-label">Vie de l'école</div>
+      <h2 class="section-title">Actualités &amp; Événements</h2>
+      <p class="section-sub">Retrouvez les dernières nouvelles de l'IHBI, nos événements à venir et les activités de nos étudiants.</p>
+    </div>
+    <div id="public-news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-top:36px">
+      <div style="text-align:center;color:var(--g400);font-size:14px;padding:40px;grid-column:1/-1">Aucune actualité pour le moment.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ CANDIDATURE ENSEIGNANTS / EMPLOYÉS ════ -->
+<section class="sec" id="candidature-emploi">
+  <div class="wrap">
+    <div class="adm-grid">
+      <div class="adm-left reveal">
+        <div class="section-label">Rejoignez notre équipe</div>
+        <h2 class="section-title">Candidature Enseignants &amp; Employés</h2>
+        <p class="section-sub" style="max-width:100%;margin-bottom:36px">Vous êtes passionné(e) par l'enseignement ou souhaitez rejoindre l'équipe administrative de l'IHBI ? Déposez votre candidature.</p>
+        <div class="adm-steps">
+          <div class="adm-step"><div class="snum">1</div><div class="stext"><strong>Remplissez le formulaire</strong><span>Indiquez votre profil, votre expérience et le poste souhaité</span></div></div>
+          <div class="adm-step"><div class="snum">2</div><div class="stext"><strong>Étude de votre dossier</strong><span>Notre direction examine votre candidature sous 5 jours ouvrés</span></div></div>
+          <div class="adm-step"><div class="snum">3</div><div class="stext"><strong>Entretien</strong><span>Les profils retenus sont convoqués pour un entretien à l'école</span></div></div>
+        </div>
+      </div>
+      <div class="reveal" style="transition-delay:.1s">
+        <div class="adm-form">
+          <div class="form-h">Déposer ma candidature</div>
+          <div class="form-s">Enseignant ou personnel administratif</div>
+          <div class="fg">
+            <label class="fl">Type de candidature <span style="color:var(--red)">*</span></label>
+            <select id="job-type" class="fsel" onchange="toggleJobFields()">
+              <option value="enseignant">Enseignant / Formateur</option>
+              <option value="employe">Personnel administratif / Employé</option>
+            </select>
+          </div>
+          <div class="fr">
+            <div class="fg"><label class="fl">Prénom <span style="color:var(--red)">*</span></label><input id="job-prenom" class="fi" type="text" placeholder="Jean"></div>
+            <div class="fg"><label class="fl">Nom <span style="color:var(--red)">*</span></label><input id="job-nom" class="fi" type="text" placeholder="Kouassi"></div>
+          </div>
+          <div class="fg"><label class="fl">Email <span style="color:var(--red)">*</span></label><input id="job-email" class="fi" type="email" placeholder="jean.kouassi@email.com"></div>
+          <div class="fg"><label class="fl">Téléphone</label><input id="job-tel" class="fi" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fg" id="job-matiere-grp">
+            <label class="fl">Matière enseignée <span style="color:var(--red)">*</span></label>
+            <input id="job-matiere" class="fi" type="text" placeholder="Ex : Mathématiques, Anglais, Comptabilité...">
+          </div>
+          <div class="fg">
+            <label class="fl">Poste souhaité</label>
+            <input id="job-poste" class="fi" type="text" placeholder="Ex : Professeur BTS, Secrétaire, Comptable...">
+          </div>
+          <div class="fg">
+            <label class="fl">Lettre de motivation</label>
+            <textarea id="job-lettre" class="fta" placeholder="Présentez votre profil, expérience et motivation..." style="min-height:110px"></textarea>
+          </div>
+          <div id="job-msg" style="display:none;padding:10px 14px;border-radius:4px;font-size:13.5px;margin-bottom:12px"></div>
+          <button class="btn-submit" onclick="submitJobApplication()">Envoyer ma candidature</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ E-LEARNING ════ -->
+<section class="sec sec-navy" id="elearning">
+  <div class="wrap">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center">
+      <div class="reveal">
+        <div class="section-label" style="color:rgba(255,255,255,.5)">Digital &amp; Innovation</div>
+        <h2 class="section-title" style="color:white" id="cms-elearning-titre">Notre plateforme E-Learning</h2>
+        <p style="color:rgba(255,255,255,.7);line-height:1.7;font-size:15px;margin:16px 0 28px" id="cms-elearning-contenu">Accédez à vos cours, ressources pédagogiques et supports de formation en ligne, à tout moment et depuis n'importe quel appareil.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">
+            <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Cours vidéo et supports PDF
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">
+            <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Emplois du temps en ligne
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">
+            <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Suivi des notes et résultats
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">
+            <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Messagerie avec les enseignants
+          </div>
+        </div>
+        <button class="btn-primary" onclick="showLogin(event)">Accéder à mon espace →</button>
+      </div>
+      <div class="reveal" style="transition-delay:.15s">
+        <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:32px;backdrop-filter:blur(8px)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center">
+              <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <div style="color:white;font-weight:600;font-size:15px">Plateforme IHBI</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:rgba(255,255,255,.8);font-size:13px">📅 Emploi du temps</span>
+              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
+            </div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:rgba(255,255,255,.8);font-size:13px">📝 Mes notes</span>
+              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
+            </div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:rgba(255,255,255,.8);font-size:13px">💬 Messagerie</span>
+              <span style="background:#22C55E;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Disponible</span>
+            </div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:rgba(255,255,255,.8);font-size:13px">📂 Ressources pédagogiques</span>
+              <span style="background:#F59E0B;color:white;font-size:11px;padding:3px 8px;border-radius:10px;font-weight:600">Bientôt</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TÉMOIGNAGES ════ -->
+<section class="sec" id="temoignages">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="section-label">Ils témoignent</div>
+      <h2 class="section-title" id="cms-temoignages-titre">Ils ont choisi l'IHBI</h2>
+      <p class="section-sub">Découvrez les expériences de nos anciens étudiants.</p>
+    </div>
+    <div id="temoignages-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-top:40px">
+      <!-- rempli par renderTemoignages() -->
+    </div>
+  </div>
+</section>
+
+<!-- ════ PARTENAIRES ════ -->
+<section class="sec sec-light" id="partenaires">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="section-label">Écosystème professionnel</div>
+      <h2 class="section-title" id="cms-partenaires-titre">Nos partenaires</h2>
+      <p class="section-sub">Des entreprises qui font confiance à l'IHBI pour le recrutement et les stages de leurs futurs collaborateurs.</p>
+    </div>
+    <div id="partenaires-grid" style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:40px">
+      <!-- rempli par renderPartenaires() -->
+    </div>
+  </div>
+</section>
+
+<!-- ════ FAQ ════ -->
+<section class="sec" id="faq">
+  <div class="wrap" style="max-width:780px">
+    <div class="sec-head center reveal">
+      <div class="section-label">Questions fréquentes</div>
+      <h2 class="section-title" id="cms-faq-titre">Foire aux questions</h2>
+      <p class="section-sub">Tout ce que vous devez savoir avant de vous inscrire à l'IHBI.</p>
+    </div>
+    <div id="faq-list" style="margin-top:40px;display:flex;flex-direction:column;gap:12px">
+      <!-- rempli par renderFAQ() -->
+    </div>
+  </div>
+</section>
+
+<!-- ════ CONTACTS ════ -->
+<section class="sec sec-light" id="contact">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="section-label">Nous joindre</div>
+      <h2 class="section-title">Contactez-nous</h2>
+      <p class="section-sub">Notre équipe est disponible pour répondre à toutes vos questions.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:40px;align-items:start">
+      <div class="reveal">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:44px;height:44px;background:var(--b100);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="20" height="20" fill="none" stroke="var(--b700)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:4px">Adresse</div>
+              <div style="font-size:14px;color:var(--g600)" id="cms-contacts-adresse">Yamoussoukro, Côte d'Ivoire</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:44px;height:44px;background:var(--b100);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="20" height="20" fill="none" stroke="var(--b700)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:4px">Téléphones</div>
+              <div id="cms-contacts-tels" style="font-size:14px;color:var(--g600);line-height:1.8">
+                27 30 64 43 92 · 07 07 52 35 97<br>01 03 62 02 70 · 07 49 04 81 70
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:44px;height:44px;background:var(--b100);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="20" height="20" fill="none" stroke="var(--b700)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:4px">Email</div>
+              <div id="cms-contacts-email" style="font-size:14px;color:var(--g600)">ihbi.info@gmail.com</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="width:44px;height:44px;background:var(--b100);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="20" height="20" fill="none" stroke="var(--b700)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:14px;color:var(--navy);margin-bottom:8px">Réseaux sociaux</div>
+              <div id="cms-contacts-reseaux" style="display:flex;gap:10px">
+                <!-- rempli par renderContacts() -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal" style="transition-delay:.1s">
+        <div class="adm-form">
+          <div class="form-h">Formulaire d'informations</div>
+          <div class="form-s">Nous vous répondons sous 48h</div>
+          <div class="fr">
+            <div class="fg"><label class="fl">Prénom <span style="color:var(--red)">*</span></label><input id="ci-prenom" class="fi" type="text" placeholder="Jean"></div>
+            <div class="fg"><label class="fl">Nom <span style="color:var(--red)">*</span></label><input id="ci-nom" class="fi" type="text" placeholder="Kouassi"></div>
+          </div>
+          <div class="fg"><label class="fl">Email <span style="color:var(--red)">*</span></label><input id="ci-email" class="fi" type="email" placeholder="jean.kouassi@email.com"></div>
+          <div class="fg"><label class="fl">Téléphone</label><input id="ci-tel" class="fi" type="tel" placeholder="+225 07 XX XX XX XX"></div>
+          <div class="fg">
+            <label class="fl">Sujet</label>
+            <select id="ci-sujet" class="fsel">
+              <option>Informations sur les formations</option>
+              <option>Frais de scolarité</option>
+              <option>Candidature étudiant</option>
+              <option>Partenariat entreprise</option>
+              <option>Autre demande</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Message</label><textarea id="ci-message" class="fta" placeholder="Votre message..."></textarea></div>
+          <div id="ci-msg" style="display:none;padding:10px 14px;border-radius:4px;font-size:13.5px;margin-bottom:12px"></div>
+          <button class="btn-submit" onclick="submitContactInfo()">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER — fond très foncé → textes blancs -->
 <footer class="footer">
   <div class="wrap">
@@ -1190,18 +1442,21 @@ tr:hover td{background:var(--navy-l)}
           <li><a href="#about">À propos</a></li>
           <li><a href="#filieres">Nos formations</a></li>
           <li><a href="#admissions">Admissions</a></li>
+          <li><a href="#news">Événements</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#candidature-emploi">Recrutement</a></li>
           <li><a href="#" onclick="showLogin(event)" class="red">Mon espace →</a></li>
         </ul>
       </div>
       <div>
         <div class="f-col-h">Contact</div>
         <ul class="f-links">
-          <li><a href="#">Yamoussoukro, Côte d'Ivoire</a></li>
-          <li><a href="#">27 30 64 43 92 (Fixe)</a></li>
-          <li><a href="#">07 07 52 35 97</a></li>
-          <li><a href="#">01 03 62 02 70</a></li>
-          <li><a href="#">07 49 04 81 70</a></li>
-          <li><a href="#">ihbi.info@gmail.com</a></li>
+          <li><a href="#contact">Yamoussoukro, Côte d'Ivoire</a></li>
+          <li><a href="#contact">27 30 64 43 92 (Fixe)</a></li>
+          <li><a href="#contact">07 07 52 35 97</a></li>
+          <li><a href="#contact">01 03 62 02 70</a></li>
+          <li><a href="#contact">07 49 04 81 70</a></li>
+          <li><a href="#contact">ihbi.info@gmail.com</a></li>
         </ul>
       </div>
     </div>
@@ -1717,6 +1972,15 @@ tr:hover td{background:var(--navy-l)}
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Réclamations
       <span id="recl-admin-badge" class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px;display:none">0</span>
     </div>
+    <div class="dsb-sec">Site Vitrine</div>
+    <div class="dsb-a" onclick="showA('a-news',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>Actualités &amp; Événements</div>
+    <div class="dsb-a" onclick="showA('a-emploi',this)" style="position:relative">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Candidatures emploi
+      <span id="emploi-admin-badge" class="bdg br" style="margin-left:auto;font-size:10px;padding:2px 7px;display:none">0</span>
+    </div>
+    <div class="dsb-a" onclick="showA('a-cms',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Éditeur de site (CMS)</div>
   </nav>
   <div class="dsb-foot">
     <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
@@ -2125,6 +2389,118 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
+  <!-- ── ACTUALITÉS & ÉVÉNEMENTS ADMIN ── -->
+  <div id="a-news" class="ds">
+    <div class="ds-title">Actualités &amp; Événements du site</div>
+    <div class="ds-sub">Gérez les actualités et événements affichés sur la page publique</div>
+    <div class="bx" style="margin-bottom:16px">
+      <div class="bx-h"><span class="bx-t">Ajouter une actualité</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px">
+        <div><label class="fl">Titre *</label><input type="text" class="fi" id="news-titre" placeholder="Ex : Journée portes ouvertes IHBI"></div>
+        <div>
+          <label class="fl">Type</label>
+          <select class="fsel" id="news-type">
+            <option value="événement">Événement</option>
+            <option value="actualité">Actualité</option>
+            <option value="annonce">Annonce</option>
+          </select>
+        </div>
+        <div><label class="fl">Date de l'événement</label><input type="date" class="fi" id="news-date"></div>
+        <div><label class="fl">Lien externe (optionnel)</label><input type="url" class="fi" id="news-lien" placeholder="https://..."></div>
+        <div style="grid-column:1/-1"><label class="fl">Description</label><textarea class="fta" id="news-corps" placeholder="Détails de l'événement ou de l'actualité..." style="min-height:80px"></textarea></div>
+      </div>
+      <div style="margin-top:12px">
+        <button onclick="createNews()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Publier</button>
+      </div>
+    </div>
+    <div class="bx">
+      <div class="bx-h"><span class="bx-t">Actualités publiées</span></div>
+      <div id="news-admin-list" style="padding:8px 0">
+        <div style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CANDIDATURES EMPLOI ADMIN ── -->
+  <div id="a-emploi" class="ds">
+    <div class="ds-title">Candidatures Enseignants &amp; Employés</div>
+    <div class="ds-sub">Candidatures reçues via le formulaire du site vitrine</div>
+    <div class="bx">
+      <div class="bx-h">
+        <span class="bx-t">Liste des candidatures</span>
+        <div style="display:flex;gap:8px">
+          <select class="fsel" id="emploi-filter" onchange="renderAdminJobApplications()" style="font-size:12px;padding:5px 10px">
+            <option value="all">Toutes</option>
+            <option value="enseignant">Enseignants</option>
+            <option value="employe">Employés</option>
+          </select>
+        </div>
+      </div>
+      <div id="emploi-admin-list" style="padding:14px 0">
+        <div style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CMS — ÉDITEUR DE SITE ── -->
+  <div id="a-cms" class="ds">
+    <div class="ds-title">Éditeur de site (CMS)</div>
+    <div class="ds-sub">Modifiez les sections de contenu affichées sur la page publique</div>
+    <!-- Sections CMS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="cms-sections-grid">
+      <!-- Section ELearning -->
+      <div class="bx">
+        <div class="bx-h"><span class="bx-t">Section E-Learning</span></div>
+        <div style="padding:0 2px">
+          <div><label class="fl">Titre</label><input type="text" class="fi" id="cms-elearning-t" placeholder="Titre de la section E-Learning"></div>
+          <div><label class="fl">Contenu</label><textarea class="fta" id="cms-elearning-c" style="min-height:80px" placeholder="Description..."></textarea></div>
+        </div>
+        <button onclick="saveCMSSection('elearning')" style="margin-top:10px;padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer</button>
+      </div>
+      <!-- Section FAQ -->
+      <div class="bx" style="grid-column:1/-1">
+        <div class="bx-h"><span class="bx-t">FAQ — Questions fréquentes</span><button onclick="addFaqItem()" style="padding:6px 14px;background:#250D42;color:white;border:none;font-size:12px;cursor:pointer;border-radius:3px">+ Ajouter</button></div>
+        <div id="cms-faq-editor" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+          <!-- items injectés par loadCMSEditor() -->
+        </div>
+        <button onclick="saveCMSFAQ()" style="padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer la FAQ</button>
+      </div>
+      <!-- Section Témoignages -->
+      <div class="bx" style="grid-column:1/-1">
+        <div class="bx-h"><span class="bx-t">Témoignages des anciens étudiants</span><button onclick="addTemoignageItem()" style="padding:6px 14px;background:#250D42;color:white;border:none;font-size:12px;cursor:pointer;border-radius:3px">+ Ajouter</button></div>
+        <div id="cms-temoignages-editor" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+          <!-- items injectés par loadCMSEditor() -->
+        </div>
+        <button onclick="saveCMSTemoignages()" style="padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer les témoignages</button>
+      </div>
+      <!-- Section Partenaires -->
+      <div class="bx" style="grid-column:1/-1">
+        <div class="bx-h"><span class="bx-t">Partenaires</span><button onclick="addPartenaireItem()" style="padding:6px 14px;background:#250D42;color:white;border:none;font-size:12px;cursor:pointer;border-radius:3px">+ Ajouter</button></div>
+        <div id="cms-partenaires-editor" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <!-- items injectés par loadCMSEditor() -->
+        </div>
+        <button onclick="saveCMSPartenaires()" style="padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer les partenaires</button>
+      </div>
+      <!-- Section Contacts -->
+      <div class="bx" style="grid-column:1/-1">
+        <div class="bx-h"><span class="bx-t">Informations de contact</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px">
+          <div><label class="fl">Adresse</label><input type="text" class="fi" id="cms-contacts-adresse-inp" placeholder="Yamoussoukro, Côte d'Ivoire"></div>
+          <div><label class="fl">Email</label><input type="email" class="fi" id="cms-contacts-email-inp" placeholder="ihbi.info@gmail.com"></div>
+          <div><label class="fl">Téléphone 1</label><input type="text" class="fi" id="cms-tel-1" placeholder="27 30 64 43 92"></div>
+          <div><label class="fl">Téléphone 2</label><input type="text" class="fi" id="cms-tel-2" placeholder="07 07 52 35 97"></div>
+          <div><label class="fl">Téléphone 3</label><input type="text" class="fi" id="cms-tel-3" placeholder="01 03 62 02 70"></div>
+          <div><label class="fl">Téléphone 4</label><input type="text" class="fi" id="cms-tel-4" placeholder="07 49 04 81 70"></div>
+          <div><label class="fl">Facebook (URL)</label><input type="url" class="fi" id="cms-facebook" placeholder="https://facebook.com/ihbi..."></div>
+          <div><label class="fl">Instagram (URL)</label><input type="url" class="fi" id="cms-instagram" placeholder="https://instagram.com/ihbi..."></div>
+          <div><label class="fl">LinkedIn (URL)</label><input type="url" class="fi" id="cms-linkedin" placeholder="https://linkedin.com/school/ihbi..."></div>
+          <div><label class="fl">Twitter/X (URL)</label><input type="url" class="fi" id="cms-twitter" placeholder="https://twitter.com/ihbi..."></div>
+        </div>
+        <button onclick="saveCMSContacts()" style="margin-top:14px;padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer les contacts</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal réponse réclamation -->
   <div class="overlay-modal" id="recl-reply-modal" onclick="if(event.target===this)document.getElementById('recl-reply-modal').style.display='none'">
     <div class="obox" style="max-width:500px">
@@ -2410,7 +2786,7 @@ function _restoreCoursesFromEdt() {
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
-const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations', 'contact_submissions', 'evaluations', 'notes'];
+const _SQL_KEYS = ['annonces', 'messages_teacher', 'messages_delegates', 'edt_drafts', 'formations', 'contact_submissions', 'evaluations', 'notes', 'news', 'site_content'];
 
 function saveDB() {
   // 1. localStorage garde tout (fallback hors ligne)
@@ -2594,12 +2970,20 @@ function goSite() {
   CURRENT_USER = null;
   sessionStorage.removeItem('ihbi_token');
   sessionStorage.removeItem('ihbi_user');
-  ['pg-dash','pg-teacher','pg-admin'].forEach(id =>
-    document.getElementById(id).style.display = 'none');
+  ['pg-dash','pg-teacher','pg-admin','pg-parent'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
   document.getElementById('pg-site').style.display = 'block';
   renderPublicFormations();
+  initSiteVitrine();
   window.scrollTo(0, 0);
   _historyPush({page:'pg-site'});
+}
+
+// Échappe HTML pour éviter XSS dans les templates string
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 // ── POLLING AUTO-REFRESH ──────────────────────────────────────────────────
@@ -2669,6 +3053,9 @@ function _rerenderActiveSections() {
     const nb = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
     const badge = document.getElementById('contacts-count-badge');
     if (badge) badge.textContent = nb;
+    // Re-rendre sections site vitrine actives
+    if (isOn('a-news'))   renderAdminNews();
+    if (isOn('a-emploi')) renderAdminJobApplications();
   } else if (role === 'student') {
     renderCal();            // rebuild calendrier + mini-cal avec COURSES à jour
     initStudentMessaging(); // re-vérifie statut délégué + appelle renderStudentMessages()
@@ -2826,6 +3213,9 @@ function showA(id, el) {
   if (id === 'a-accounts')      renderAccounts();
   if (id === 'a-payments')      renderPayments();
   if (id === 'a-reclamations')  renderAdminReclamations();
+  if (id === 'a-news')          renderAdminNews();
+  if (id === 'a-emploi')        renderAdminJobApplications();
+  if (id === 'a-cms')           loadCMSEditor();
   _historyPush({page:'pg-admin', section:id});
 }
 
@@ -5393,6 +5783,8 @@ window.addEventListener('DOMContentLoaded', () => {
       if (document.getElementById('all-formations-modal')?.classList.contains('on')) renderAllFormations();
     })
     .catch(() => {});
+  // Charger le contenu CMS et les actualités du site vitrine (public, sans auth)
+  initSiteVitrine();
 });
 
 // ══════════════════════════════════════════════
@@ -5689,6 +6081,531 @@ async function exportNotesCSV(evalId) {
     a.download = `notes_${ev?.intitule||evalId}_${ev?.classe_id||''}.csv`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   } catch(e) { toast('Erreur export CSV', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// SITE VITRINE — CONTENU CMS PUBLIC
+// ══════════════════════════════════════════════
+
+async function initSiteVitrine() {
+  try {
+    const [newsRes, cmsRes] = await Promise.all([
+      fetch('/api/public/news'),
+      fetch('/api/public/site-content'),
+    ]);
+    const news = newsRes.ok ? await newsRes.json() : [];
+    const cms  = cmsRes.ok  ? await cmsRes.json()  : {};
+    renderPublicNews(news);
+    renderTemoignages(cms);
+    renderPartenaires(cms);
+    renderFAQ(cms);
+    renderSiteContacts(cms);
+    if (cms.elearning) {
+      const tEl = document.getElementById('cms-elearning-titre');
+      const cEl = document.getElementById('cms-elearning-contenu');
+      if (tEl && cms.elearning.titre) tEl.textContent = cms.elearning.titre;
+      if (cEl && cms.elearning.contenu) cEl.textContent = cms.elearning.contenu;
+    }
+  } catch(e) { console.warn('initSiteVitrine:', e); }
+}
+
+function renderPublicNews(newsArr) {
+  const grid = document.getElementById('public-news-grid');
+  if (!grid) return;
+  const items = (newsArr || DB.news || []).filter(n => n.statut === 'publié');
+  if (!items.length) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--g400);font-size:14px;padding:40px;grid-column:1/-1">Aucune actualité pour le moment.</div>';
+    return;
+  }
+  const typeColors = { 'événement': '#250D42', 'actualité': '#0A3D2D', 'annonce': '#CC1A27' };
+  grid.innerHTML = items.map(n => {
+    const col = typeColors[n.type] || '#250D42';
+    return `<div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
+      <div style="background:${col};padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:white;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">${n.type||'événement'}</span>
+        ${n.date_event ? `<span style="color:rgba(255,255,255,.75);font-size:12px">${n.date_event}</span>` : ''}
+      </div>
+      <div style="padding:18px">
+        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px">${escHtml(n.titre)}</div>
+        ${n.corps ? `<p style="color:var(--g600);font-size:13.5px;line-height:1.6;margin-bottom:12px">${escHtml(n.corps)}</p>` : ''}
+        ${n.lien ? `<a href="${n.lien}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:${col};text-decoration:none">En savoir plus →</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTemoignages(cms) {
+  const grid = document.getElementById('temoignages-grid');
+  if (!grid) return;
+  const titleEl = document.getElementById('cms-temoignages-titre');
+  const sc = cms || (DB.site_content || {});
+  if (sc.temoignages) {
+    if (titleEl && sc.temoignages.titre) titleEl.textContent = sc.temoignages.titre;
+    let items = [];
+    try { items = JSON.parse(sc.temoignages.contenu || '[]'); } catch(e) {}
+    grid.innerHTML = items.map(t => `
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:24px;position:relative">
+        <div style="font-size:32px;color:var(--b200);line-height:1;margin-bottom:12px">"</div>
+        <p style="color:var(--g700);font-size:14px;line-height:1.7;margin-bottom:16px;font-style:italic">${escHtml(t.texte||'')}</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:var(--b700);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0">${(t.nom||'?')[0]}</div>
+          <div>
+            <div style="font-weight:600;font-size:13.5px;color:var(--navy)">${escHtml(t.nom||'')}</div>
+            <div style="font-size:12px;color:var(--g400)">${escHtml(t.promo||'')}</div>
+          </div>
+        </div>
+      </div>`).join('') || '<div style="text-align:center;color:var(--g400);padding:24px">Aucun témoignage pour le moment.</div>';
+  }
+}
+
+function renderPartenaires(cms) {
+  const grid = document.getElementById('partenaires-grid');
+  if (!grid) return;
+  const titleEl = document.getElementById('cms-partenaires-titre');
+  const sc = cms || (DB.site_content || {});
+  if (sc.partenaires) {
+    if (titleEl && sc.partenaires.titre) titleEl.textContent = sc.partenaires.titre;
+    let items = [];
+    try { items = JSON.parse(sc.partenaires.contenu || '[]'); } catch(e) {}
+    grid.innerHTML = items.map(p => `
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:20px 28px;text-align:center;min-width:130px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">${escHtml(p.nom||'')}</div>
+        ${p.description ? `<div style="font-size:12px;color:var(--g400)">${escHtml(p.description)}</div>` : ''}
+      </div>`).join('') || '<div style="color:var(--g400);padding:24px">Aucun partenaire renseigné.</div>';
+  }
+}
+
+function renderFAQ(cms) {
+  const list = document.getElementById('faq-list');
+  if (!list) return;
+  const titleEl = document.getElementById('cms-faq-titre');
+  const sc = cms || (DB.site_content || {});
+  if (sc.faq) {
+    if (titleEl && sc.faq.titre) titleEl.textContent = sc.faq.titre;
+    let items = [];
+    try { items = JSON.parse(sc.faq.contenu || '[]'); } catch(e) {}
+    list.innerHTML = items.map((f, i) => `
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <button onclick="toggleFAQ(${i})" style="width:100%;text-align:left;padding:16px 20px;background:white;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14.5px;font-weight:600;color:var(--navy)">
+          ${escHtml(f.q||'')}
+          <svg id="faq-icon-${i}" width="18" height="18" fill="none" stroke="var(--g400)" viewBox="0 0 24 24" style="flex-shrink:0;transition:transform .2s"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-body-${i}" style="max-height:0;overflow:hidden;transition:max-height .3s ease">
+          <div style="padding:0 20px 16px;font-size:14px;color:var(--g600);line-height:1.7">${escHtml(f.r||'')}</div>
+        </div>
+      </div>`).join('') || '<div style="text-align:center;color:var(--g400);padding:24px">Aucune question pour le moment.</div>';
+  }
+}
+
+function toggleFAQ(i) {
+  const body = document.getElementById('faq-body-' + i);
+  const icon = document.getElementById('faq-icon-' + i);
+  if (!body) return;
+  const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+  body.style.maxHeight = isOpen ? '0' : body.scrollHeight + 'px';
+  if (icon) icon.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function renderSiteContacts(cms) {
+  const reseauxEl = document.getElementById('cms-contacts-reseaux');
+  const adrEl     = document.getElementById('cms-contacts-adresse');
+  const telsEl    = document.getElementById('cms-contacts-tels');
+  const emailEl   = document.getElementById('cms-contacts-email');
+  const sc = cms || (DB.site_content || {});
+  if (!sc.contacts) return;
+  let data = {};
+  try { data = JSON.parse(sc.contacts.contenu || '{}'); } catch(e) {}
+  if (adrEl  && data.adresse) adrEl.textContent  = data.adresse;
+  if (emailEl && data.email)  emailEl.textContent = data.email;
+  if (telsEl  && data.tel)    telsEl.innerHTML    = data.tel.filter(Boolean).join('<br>');
+  if (reseauxEl) {
+    const links = [
+      { key: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: 'f' },
+      { key: 'instagram', label: 'Instagram', color: '#E4405F', icon: 'ig' },
+      { key: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: 'in' },
+      { key: 'twitter',   label: 'Twitter/X', color: '#000',    icon: 'x' },
+    ].filter(l => data[l.key]);
+    reseauxEl.innerHTML = links.length
+      ? links.map(l => `<a href="${data[l.key]}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:${l.color};color:white;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none">${escHtml(l.label)}</a>`).join('')
+      : '<span style="font-size:13px;color:var(--g400)">Réseaux sociaux non configurés</span>';
+  }
+}
+
+// ── Formulaire d'informations (section Contact) ──────────────────────────────
+async function submitContactInfo() {
+  const prenom  = document.getElementById('ci-prenom')?.value?.trim();
+  const nom     = document.getElementById('ci-nom')?.value?.trim();
+  const email   = document.getElementById('ci-email')?.value?.trim();
+  const tel     = document.getElementById('ci-tel')?.value?.trim() || '';
+  const sujet   = document.getElementById('ci-sujet')?.value || 'Autre demande';
+  const message = document.getElementById('ci-message')?.value?.trim() || '';
+  const msgEl   = document.getElementById('ci-msg');
+  if (!prenom || !nom || !email) { showMsg(msgEl, 'Prénom, nom et email sont requis.', '#CC1A27'); return; }
+  try {
+    const res = await fetch('/api/candidatures', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom, nom, email, telephone: tel, filiere: sujet, message }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg(msgEl, data.error || 'Erreur', '#CC1A27'); return; }
+    showMsg(msgEl, 'Message envoyé ! Nous vous répondrons sous 48h.', '#0A3D2D');
+    ['ci-prenom','ci-nom','ci-email','ci-tel','ci-message'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+  } catch(e) { showMsg(msgEl, 'Erreur réseau.', '#CC1A27'); }
+}
+function showMsg(el, txt, bg) {
+  if (!el) return;
+  el.textContent = txt; el.style.background = bg + '18'; el.style.color = bg;
+  el.style.border = '1px solid ' + bg + '44'; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ── Candidature enseignant / employé (formulaire site vitrine) ───────────────
+function toggleJobFields() {
+  const type = document.getElementById('job-type')?.value;
+  const grp  = document.getElementById('job-matiere-grp');
+  if (grp) grp.style.display = type === 'enseignant' ? 'block' : 'none';
+}
+async function submitJobApplication() {
+  const type    = document.getElementById('job-type')?.value || 'enseignant';
+  const prenom  = document.getElementById('job-prenom')?.value?.trim();
+  const nom     = document.getElementById('job-nom')?.value?.trim();
+  const email   = document.getElementById('job-email')?.value?.trim();
+  const tel     = document.getElementById('job-tel')?.value?.trim() || '';
+  const poste   = document.getElementById('job-poste')?.value?.trim() || '';
+  const matiere = document.getElementById('job-matiere')?.value?.trim() || '';
+  const lettre  = document.getElementById('job-lettre')?.value?.trim() || '';
+  const msgEl   = document.getElementById('job-msg');
+  if (!prenom || !nom || !email) { showMsg(msgEl, 'Prénom, nom et email sont requis.', '#CC1A27'); return; }
+  try {
+    const res = await fetch('/api/public/job-application', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, nom, prenom, email, telephone: tel, poste, matiere, lettre }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showMsg(msgEl, data.error || 'Erreur', '#CC1A27'); return; }
+    showMsg(msgEl, 'Candidature envoyée ! Nous étudierons votre dossier sous 5 jours ouvrés.', '#0A3D2D');
+    ['job-prenom','job-nom','job-email','job-tel','job-poste','job-matiere','job-lettre'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+  } catch(e) { showMsg(msgEl, 'Erreur réseau.', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — ACTUALITÉS & ÉVÉNEMENTS
+// ══════════════════════════════════════════════
+async function renderAdminNews() {
+  const list = document.getElementById('news-admin-list');
+  if (!list) return;
+  list.innerHTML = '<div style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>';
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const r = await fetch('/api/admin/news', { headers: { Authorization: 'Bearer ' + token } });
+    const items = r.ok ? await r.json() : [];
+    if (!items.length) { list.innerHTML = '<div style="padding:14px 18px;color:var(--g400);font-size:13px">Aucune actualité publiée.</div>'; return; }
+    const typeColors = { 'événement': '#250D42', 'actualité': '#0A3D2D', 'annonce': '#CC1A27' };
+    list.innerHTML = items.map(n => `
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)">
+        <span style="padding:3px 9px;background:${typeColors[n.type]||'#250D42'};color:white;font-size:11px;font-weight:700;border-radius:3px;white-space:nowrap">${n.type||'?'}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13.5px;color:var(--navy)">${escHtml(n.titre)}</div>
+          ${n.date_event ? `<div style="font-size:12px;color:var(--g400)">${n.date_event}</div>` : ''}
+          ${n.corps ? `<div style="font-size:13px;color:var(--g600);margin-top:4px">${escHtml(n.corps.substring(0,120))}${n.corps.length>120?'…':''}</div>` : ''}
+        </div>
+        <button onclick="deleteNews(${n.id})" style="padding:5px 12px;background:var(--off);border:1px solid var(--border);font-size:12px;color:#CC1A27;cursor:pointer;border-radius:3px;white-space:nowrap">Supprimer</button>
+      </div>`).join('');
+  } catch(e) { list.innerHTML = '<div style="padding:14px 18px;color:#CC1A27;font-size:13px">Erreur de chargement.</div>'; }
+}
+
+async function createNews() {
+  const titre  = document.getElementById('news-titre')?.value?.trim();
+  const corps  = document.getElementById('news-corps')?.value?.trim() || '';
+  const type   = document.getElementById('news-type')?.value || 'événement';
+  const date   = document.getElementById('news-date')?.value || '';
+  const lien   = document.getElementById('news-lien')?.value?.trim() || '';
+  if (!titre) { toast('Le titre est requis', '#CC1A27'); return; }
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/admin/news', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ titre, corps, type, date_event: date, lien }),
+    });
+    if (!res.ok) throw new Error();
+    toast('Actualité publiée ✓', '#0A3D2D');
+    ['news-titre','news-corps','news-date','news-lien'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    renderAdminNews();
+  } catch(e) { toast('Erreur lors de la publication', '#CC1A27'); }
+}
+
+async function deleteNews(id) {
+  if (!confirm('Supprimer cette actualité ?')) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/admin/news/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) throw new Error();
+    toast('Actualité supprimée', '#0A3D2D');
+    renderAdminNews();
+  } catch(e) { toast('Erreur lors de la suppression', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — CANDIDATURES EMPLOI
+// ══════════════════════════════════════════════
+async function renderAdminJobApplications() {
+  const list   = document.getElementById('emploi-admin-list');
+  const filter = document.getElementById('emploi-filter')?.value || 'all';
+  if (!list) return;
+  list.innerHTML = '<div style="padding:14px 18px;color:var(--g400);font-size:13px">Chargement…</div>';
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const r = await fetch('/api/admin/job-applications', { headers: { Authorization: 'Bearer ' + token } });
+    let items = r.ok ? await r.json() : [];
+    if (filter !== 'all') items = items.filter(a => a.type === filter);
+    // badge
+    const badge = document.getElementById('emploi-admin-badge');
+    const newCount = items.filter(a => a.statut === 'nouveau').length;
+    if (badge) { badge.textContent = newCount; badge.style.display = newCount ? 'inline-block' : 'none'; }
+    if (!items.length) { list.innerHTML = '<div style="padding:14px 18px;color:var(--g400);font-size:13px">Aucune candidature reçue.</div>'; return; }
+    const statColors = { 'nouveau': '#CC1A27', 'en_cours': '#D97706', 'retenu': '#0A3D2D', 'refusé': '#6B7280' };
+    list.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--off)">
+        <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--g500);font-weight:600;border-bottom:1px solid var(--border)">Candidat</th>
+        <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--g500);font-weight:600;border-bottom:1px solid var(--border)">Type</th>
+        <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--g500);font-weight:600;border-bottom:1px solid var(--border)">Poste / Matière</th>
+        <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--g500);font-weight:600;border-bottom:1px solid var(--border)">Date</th>
+        <th style="padding:10px 14px;text-align:left;font-size:12px;color:var(--g500);font-weight:600;border-bottom:1px solid var(--border)">Statut</th>
+        <th style="padding:10px 14px;border-bottom:1px solid var(--border)"></th>
+      </tr></thead>
+      <tbody>${items.map(a => `
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:12px 14px">
+            <div style="font-weight:600;font-size:13.5px">${escHtml(a.prenom+' '+a.nom)}</div>
+            <div style="font-size:12px;color:var(--g400)">${escHtml(a.email)}</div>
+            ${a.telephone ? `<div style="font-size:12px;color:var(--g400)">${escHtml(a.telephone)}</div>` : ''}
+          </td>
+          <td style="padding:12px 14px"><span style="padding:3px 9px;background:${a.type==='enseignant'?'#EDE9FE':'#FEF3C7'};color:${a.type==='enseignant'?'#5B21B6':'#92400E'};font-size:11px;font-weight:700;border-radius:3px">${a.type}</span></td>
+          <td style="padding:12px 14px;font-size:13px;color:var(--g600)">${escHtml(a.poste||'')}${a.matiere ? '<br><span style="font-size:12px;color:var(--g400)">'+escHtml(a.matiere)+'</span>' : ''}</td>
+          <td style="padding:12px 14px;font-size:12px;color:var(--g400)">${a.created_at ? a.created_at.split('T')[0] : ''}</td>
+          <td style="padding:12px 14px">
+            <select onchange="updateJobStatus(${a.id},this.value)" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:3px;color:${statColors[a.statut]||'#333'}">
+              <option value="nouveau" ${a.statut==='nouveau'?'selected':''}>Nouveau</option>
+              <option value="en_cours" ${a.statut==='en_cours'?'selected':''}>En cours</option>
+              <option value="retenu" ${a.statut==='retenu'?'selected':''}>Retenu</option>
+              <option value="refusé" ${a.statut==='refusé'?'selected':''}>Refusé</option>
+            </select>
+          </td>
+          <td style="padding:12px 14px">
+            ${a.lettre ? `<button onclick="alert('${escHtml(a.lettre).replace(/'/g,'\\\'')}')" style="padding:5px 12px;background:var(--off);border:1px solid var(--border);font-size:12px;cursor:pointer;border-radius:3px">Lire lettre</button>` : ''}
+          </td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch(e) { list.innerHTML = '<div style="padding:14px 18px;color:#CC1A27;font-size:13px">Erreur de chargement.</div>'; }
+}
+
+async function updateJobStatus(id, statut) {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    await fetch('/api/admin/job-applications/' + id, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ statut }),
+    });
+    toast('Statut mis à jour ✓', '#0A3D2D');
+  } catch(e) { toast('Erreur de mise à jour', '#CC1A27'); }
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — CMS ÉDITEUR DE SITE
+// ══════════════════════════════════════════════
+let _cmsData = {};
+
+async function loadCMSEditor() {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const r = await fetch('/api/admin/site-content', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return;
+    _cmsData = await r.json();
+  } catch(e) { return; }
+
+  // ELearning
+  const el = _cmsData.elearning || {};
+  const tInp = document.getElementById('cms-elearning-t');
+  const cInp = document.getElementById('cms-elearning-c');
+  if (tInp) tInp.value = el.titre || '';
+  if (cInp) cInp.value = el.contenu || '';
+
+  // FAQ
+  let faqItems = [];
+  try { faqItems = JSON.parse((_cmsData.faq || {}).contenu || '[]'); } catch(e) {}
+  renderCMSFaqEditor(faqItems);
+
+  // Témoignages
+  let temItems = [];
+  try { temItems = JSON.parse((_cmsData.temoignages || {}).contenu || '[]'); } catch(e) {}
+  renderCMSTemoignagesEditor(temItems);
+
+  // Partenaires
+  let partItems = [];
+  try { partItems = JSON.parse((_cmsData.partenaires || {}).contenu || '[]'); } catch(e) {}
+  renderCMSPartenairesEditor(partItems);
+
+  // Contacts
+  let contacts = {};
+  try { contacts = JSON.parse((_cmsData.contacts || {}).contenu || '{}'); } catch(e) {}
+  const fields = { 'cms-contacts-adresse-inp': contacts.adresse||'', 'cms-contacts-email-inp': contacts.email||'',
+    'cms-tel-1': (contacts.tel||[])[0]||'', 'cms-tel-2': (contacts.tel||[])[1]||'',
+    'cms-tel-3': (contacts.tel||[])[2]||'', 'cms-tel-4': (contacts.tel||[])[3]||'',
+    'cms-facebook': contacts.facebook||'', 'cms-instagram': contacts.instagram||'',
+    'cms-linkedin': contacts.linkedin||'', 'cms-twitter': contacts.twitter||'' };
+  Object.entries(fields).forEach(([id, val]) => { const el = document.getElementById(id); if(el) el.value = val; });
+}
+
+function renderCMSFaqEditor(items) {
+  const editor = document.getElementById('cms-faq-editor');
+  if (!editor) return;
+  editor.innerHTML = items.map((f, i) => `
+    <div style="background:var(--off);border:1px solid var(--border);border-radius:6px;padding:12px" id="faq-item-${i}">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" class="fi" style="flex:1" value="${escHtml(f.q||'')}" placeholder="Question" id="faq-q-${i}">
+        <button onclick="removeFaqItem(${i})" style="padding:6px 10px;background:none;border:1px solid #CC1A2730;color:#CC1A27;border-radius:3px;cursor:pointer;font-size:16px;line-height:1">×</button>
+      </div>
+      <textarea class="fta" placeholder="Réponse" style="min-height:60px" id="faq-r-${i}">${escHtml(f.r||'')}</textarea>
+    </div>`).join('');
+}
+
+function addFaqItem() {
+  const editor = document.getElementById('cms-faq-editor');
+  if (!editor) return;
+  const items = collectFaqItems();
+  items.push({ q: '', r: '' });
+  renderCMSFaqEditor(items);
+}
+function removeFaqItem(i) {
+  const items = collectFaqItems();
+  items.splice(i, 1);
+  renderCMSFaqEditor(items);
+}
+function collectFaqItems() {
+  const items = [];
+  let i = 0;
+  while (document.getElementById('faq-q-' + i)) {
+    items.push({ q: document.getElementById('faq-q-' + i)?.value || '', r: document.getElementById('faq-r-' + i)?.value || '' });
+    i++;
+  }
+  return items;
+}
+async function saveCMSFAQ() {
+  const items = collectFaqItems();
+  await saveCMSKey('faq', (_cmsData.faq||{}).titre || 'Foire aux questions', JSON.stringify(items));
+  toast('FAQ enregistrée ✓', '#0A3D2D');
+}
+
+function renderCMSTemoignagesEditor(items) {
+  const editor = document.getElementById('cms-temoignages-editor');
+  if (!editor) return;
+  editor.innerHTML = items.map((t, i) => `
+    <div style="background:var(--off);border:1px solid var(--border);border-radius:6px;padding:12px;flex:1;min-width:260px" id="tem-item-${i}">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" class="fi" style="flex:1" value="${escHtml(t.nom||'')}" placeholder="Nom" id="tem-nom-${i}">
+        <button onclick="removeTemoignageItem(${i})" style="padding:6px 10px;background:none;border:1px solid #CC1A2730;color:#CC1A27;border-radius:3px;cursor:pointer;font-size:16px;line-height:1">×</button>
+      </div>
+      <input type="text" class="fi" style="margin-bottom:8px" value="${escHtml(t.promo||'')}" placeholder="Promotion (ex: BTS FCGE 2023)" id="tem-promo-${i}">
+      <textarea class="fta" placeholder="Témoignage..." style="min-height:70px" id="tem-texte-${i}">${escHtml(t.texte||'')}</textarea>
+    </div>`).join('');
+}
+function addTemoignageItem() {
+  const items = collectTemoignageItems();
+  items.push({ nom: '', promo: '', texte: '' });
+  renderCMSTemoignagesEditor(items);
+}
+function removeTemoignageItem(i) {
+  const items = collectTemoignageItems();
+  items.splice(i, 1);
+  renderCMSTemoignagesEditor(items);
+}
+function collectTemoignageItems() {
+  const items = [];
+  let i = 0;
+  while (document.getElementById('tem-nom-' + i)) {
+    items.push({ nom: document.getElementById('tem-nom-'+i)?.value||'', promo: document.getElementById('tem-promo-'+i)?.value||'', texte: document.getElementById('tem-texte-'+i)?.value||'' });
+    i++;
+  }
+  return items;
+}
+async function saveCMSTemoignages() {
+  const items = collectTemoignageItems();
+  await saveCMSKey('temoignages', (_cmsData.temoignages||{}).titre || 'Ils ont choisi l\'IHBI', JSON.stringify(items));
+  toast('Témoignages enregistrés ✓', '#0A3D2D');
+}
+
+function renderCMSPartenairesEditor(items) {
+  const editor = document.getElementById('cms-partenaires-editor');
+  if (!editor) return;
+  editor.innerHTML = items.map((p, i) => `
+    <div style="background:var(--off);border:1px solid var(--border);border-radius:6px;padding:10px;min-width:200px;flex:1" id="part-item-${i}">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <input type="text" class="fi" style="flex:1" value="${escHtml(p.nom||'')}" placeholder="Nom partenaire" id="part-nom-${i}">
+        <button onclick="removePartenaireItem(${i})" style="padding:4px 8px;background:none;border:1px solid #CC1A2730;color:#CC1A27;border-radius:3px;cursor:pointer">×</button>
+      </div>
+      <input type="text" class="fi" value="${escHtml(p.description||'')}" placeholder="Description" id="part-desc-${i}">
+    </div>`).join('');
+}
+function addPartenaireItem() {
+  const items = collectPartenaireItems();
+  items.push({ nom: '', description: '' });
+  renderCMSPartenairesEditor(items);
+}
+function removePartenaireItem(i) {
+  const items = collectPartenaireItems();
+  items.splice(i, 1);
+  renderCMSPartenairesEditor(items);
+}
+function collectPartenaireItems() {
+  const items = [];
+  let i = 0;
+  while (document.getElementById('part-nom-' + i)) {
+    items.push({ nom: document.getElementById('part-nom-'+i)?.value||'', description: document.getElementById('part-desc-'+i)?.value||'' });
+    i++;
+  }
+  return items;
+}
+async function saveCMSPartenaires() {
+  const items = collectPartenaireItems();
+  await saveCMSKey('partenaires', (_cmsData.partenaires||{}).titre || 'Nos partenaires', JSON.stringify(items));
+  toast('Partenaires enregistrés ✓', '#0A3D2D');
+}
+
+async function saveCMSSection(key) {
+  const t = document.getElementById('cms-' + key + '-t')?.value || '';
+  const c = document.getElementById('cms-' + key + '-c')?.value || '';
+  await saveCMSKey(key, t, c);
+  toast('Section enregistrée ✓', '#0A3D2D');
+}
+
+async function saveCMSContacts() {
+  const adresse  = document.getElementById('cms-contacts-adresse-inp')?.value?.trim() || '';
+  const email    = document.getElementById('cms-contacts-email-inp')?.value?.trim() || '';
+  const facebook = document.getElementById('cms-facebook')?.value?.trim() || '';
+  const instagram= document.getElementById('cms-instagram')?.value?.trim() || '';
+  const linkedin = document.getElementById('cms-linkedin')?.value?.trim() || '';
+  const twitter  = document.getElementById('cms-twitter')?.value?.trim() || '';
+  const tel = [1,2,3,4].map(n => document.getElementById('cms-tel-'+n)?.value?.trim() || '').filter(Boolean);
+  const data = { adresse, email, tel, facebook, instagram, linkedin, twitter };
+  await saveCMSKey('contacts', 'Contactez-nous', JSON.stringify(data));
+  toast('Contacts enregistrés ✓', '#0A3D2D');
+}
+
+async function saveCMSKey(key, titre, contenu) {
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/admin/site-content/' + key, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ titre, contenu }),
+    });
+    if (!res.ok) throw new Error();
+    if (_cmsData[key]) { _cmsData[key].titre = titre; _cmsData[key].contenu = contenu; }
+    else _cmsData[key] = { titre, contenu };
+  } catch(e) { toast('Erreur lors de l\'enregistrement', '#CC1A27'); }
 }
 </script>
 </body>

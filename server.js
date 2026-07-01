@@ -375,6 +375,56 @@ async function ensureTables() {
     `);
     // Lien parent → enfant
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_of INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+    // Actualités / Événements publics du site vitrine
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS news (
+        id         SERIAL PRIMARY KEY,
+        titre      TEXT NOT NULL,
+        corps      TEXT DEFAULT '',
+        type       TEXT DEFAULT 'événement',
+        image_url  TEXT DEFAULT '',
+        date_event TEXT DEFAULT '',
+        lien       TEXT DEFAULT '',
+        statut     TEXT DEFAULT 'publié',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    // CMS : contenu éditable des sections du site vitrine
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS site_content (
+        key        TEXT PRIMARY KEY,
+        titre      TEXT DEFAULT '',
+        contenu    TEXT DEFAULT '',
+        image_url  TEXT DEFAULT '',
+        ordre      INTEGER DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      INSERT INTO site_content (key, titre, contenu, ordre) VALUES
+        ('elearning',   'Notre plateforme E-Learning', 'Accédez à vos cours, ressources pédagogiques et supports de formation en ligne, à tout moment et depuis n''importe quel appareil. La plateforme IHBI offre des contenus interactifs, des quiz et un suivi personnalisé de votre progression.', 2),
+        ('temoignages', 'Ils ont choisi l''IHBI', '[{"nom":"Konan Yves","promo":"BTS FCGE 2023","texte":"L''IHBI m''a permis de décrocher mon premier emploi dès la fin de mes études. La formation bilingue est un vrai atout sur le marché du travail."},{"nom":"Adjoua Marie","promo":"BTS RHC 2022","texte":"Un encadrement de qualité et des professeurs disponibles. Je recommande l''IHBI à tous les bacheliers qui veulent réussir."},{"nom":"Bah Mamadou","promo":"BTS 2MA 2023","texte":"La filière Mécanique Automobile m''a ouvert des portes que je n''imaginais pas. Aujourd''hui j''ai mon propre atelier."}]', 3),
+        ('partenaires', 'Nos partenaires', '[{"nom":"SODECI","description":"Partenaire stages & emploi"},{"nom":"Orange CI","description":"Partenaire stages & emploi"},{"nom":"Bolloré Africa","description":"Partenaire stages"},{"nom":"MTN CI","description":"Partenaire stages"},{"nom":"LONACI","description":"Partenaire stages"},{"nom":"SIR","description":"Partenaire stages"}]', 4),
+        ('faq',         'Foire aux questions', '[{"q":"Quelles sont les conditions d''admission ?","r":"Le BTS IHBI est accessible aux titulaires du Baccalauréat ou d''un diplôme équivalent. Un entretien de sélection est organisé pour évaluer votre profil."},{"q":"Les cours sont-ils dispensés en anglais ?","r":"Oui, toutes les formations IHBI sont bilingues français-anglais. Des cours d''anglais intensifs sont intégrés au programme pour atteindre un niveau professionnel."},{"q":"Quel est le coût des études ?","r":"Les frais de scolarité varient selon la filière et sont discutés lors de l''entretien d''admission. Des facilités de paiement en tranches sont proposées."},{"q":"Y a-t-il des stages obligatoires ?","r":"Oui, chaque formation comprend des stages en entreprise obligatoires intégrés dans le programme, grâce à notre réseau de partenaires."},{"q":"L''IHBI est-il reconnu par l''État ?","r":"Oui, l''IHBI est un établissement privé d''enseignement supérieur agréé, dont les diplômes BTS sont reconnus par les autorités ivoiriennes."}]', 5),
+        ('contacts',    'Contactez-nous', '{"tel":["27 30 64 43 92","07 07 52 35 97","01 03 62 02 70","07 49 04 81 70"],"email":"ihbi.info@gmail.com","adresse":"Yamoussoukro, Côte d''Ivoire","facebook":"","instagram":"","linkedin":"","twitter":""}', 6)
+      ON CONFLICT (key) DO NOTHING
+    `);
+    // Candidatures enseignants / employés
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS job_applications (
+        id         SERIAL PRIMARY KEY,
+        type       TEXT NOT NULL DEFAULT 'enseignant',
+        nom        TEXT NOT NULL,
+        prenom     TEXT NOT NULL,
+        email      TEXT NOT NULL,
+        telephone  TEXT DEFAULT '',
+        poste      TEXT DEFAULT '',
+        matiere    TEXT DEFAULT '',
+        lettre     TEXT DEFAULT '',
+        statut     TEXT DEFAULT 'nouveau',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
     console.error('[DB] ensureTables error:', e.message);
@@ -487,6 +537,27 @@ async function getFullData() {
     if (!sqlFormations.some(s => s.id === b.id)) mergedFormations.push(b);
   }
 
+  // Actualités / Événements publics
+  let sqlNews = [];
+  try {
+    const newsR = await pool.query("SELECT * FROM news ORDER BY created_at DESC");
+    sqlNews = newsR.rows.map(r => ({
+      id: r.id, titre: r.titre, corps: r.corps, type: r.type,
+      image_url: r.image_url || '', date_event: r.date_event || '',
+      lien: r.lien || '', statut: r.statut,
+      created_at: isoStr(r.created_at),
+    }));
+  } catch(e) { console.error('[getFullData] news not available:', e.message); }
+
+  // Contenu CMS du site vitrine
+  let siteContent = {};
+  try {
+    const scR = await pool.query('SELECT key, titre, contenu, image_url, ordre FROM site_content ORDER BY ordre');
+    scR.rows.forEach(r => {
+      siteContent[r.key] = { titre: r.titre, contenu: r.contenu, image_url: r.image_url || '', ordre: r.ordre };
+    });
+  } catch(e) { console.error('[getFullData] site_content not available:', e.message); }
+
   return {
     ...base,
     users,
@@ -508,6 +579,8 @@ async function getFullData() {
     edt_drafts: mergedEdtDrafts,
     formations: mergedFormations,
     contact_submissions: mergedContacts,
+    news: sqlNews,
+    site_content: siteContent,
   };
 }
 
@@ -1458,6 +1531,110 @@ app.get('/api/teacher/volume-horaire', authMiddleware, async (req, res) => {
     console.error('Volume horaire error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
+});
+
+// ── GET /api/public/site-content — contenu CMS (public, sans auth) ──────────
+app.get('/api/public/site-content', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT key, titre, contenu, image_url, ordre FROM site_content ORDER BY ordre');
+    const obj = {};
+    r.rows.forEach(row => { obj[row.key] = { titre: row.titre, contenu: row.contenu, image_url: row.image_url || '' }; });
+    res.json(obj);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+// ── NEWS (Actualités / Événements publics) ───────────────────────────────────
+app.get('/api/public/news', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT * FROM news WHERE statut='publié' ORDER BY created_at DESC LIMIT 20");
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.get('/api/admin/news', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  try {
+    const r = await pool.query('SELECT * FROM news ORDER BY created_at DESC');
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.post('/api/admin/news', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  const { titre, corps, type, image_url, date_event, lien } = req.body;
+  if (!titre) return res.status(400).json({error:'Titre requis'});
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO news (titre, corps, type, image_url, date_event, lien)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [titre, corps||'', type||'événement', image_url||'', date_event||'', lien||'']
+    );
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.delete('/api/admin/news/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  try {
+    await pool.query('DELETE FROM news WHERE id=$1', [req.params.id]);
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+// ── CMS — Contenu du site vitrine ────────────────────────────────────────────
+app.get('/api/admin/site-content', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  try {
+    const r = await pool.query('SELECT * FROM site_content ORDER BY ordre');
+    const obj = {};
+    r.rows.forEach(row => { obj[row.key] = row; });
+    res.json(obj);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.put('/api/admin/site-content/:key', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  const { titre, contenu, image_url } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO site_content (key, titre, contenu, image_url)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (key) DO UPDATE SET titre=$2, contenu=$3, image_url=$4, updated_at=NOW()`,
+      [req.params.key, titre||'', contenu||'', image_url||'']
+    );
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+// ── Candidatures enseignants / employés ──────────────────────────────────────
+app.post('/api/public/job-application', async (req, res) => {
+  const { type, nom, prenom, email, telephone, poste, matiere, lettre } = req.body;
+  if (!nom || !prenom || !email) return res.status(400).json({error:'Champs requis manquants'});
+  try {
+    await pool.query(
+      `INSERT INTO job_applications (type,nom,prenom,email,telephone,poste,matiere,lettre)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [type||'enseignant', nom, prenom, email, telephone||'', poste||'', matiere||'', lettre||'']
+    );
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.get('/api/admin/job-applications', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  try {
+    const r = await pool.query('SELECT * FROM job_applications ORDER BY created_at DESC');
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
+});
+
+app.put('/api/admin/job-applications/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Accès refusé'});
+  const { statut } = req.body;
+  try {
+    await pool.query('UPDATE job_applications SET statut=$1 WHERE id=$2', [statut, req.params.id]);
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:'Erreur serveur'}); }
 });
 
 // ── GET /api/health — vérification Railway ──────────────────────────────────

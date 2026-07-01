@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ihbi-maquette",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "7821"],
+      "port": 7821
+    }
+  ]
+}
