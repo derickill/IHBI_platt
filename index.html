@@ -649,6 +649,9 @@ tr:hover td{background:var(--navy-l)}
 
 /* ── SECTIONS DASHBOARD ── */
 .ds{display:none}.ds.active{display:block}
+/* Fondu discret sur les tables/listes quand les données se mettent à jour */
+@keyframes _softFade{from{opacity:.7}to{opacity:1}}
+.poll-updated{animation:_softFade .35s ease}
 .ds-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--b900);margin-bottom:4px}
 .ds-sub{font-size:13px;color:var(--g400);margin-bottom:24px}
 
@@ -2989,8 +2992,8 @@ function escHtml(str) {
 }
 
 // ── POLLING AUTO-REFRESH ──────────────────────────────────────────────────
-// Toutes les 20s : compare Railway avec DB local, re-rend si changement
-const _POLL_MS = 5000;
+// Toutes les 20s : compare Railway avec DB local, re-rend UNIQUEMENT les sections touchées
+const _POLL_MS = 20000;
 let   _pollTimer = null;
 let   _openInscritsFid = null; // formation dont le modal inscrits est ouvert
 
@@ -3009,71 +3012,78 @@ async function _pollRefresh() {
     const res = await fetch('/api/data', { headers: { 'Authorization': 'Bearer ' + t } });
     if (!res.ok) return;
     const fresh = await res.json();
-    // Détecter s'il y a eu un changement
-    const changed = _DB_KEYS.some(k => JSON.stringify(fresh[k]) !== JSON.stringify(DB[k]));
-    if (!changed) return;
-    // Appliquer les nouvelles données
-    _DB_KEYS.forEach(k => { if (k in fresh) DB[k] = fresh[k]; });
-    _restoreCoursesFromEdt(); // Rebuilder COURSES depuis edt_drafts mis à jour
-    // Persister en localStorage (annonces, messages_teacher, messages_delegates inclus)
-    // → un refresh page recharge directement ces données sans attendre Railway
+    // Détecter exactement quelles clés ont changé
+    const changedKeys = new Set(
+      _DB_KEYS.filter(k => JSON.stringify(fresh[k]) !== JSON.stringify(DB[k]))
+    );
+    if (!changedKeys.size) return; // rien n'a changé → pas de re-render du tout
+    // Appliquer uniquement les clés modifiées
+    changedKeys.forEach(k => { DB[k] = fresh[k]; });
+    if (changedKeys.has('edt_drafts')) _restoreCoursesFromEdt();
     try { localStorage.setItem('ihbi_db_v2', JSON.stringify(_dbSnapshot())); } catch(e) {}
-    // Re-rendre les sections actuellement visibles
-    _rerenderActiveSections();
+    // Re-rendre seulement les sections affectées par les clés qui ont changé
+    _rerenderActiveSections(changedKeys);
   } catch(e) { /* silencieux si hors ligne */ }
 }
 
-function _rerenderActiveSections() {
-  const role = CURRENT_USER?.role;
-  const isOn = id => document.getElementById(id)?.classList.contains('active');
+// changedKeys : Set des clés DB qui ont réellement changé (passé par _pollRefresh)
+// Si appelé sans argument (init, navigation), on force tout
+function _rerenderActiveSections(changedKeys) {
+  const role  = CURRENT_USER?.role;
+  const isOn  = id => document.getElementById(id)?.classList.contains('active');
+  const all   = !changedKeys; // sans argument = force tout
+  const has   = k => all || changedKeys.has(k);
 
   if (role === 'admin') {
-    // Toujours re-rendre les formations (liste + compteur inscrits)
-    renderAdminFormations();
-    // Si le modal inscrits est ouvert, rafraîchir son contenu via API
-    const inscModal = document.getElementById('event-reg-modal');
-    if (_openInscritsFid && inscModal?.style.display === 'flex') {
-      const t = sessionStorage.getItem('ihbi_token');
-      fetch('/api/formations/' + _openInscritsFid + '/inscrits', {
-        headers: { 'Authorization': 'Bearer ' + t }
-      }).then(r => r.ok ? r.json() : null).then(json => {
-        if (!json) return;
-        const f = DB.formations.find(x => x.id === _openInscritsFid);
-        if (f) f.inscrits = json.inscrits || [];
-        document.getElementById('event-reg-tbody').innerHTML = _renderInscritsTbody(json.inscrits);
-      }).catch(() => {});
+    // Formations : seulement si les formations ou les inscrits ont changé
+    if (has('formations')) {
+      renderAdminFormations();
+      const inscModal = document.getElementById('event-reg-modal');
+      if (_openInscritsFid && inscModal?.style.display === 'flex') {
+        const t = sessionStorage.getItem('ihbi_token');
+        fetch('/api/formations/' + _openInscritsFid + '/inscrits', {
+          headers: { 'Authorization': 'Bearer ' + t }
+        }).then(r => r.ok ? r.json() : null).then(json => {
+          if (!json) return;
+          const f = DB.formations.find(x => x.id === _openInscritsFid);
+          if (f) f.inscrits = json.inscrits || [];
+          document.getElementById('event-reg-tbody').innerHTML = _renderInscritsTbody(json.inscrits);
+        }).catch(() => {});
+      }
     }
-    // Messages délégués : toujours mis à jour (DOM présent même si section non active)
-    renderAdminDelegateMsgs();
-    // Sections spécifiques
-    if (isOn('a-contacts'))  renderContacts(contactFilter || 'all');
-    if (isOn('a-annonces'))  renderAdminAnnonces();
-    if (isOn('a-accounts'))  renderAccounts();
-    if (isOn('a-payments'))  renderPayments();
-    if (isOn('a-edt'))       buildEdtRows();
-    // Badge candidatures toujours à jour
-    const nb = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
-    const badge = document.getElementById('contacts-count-badge');
-    if (badge) badge.textContent = nb;
-    // Re-rendre sections site vitrine actives
-    if (isOn('a-news'))   renderAdminNews();
-    if (isOn('a-emploi')) renderAdminJobApplications();
+    // Messages délégués : seulement si les messages ont changé
+    if (has('messages_delegates')) renderAdminDelegateMsgs();
+    // Sections spécifiques : seulement si elles sont visibles ET leurs données ont changé
+    if (isOn('a-contacts')  && has('contact_submissions')) renderContacts(contactFilter || 'all');
+    if (isOn('a-annonces')  && has('annonces'))            renderAdminAnnonces();
+    if (isOn('a-accounts')  && has('users'))               renderAccounts();
+    if (isOn('a-payments')  && has('users'))               renderPayments();
+    if (isOn('a-edt')       && has('edt_drafts'))          buildEdtRows();
+    if (isOn('a-news')      && has('news'))                renderAdminNews();
+    if (isOn('a-emploi'))                                  { /* géré par appel direct */ }
+    // Badge candidatures : seulement si contact_submissions a changé
+    if (has('contact_submissions')) {
+      const nb = DB.contact_submissions.filter(c => c.statut === 'nouveau').length;
+      const badge = document.getElementById('contacts-count-badge');
+      if (badge) badge.textContent = nb;
+    }
   } else if (role === 'student') {
-    renderCal();            // rebuild calendrier + mini-cal avec COURSES à jour
-    initStudentMessaging(); // re-vérifie statut délégué + appelle renderStudentMessages()
-    renderStudentAnnonces();
-    if (isOn('notes')) renderStudentNotes();
+    if (has('edt_drafts'))          renderCal();
+    if (has('messages_delegates') || has('messages_teacher') || has('users')) initStudentMessaging();
+    if (has('annonces'))            renderStudentAnnonces();
+    if (isOn('notes') && (has('evaluations') || has('notes'))) renderStudentNotes();
   } else if (role === 'teacher') {
-    renderTeacherDelegateMsgs();
-    if (isOn('t-planning')) renderTeacherCal();
-    if (isOn('t-notes'))    renderEvalHistory(currentEvalFilter);
+    if (has('messages_delegates'))  renderTeacherDelegateMsgs();
+    if (isOn('t-planning') && has('edt_drafts')) renderTeacherCal();
+    if (isOn('t-notes')    && (has('evaluations') || has('notes'))) renderEvalHistory(currentEvalFilter);
   } else if (role === 'parent') {
-    // Recharger les données enfant puis mettre à jour les sections actives
-    loadParentChildData().then(() => {
-      renderParentDashboard();
-      if (isOn('p-edt'))   renderParentEdt();
-      if (isOn('p-notes')) renderParentNotes();
-    });
+    if (has('evaluations') || has('notes') || has('edt_drafts') || has('users')) {
+      loadParentChildData().then(() => {
+        renderParentDashboard();
+        if (isOn('p-edt'))   renderParentEdt();
+        if (isOn('p-notes')) renderParentNotes();
+      });
+    }
   }
 }
 
