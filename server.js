@@ -425,11 +425,293 @@ async function ensureTables() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS matieres (
+        id          SERIAL PRIMARY KEY,
+        nom         TEXT NOT NULL,
+        filiere     TEXT NOT NULL,
+        coefficient INTEGER DEFAULT 1,
+        ordre       INTEGER DEFAULT 0,
+        UNIQUE(nom, filiere)
+      )
+    `);
     console.log('[DB] Tables vérifiées ✓');
   } catch (e) {
     console.error('[DB] ensureTables error:', e.message);
   }
 }
+
+// ── Référentiel des matières par filière ─────────────────────────────────────
+const MATIERES_SEED = [
+  // 2MA — Moteur et Mécanique Automobile (34)
+  { nom: "Technique d'Expression Ecrite et orale",     filiere:'2MA', coefficient:2, ordre:1  },
+  { nom: "Anglais Technique",                           filiere:'2MA', coefficient:2, ordre:2  },
+  { nom: "Entrepreneuriat",                             filiere:'2MA', coefficient:2, ordre:3  },
+  { nom: "Santé, Sécurité, et Protection de l'Environnement", filiere:'2MA', coefficient:2, ordre:4 },
+  { nom: "Prévention des Accidents",                    filiere:'2MA', coefficient:2, ordre:5  },
+  { nom: "Mathématiques Générales",                     filiere:'2MA', coefficient:3, ordre:6  },
+  { nom: "Informatique Appliquée",                      filiere:'2MA', coefficient:2, ordre:7  },
+  { nom: "Droit Civil",                                 filiere:'2MA', coefficient:2, ordre:8  },
+  { nom: "Droit commercial",                            filiere:'2MA', coefficient:2, ordre:9  },
+  { nom: "Droit du travail",                            filiere:'2MA', coefficient:2, ordre:10 },
+  { nom: "Droit de l'automobile",                       filiere:'2MA', coefficient:2, ordre:11 },
+  { nom: "Economie",                                    filiere:'2MA', coefficient:2, ordre:12 },
+  { nom: "Gestion",                                     filiere:'2MA', coefficient:2, ordre:13 },
+  { nom: "Chimie",                                      filiere:'2MA', coefficient:2, ordre:14 },
+  { nom: "Physiques Appliquées",                        filiere:'2MA', coefficient:2, ordre:15 },
+  { nom: "Mécanique RDM",                               filiere:'2MA', coefficient:2, ordre:16 },
+  { nom: "Thermodynamique",                             filiere:'2MA', coefficient:2, ordre:17 },
+  { nom: "Dessin technique",                            filiere:'2MA', coefficient:3, ordre:18 },
+  { nom: "Automatique",                                 filiere:'2MA', coefficient:3, ordre:19 },
+  { nom: "Automatismes",                                filiere:'2MA', coefficient:2, ordre:20 },
+  { nom: "Fabrication mécanique",                       filiere:'2MA', coefficient:2, ordre:21 },
+  { nom: "Théories moteurs",                            filiere:'2MA', coefficient:2, ordre:22 },
+  { nom: "Atelier moteur",                              filiere:'2MA', coefficient:2, ordre:23 },
+  { nom: "Les organes d'utilisation",                   filiere:'2MA', coefficient:2, ordre:24 },
+  { nom: "Les organes de transmission",                 filiere:'2MA', coefficient:2, ordre:25 },
+  { nom: "Injection essence/diesel",                    filiere:'2MA', coefficient:2, ordre:26 },
+  { nom: "Electricité automobile/codification",         filiere:'2MA', coefficient:2, ordre:27 },
+  { nom: "Electronique appliquée",                      filiere:'2MA', coefficient:2, ordre:28 },
+  { nom: "Climatisation auto",                          filiere:'2MA', coefficient:2, ordre:29 },
+  { nom: "Maintenance appliquée à la Mécanique Automobile", filiere:'2MA', coefficient:2, ordre:30 },
+  { nom: "Organisation et gestion de garage",           filiere:'2MA', coefficient:2, ordre:31 },
+  { nom: "Hydraulique",                                 filiere:'2MA', coefficient:2, ordre:32 },
+  { nom: "Pneumatique",                                 filiere:'2MA', coefficient:2, ordre:33 },
+  { nom: "TP mécanique",                                filiere:'2MA', coefficient:2, ordre:34 },
+  // IDA — Informatique Développeur d'Applications (25)
+  { nom: "Technique de l'expression française",         filiere:'IDA', coefficient:2, ordre:1  },
+  { nom: "Anglais technique",                           filiere:'IDA', coefficient:2, ordre:2  },
+  { nom: "Économie de Gestion / Entrepreneuriat",       filiere:'IDA', coefficient:2, ordre:3  },
+  { nom: "Comptabilité Générale",                       filiere:'IDA', coefficient:2, ordre:4  },
+  { nom: "Droit (Travail-commercial-Civil)",            filiere:'IDA', coefficient:2, ordre:5  },
+  { nom: "Mathématique Générale, Statistique",          filiere:'IDA', coefficient:3, ordre:6  },
+  { nom: "Mathématique financière et Recherche opérationnelle", filiere:'IDA', coefficient:2, ordre:7 },
+  { nom: "Architecture des systèmes",                   filiere:'IDA', coefficient:2, ordre:8  },
+  { nom: "Systèmes d'Exploitation et sécurité informatique", filiere:'IDA', coefficient:2, ordre:9 },
+  { nom: "Réseau et Téléinformatique",                  filiere:'IDA', coefficient:2, ordre:10 },
+  { nom: "Développement Web (HTML, CSS, JavaScript)",   filiere:'IDA', coefficient:4, ordre:11 },
+  { nom: "Langages Evolués (PHP)",                      filiere:'IDA', coefficient:3, ordre:12 },
+  { nom: "Langage Visual Basic / Delphi",               filiere:'IDA', coefficient:3, ordre:13 },
+  { nom: "Algorithmique",                               filiere:'IDA', coefficient:4, ordre:14 },
+  { nom: "Langage Pascal et C",                         filiere:'IDA', coefficient:2, ordre:15 },
+  { nom: "Méthodologie d'analyse (MERISE)",             filiere:'IDA', coefficient:4, ordre:16 },
+  { nom: "Bases de Données",                            filiere:'IDA', coefficient:2, ordre:17 },
+  { nom: "Webdesign (Photoshop, Fireworks, DreamWeaver)", filiere:'IDA', coefficient:2, ordre:18 },
+  { nom: "Logiciel (MS Word, Excel, Power Point)",      filiere:'IDA', coefficient:2, ordre:19 },
+  { nom: "Négociation Informatique",                    filiere:'IDA', coefficient:2, ordre:20 },
+  { nom: "Gestion de Projet informatique",              filiere:'IDA', coefficient:2, ordre:21 },
+  { nom: "Programmation orientée objet et événementielle", filiere:'IDA', coefficient:2, ordre:22 },
+  { nom: "Architecture client/serveur",                 filiere:'IDA', coefficient:2, ordre:23 },
+  { nom: "Technique d'administration",                  filiere:'IDA', coefficient:2, ordre:24 },
+  { nom: "Atelier génie logiciel",                      filiere:'IDA', coefficient:2, ordre:25 },
+  // MSP — Maintenance des Systèmes de Production (21)
+  { nom: "Technique d'Expression Ecrite et Orale",      filiere:'MSP', coefficient:2, ordre:1  },
+  { nom: "Anglais Technique",                           filiere:'MSP', coefficient:2, ordre:2  },
+  { nom: "Economie et Gestion",                         filiere:'MSP', coefficient:2, ordre:3  },
+  { nom: "Mathématiques",                               filiere:'MSP', coefficient:3, ordre:4  },
+  { nom: "Informatique Appliquée",                      filiere:'MSP', coefficient:2, ordre:5  },
+  { nom: "Mécanique RDM",                               filiere:'MSP', coefficient:3, ordre:6  },
+  { nom: "Electronique Analogique",                     filiere:'MSP', coefficient:2, ordre:7  },
+  { nom: "Electricité Générale",                        filiere:'MSP', coefficient:4, ordre:8  },
+  { nom: "Electronique Industrielle",                   filiere:'MSP', coefficient:3, ordre:9  },
+  { nom: "Thermodynamique",                             filiere:'MSP', coefficient:3, ordre:10 },
+  { nom: "Automatique",                                 filiere:'MSP', coefficient:3, ordre:11 },
+  { nom: "Electrotechnique",                            filiere:'MSP', coefficient:3, ordre:12 },
+  { nom: "Etude des Installations Hydrauliques",        filiere:'MSP', coefficient:3, ordre:13 },
+  { nom: "Technologie générale",                        filiere:'MSP', coefficient:2, ordre:14 },
+  { nom: "Maintenance Industrielle - Hygiène Sécurité", filiere:'MSP', coefficient:6, ordre:15 },
+  { nom: "Installations Electriques",                   filiere:'MSP', coefficient:3, ordre:16 },
+  { nom: "Mesures et Essais des Machines Electriques",  filiere:'MSP', coefficient:3, ordre:17 },
+  { nom: "Dessin Technique / Technologie Générale",     filiere:'MSP', coefficient:4, ordre:18 },
+  { nom: "Technique des Systèmes Automatisés et Equipements", filiere:'MSP', coefficient:3, ordre:19 },
+  { nom: "Fabrication mécanique",                       filiere:'MSP', coefficient:3, ordre:20 },
+  { nom: "Analyse de fabrication / Bureau d'études des méthodes (BEM)", filiere:'MSP', coefficient:3, ordre:21 },
+  // RHC — Ressources Humaines et Communication (18)
+  { nom: "Perfectionnement Linguistique",               filiere:'RHC', coefficient:3, ordre:1  },
+  { nom: "Anglais professionnel",                       filiere:'RHC', coefficient:3, ordre:2  },
+  { nom: "Economie Générale",                           filiere:'RHC', coefficient:2, ordre:3  },
+  { nom: "Economie et organisation d'entreprise",       filiere:'RHC', coefficient:2, ordre:4  },
+  { nom: "Droit Civil",                                 filiere:'RHC', coefficient:2, ordre:5  },
+  { nom: "Droit du travail",                            filiere:'RHC', coefficient:2, ordre:6  },
+  { nom: "Droit des affaires",                          filiere:'RHC', coefficient:2, ordre:7  },
+  { nom: "Informatique appliquée (logiciel)",           filiere:'RHC', coefficient:2, ordre:8  },
+  { nom: "Psychosociologie appliquée",                  filiere:'RHC', coefficient:2, ordre:9  },
+  { nom: "TCA - GAP",                                   filiere:'RHC', coefficient:3, ordre:10 },
+  { nom: "Psychosociologie des organisations et GRH",   filiere:'RHC', coefficient:3, ordre:11 },
+  { nom: "Statistiques appliquées à la Com. et GRH",    filiere:'RHC', coefficient:2, ordre:12 },
+  { nom: "Négociation et relations sociales",           filiere:'RHC', coefficient:3, ordre:13 },
+  { nom: "GPC + définition des concepts RH",            filiere:'RHC', coefficient:3, ordre:14 },
+  { nom: "Rémunération + comptabilité",                 filiere:'RHC', coefficient:3, ordre:15 },
+  { nom: "Politique et stratégie de communication",     filiere:'RHC', coefficient:3, ordre:16 },
+  { nom: "Communication",                               filiere:'RHC', coefficient:2, ordre:17 },
+  { nom: "Marketing Digital",                           filiere:'RHC', coefficient:2, ordre:18 },
+  // RIT — Réseaux Informatiques et Télécommunications (24)
+  { nom: "Transmission",                                filiere:'RIT', coefficient:4, ordre:1  },
+  { nom: "Commutation",                                 filiere:'RIT', coefficient:4, ordre:2  },
+  { nom: "Réseau d'Accès",                              filiere:'RIT', coefficient:4, ordre:3  },
+  { nom: "Téléinformatique",                            filiere:'RIT', coefficient:4, ordre:4  },
+  { nom: "Réseaux Locaux Informatiques",                filiere:'RIT', coefficient:4, ordre:5  },
+  { nom: "Energie",                                     filiere:'RIT', coefficient:2, ordre:6  },
+  { nom: "Systèmes d'Exploitation",                     filiere:'RIT', coefficient:2, ordre:7  },
+  { nom: "Réseaux Mobiles",                             filiere:'RIT', coefficient:3, ordre:8  },
+  { nom: "Réseaux de Télécommunication et Téléphonie",  filiere:'RIT', coefficient:3, ordre:9  },
+  { nom: "Projet (Informatique et Télécom)",            filiere:'RIT', coefficient:3, ordre:10 },
+  { nom: "Micro Processeur",                            filiere:'RIT', coefficient:2, ordre:11 },
+  { nom: "Architecture des Systèmes Informatiques",     filiere:'RIT', coefficient:2, ordre:12 },
+  { nom: "Electronique Analogique et Numérique",        filiere:'RIT', coefficient:3, ordre:13 },
+  { nom: "Algorithmique et Langages",                   filiere:'RIT', coefficient:2, ordre:14 },
+  { nom: "Traitement du Signal",                        filiere:'RIT', coefficient:4, ordre:15 },
+  { nom: "Electricité",                                 filiere:'RIT', coefficient:2, ordre:16 },
+  { nom: "Anglais",                                     filiere:'RIT', coefficient:2, ordre:17 },
+  { nom: "Français",                                    filiere:'RIT', coefficient:2, ordre:18 },
+  { nom: "Droit",                                       filiere:'RIT', coefficient:2, ordre:19 },
+  { nom: "Economie",                                    filiere:'RIT', coefficient:2, ordre:20 },
+  { nom: "Gestion",                                     filiere:'RIT', coefficient:2, ordre:21 },
+  { nom: "Entrepreneuriat",                             filiere:'RIT', coefficient:2, ordre:22 },
+  { nom: "Mathématiques",                               filiere:'RIT', coefficient:3, ordre:23 },
+  { nom: "Informatique Appliquée",                      filiere:'RIT', coefficient:2, ordre:24 },
+  // FCGE — Finances Comptabilité Gestion des Entreprises (19) — s'applique à FCGE1 et FCGE2
+  { nom: "Technique d'Expression Ecrite et Orale",      filiere:'FCGE', coefficient:3, ordre:1  },
+  { nom: "Anglais Commercial",                          filiere:'FCGE', coefficient:3, ordre:2  },
+  { nom: "Economie Générale",                           filiere:'FCGE', coefficient:2, ordre:3  },
+  { nom: "Economie et Organisation d'Entreprise",       filiere:'FCGE', coefficient:2, ordre:4  },
+  { nom: "Droit des Affaires",                          filiere:'FCGE', coefficient:2, ordre:5  },
+  { nom: "Droit du Travail",                            filiere:'FCGE', coefficient:2, ordre:6  },
+  { nom: "Droit Civil",                                 filiere:'FCGE', coefficient:2, ordre:7  },
+  { nom: "Marketing",                                   filiere:'FCGE', coefficient:3, ordre:8  },
+  { nom: "Mathématiques Générales, Statistiques et Probabilités", filiere:'FCGE', coefficient:2, ordre:9 },
+  { nom: "Comptabilité Générale",                       filiere:'FCGE', coefficient:5, ordre:10 },
+  { nom: "Comptabilité des Sociétés",                   filiere:'FCGE', coefficient:3, ordre:11 },
+  { nom: "Comptabilité Analytique",                     filiere:'FCGE', coefficient:3, ordre:12 },
+  { nom: "Contrôle de Gestion",                         filiere:'FCGE', coefficient:3, ordre:13 },
+  { nom: "Gestion Financière",                          filiere:'FCGE', coefficient:4, ordre:14 },
+  { nom: "Fiscalité",                                   filiere:'FCGE', coefficient:3, ordre:15 },
+  { nom: "Bureaux Comptable et Fiscal",                 filiere:'FCGE', coefficient:2, ordre:16 },
+  { nom: "Mathématiques Financières et Recherche Opérationnelle", filiere:'FCGE', coefficient:2, ordre:17 },
+  { nom: "Informatique Appliquée",                      filiere:'FCGE', coefficient:3, ordre:18 },
+  { nom: "Marketing Digital",                           filiere:'FCGE', coefficient:2, ordre:19 },
+  // GEC — Gestion Commerciale (21)
+  { nom: "Technique d'Expression Ecrite et Orale",      filiere:'GEC', coefficient:3, ordre:1  },
+  { nom: "Anglais Commercial",                          filiere:'GEC', coefficient:3, ordre:2  },
+  { nom: "Economie Générale",                           filiere:'GEC', coefficient:2, ordre:3  },
+  { nom: "Economie et Organisation d'Entreprise",       filiere:'GEC', coefficient:2, ordre:4  },
+  { nom: "Droit des Affaires",                          filiere:'GEC', coefficient:2, ordre:5  },
+  { nom: "Droit du Travail",                            filiere:'GEC', coefficient:2, ordre:6  },
+  { nom: "Droit Civil",                                 filiere:'GEC', coefficient:2, ordre:7  },
+  { nom: "Mathématiques Appliquées à la Gestion",       filiere:'GEC', coefficient:2, ordre:8  },
+  { nom: "Fondement et Concepts Marketing - Etude de Marché", filiere:'GEC', coefficient:2, ordre:9 },
+  { nom: "Techniques de Vente et Négociation",          filiere:'GEC', coefficient:2, ordre:10 },
+  { nom: "Stratégie Marketing et Plan d'Action Commerciale", filiere:'GEC', coefficient:3, ordre:11 },
+  { nom: "Distribution - Merchandising",                filiere:'GEC', coefficient:2, ordre:12 },
+  { nom: "Techniques du Commerce International",        filiere:'GEC', coefficient:3, ordre:13 },
+  { nom: "Comptabilité Générale",                       filiere:'GEC', coefficient:2, ordre:14 },
+  { nom: "Comptabilité Analytique et Gestion Prévisionnelle", filiere:'GEC', coefficient:2, ordre:15 },
+  { nom: "Informatique Appliquée",                      filiere:'GEC', coefficient:2, ordre:16 },
+  { nom: "Gestion des Approvisionnements et des Stocks",filiere:'GEC', coefficient:2, ordre:17 },
+  { nom: "Marketing International",                     filiere:'GEC', coefficient:2, ordre:18 },
+  { nom: "Management de la Force de Vente",             filiere:'GEC', coefficient:2, ordre:19 },
+  { nom: "Action Terrain Encadrée (ATE)",               filiere:'GEC', coefficient:5, ordre:20 },
+  { nom: "Marketing Digital",                           filiere:'GEC', coefficient:2, ordre:21 },
+  // ATV — Agriculture Tropicale option Production Végétale (33)
+  { nom: "Anglais",                                     filiere:'ATV', coefficient:2, ordre:1  },
+  { nom: "Comptabilité",                                filiere:'ATV', coefficient:2, ordre:2  },
+  { nom: "Droit foncier et droit du travail",           filiere:'ATV', coefficient:2, ordre:3  },
+  { nom: "Economie",                                    filiere:'ATV', coefficient:2, ordre:4  },
+  { nom: "Economie rurale et gestion d'exploitation agricole", filiere:'ATV', coefficient:2, ordre:5 },
+  { nom: "Gestion",                                     filiere:'ATV', coefficient:2, ordre:6  },
+  { nom: "Gestion des ressources humaines",             filiere:'ATV', coefficient:2, ordre:7  },
+  { nom: "Informatique",                                filiere:'ATV', coefficient:1, ordre:8  },
+  { nom: "Marketing et force de vente",                 filiere:'ATV', coefficient:2, ordre:9  },
+  { nom: "Agrochimie",                                  filiere:'ATV', coefficient:3, ordre:10 },
+  { nom: "Agroclimatologie",                            filiere:'ATV', coefficient:2, ordre:11 },
+  { nom: "Agronomie générale",                          filiere:'ATV', coefficient:4, ordre:12 },
+  { nom: "Biochimie",                                   filiere:'ATV', coefficient:2, ordre:13 },
+  { nom: "Biologie de la reproduction",                 filiere:'ATV', coefficient:2, ordre:14 },
+  { nom: "Biométrie",                                   filiere:'ATV', coefficient:2, ordre:15 },
+  { nom: "Botanique",                                   filiere:'ATV', coefficient:3, ordre:16 },
+  { nom: "Chimie alimentaire",                          filiere:'ATV', coefficient:2, ordre:17 },
+  { nom: "Cultures industrielles",                      filiere:'ATV', coefficient:4, ordre:18 },
+  { nom: "Cultures maraîchères",                        filiere:'ATV', coefficient:2, ordre:19 },
+  { nom: "Cultures vivrières",                          filiere:'ATV', coefficient:4, ordre:20 },
+  { nom: "Défense des cultures",                        filiere:'ATV', coefficient:3, ordre:21 },
+  { nom: "Ecologie générale et végétale",               filiere:'ATV', coefficient:2, ordre:22 },
+  { nom: "Entomologie",                                 filiere:'ATV', coefficient:3, ordre:23 },
+  { nom: "Fertilisation",                               filiere:'ATV', coefficient:3, ordre:24 },
+  { nom: "Fruits et agrumes",                           filiere:'ATV', coefficient:2, ordre:25 },
+  { nom: "Génétique et sélection végétale",             filiere:'ATV', coefficient:3, ordre:26 },
+  { nom: "Irrigation",                                  filiere:'ATV', coefficient:4, ordre:27 },
+  { nom: "Machinisme agricole",                         filiere:'ATV', coefficient:2, ordre:28 },
+  { nom: "Pédologie",                                   filiere:'ATV', coefficient:3, ordre:29 },
+  { nom: "Phytopathologie",                             filiere:'ATV', coefficient:2, ordre:30 },
+  { nom: "Projet",                                      filiere:'ATV', coefficient:2, ordre:31 },
+  { nom: "Technique d'expression écrite et orale",      filiere:'ATV', coefficient:2, ordre:32 },
+  { nom: "Topographie",                                 filiere:'ATV', coefficient:2, ordre:33 },
+  // ATA — Agriculture Tropicale option Production Animale (28)
+  { nom: "Anglais",                                     filiere:'ATA', coefficient:2, ordre:1  },
+  { nom: "Technique d'expression écrite",               filiere:'ATA', coefficient:2, ordre:2  },
+  { nom: "Gestion",                                     filiere:'ATA', coefficient:2, ordre:3  },
+  { nom: "Comptabilité",                                filiere:'ATA', coefficient:2, ordre:4  },
+  { nom: "Informatique",                                filiere:'ATA', coefficient:1, ordre:5  },
+  { nom: "Droit foncier et droit du travail",           filiere:'ATA', coefficient:2, ordre:6  },
+  { nom: "Economie rurale et gestion d'exploitation agricole", filiere:'ATA', coefficient:2, ordre:7 },
+  { nom: "Gestion des ressources humaines",             filiere:'ATA', coefficient:2, ordre:8  },
+  { nom: "Marketing et force de vente",                 filiere:'ATA', coefficient:2, ordre:9  },
+  { nom: "Anatomie et Physiologie Animales",            filiere:'ATA', coefficient:3, ordre:10 },
+  { nom: "Biologie Animale",                            filiere:'ATA', coefficient:3, ordre:11 },
+  { nom: "Génétique animale",                           filiere:'ATA', coefficient:2, ordre:12 },
+  { nom: "Microbiologie",                               filiere:'ATA', coefficient:3, ordre:13 },
+  { nom: "Ecologie Générale et Animale",                filiere:'ATA', coefficient:2, ordre:14 },
+  { nom: "Alimentation des animaux d'élevage",          filiere:'ATA', coefficient:2, ordre:15 },
+  { nom: "Biochimie",                                   filiere:'ATA', coefficient:2, ordre:16 },
+  { nom: "Zootechnie Générale",                         filiere:'ATA', coefficient:2, ordre:17 },
+  { nom: "Entomologie",                                 filiere:'ATA', coefficient:2, ordre:18 },
+  { nom: "Biométrie",                                   filiere:'ATA', coefficient:2, ordre:19 },
+  { nom: "Aviculture",                                  filiere:'ATA', coefficient:4, ordre:20 },
+  { nom: "Elevage des ruminants",                       filiere:'ATA', coefficient:4, ordre:21 },
+  { nom: "Cuniculture",                                 filiere:'ATA', coefficient:3, ordre:22 },
+  { nom: "Aulacodiculture",                             filiere:'ATA', coefficient:4, ordre:23 },
+  { nom: "Porciculture",                                filiere:'ATA', coefficient:4, ordre:24 },
+  { nom: "Pisciculture",                                filiere:'ATA', coefficient:3, ordre:25 },
+  { nom: "Santé Animale",                               filiere:'ATA', coefficient:3, ordre:26 },
+  { nom: "Pharmacie Vétérinaire",                       filiere:'ATA', coefficient:2, ordre:27 },
+  { nom: "Chimie alimentaire",                          filiere:'ATA', coefficient:2, ordre:28 },
+  // ELT — Electrotechnique (18)
+  { nom: "Technique d'Expression Ecrite et Orale",      filiere:'ELT', coefficient:2, ordre:1  },
+  { nom: "Anglais Technique",                           filiere:'ELT', coefficient:2, ordre:2  },
+  { nom: "Economie et Gestion",                         filiere:'ELT', coefficient:2, ordre:3  },
+  { nom: "Mathématiques",                               filiere:'ELT', coefficient:2, ordre:4  },
+  { nom: "Informatique",                                filiere:'ELT', coefficient:3, ordre:5  },
+  { nom: "Electronique Industrielle",                   filiere:'ELT', coefficient:3, ordre:6  },
+  { nom: "Electricité Générale et Electrotechnique",    filiere:'ELT', coefficient:5, ordre:7  },
+  { nom: "Electronique Analogique",                     filiere:'ELT', coefficient:3, ordre:8  },
+  { nom: "Mécanique",                                   filiere:'ELT', coefficient:2, ordre:9  },
+  { nom: "Algorithme et Langage",                       filiere:'ELT', coefficient:2, ordre:10 },
+  { nom: "Automatique",                                 filiere:'ELT', coefficient:2, ordre:11 },
+  { nom: "Installations Electriques + Projet",          filiere:'ELT', coefficient:4, ordre:12 },
+  { nom: "Mesures Electriques et Electroniques",        filiere:'ELT', coefficient:3, ordre:13 },
+  { nom: "Mesures Electriques et Essais de Machines",   filiere:'ELT', coefficient:4, ordre:14 },
+  { nom: "Technologie et Etude d'Equipement",           filiere:'ELT', coefficient:3, ordre:15 },
+  { nom: "Schéma et Systèmes Automatisés",              filiere:'ELT', coefficient:3, ordre:16 },
+  { nom: "Dessin Industriel - Technologie de Construction", filiere:'ELT', coefficient:2, ordre:17 },
+  { nom: "Maintenance",                                 filiere:'ELT', coefficient:2, ordre:18 },
+];
+
+async function seedMatieres() {
+  try {
+    const { rows } = await pool.query('SELECT COUNT(*) FROM matieres');
+    if (parseInt(rows[0].count) > 0) return;
+    for (const m of MATIERES_SEED) {
+      await pool.query(
+        'INSERT INTO matieres (nom, filiere, coefficient, ordre) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
+        [m.nom, m.filiere, m.coefficient, m.ordre]
+      );
+    }
+    console.log(`[DB] Matières seeded: ${MATIERES_SEED.length} entrées`);
+  } catch(e) {
+    console.error('[DB] seedMatieres error:', e.message);
+  }
+}
+
 // NE PAS appeler ensureTables() ici — appelé dans startServer() ci-dessous, AVANT app.listen()
 
 // ── Agrégateur de données — app_data blob + tables SQL ─────────────────────
@@ -1638,6 +1920,60 @@ app.put('/api/admin/job-applications/:id', authMiddleware, async (req, res) => {
 });
 
 // ── GET /api/health — vérification Railway ──────────────────────────────────
+// ── Routes Matières ─────────────────────────────────────────────────────────
+// Public: liste des matières pour une filière (utilisé par les dropdowns)
+app.get('/api/matieres/:filiere', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, nom, coefficient FROM matieres WHERE filiere=$1 ORDER BY ordre ASC',
+      [req.params.filiere.toUpperCase()]
+    );
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin: toutes les matières
+app.get('/api/admin/matieres', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM matieres ORDER BY filiere, ordre ASC');
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin: ajouter une matière
+app.post('/api/admin/matieres', authMiddleware, async (req, res) => {
+  const { nom, filiere, coefficient, ordre } = req.body;
+  if (!nom || !filiere) return res.status(400).json({ error: 'nom et filiere requis' });
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO matieres (nom, filiere, coefficient, ordre) VALUES ($1, $2, $3, $4) RETURNING *',
+      [nom.trim(), filiere.toUpperCase(), coefficient || 1, ordre || 0]
+    );
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin: modifier une matière
+app.put('/api/admin/matieres/:id', authMiddleware, async (req, res) => {
+  const { nom, coefficient } = req.body;
+  try {
+    const { rows } = await pool.query(
+      'UPDATE matieres SET nom=$1, coefficient=$2 WHERE id=$3 RETURNING *',
+      [nom.trim(), coefficient || 1, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Matière non trouvée' });
+    res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin: supprimer une matière
+app.delete('/api/admin/matieres/:id', authMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM matieres WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 
 // ── Toutes les autres routes → index.html (SPA) ─────────────────────────────
@@ -1651,7 +1987,8 @@ app.get('*', (req, res) => {
 // et autoRestoreSession() gardait les vieilles données localStorage au lieu de charger Railway.
 const PORT = process.env.PORT || 3000;
 async function startServer() {
-  await ensureTables();          // ← tables garanties avant toute requête
+  await ensureTables();
+  await seedMatieres();
   app.listen(PORT, () => {
     console.log(`Serveur IHBI démarré sur http://localhost:${PORT}`);
   });

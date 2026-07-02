@@ -2123,6 +2123,8 @@ tr:hover td{background:var(--navy-l)}
     </div>
     <div class="dsb-a" onclick="showA('a-cms',this)">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Éditeur de site (CMS)</div>
+    <div class="dsb-a" onclick="showA('a-matieres',this)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>Matières &amp; Coefficients</div>
   </nav>
   <div class="dsb-foot">
     <div class="dsb-out" onclick="goSite()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Déconnexion</div>
@@ -2230,7 +2232,11 @@ tr:hover td{background:var(--navy-l)}
             <option value="2">Mercredi</option><option value="3">Jeudi</option><option value="4">Vendredi</option>
           </select>
         </div>
-        <div><label class="fl">Matière</label><input type="text" class="fi" id="slot-matiere" placeholder="Ex: Comptabilité générale"></div>
+        <div><label class="fl">Matière</label>
+          <select class="fsel" id="slot-matiere">
+            <option value="">— Chargement… —</option>
+          </select>
+        </div>
         <div><label class="fl">Heure début</label><input type="time" class="fi" id="slot-start" value="08:00"></div>
         <div><label class="fl">Heure fin</label><input type="time" class="fi" id="slot-end" value="10:00"></div>
         <div><label class="fl">Salle</label><input type="text" class="fi" id="slot-room" placeholder="Ex: Salle A2"></div>
@@ -2584,6 +2590,60 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
+  <!-- ── MATIÈRES & COEFFICIENTS ── -->
+  <div id="a-matieres" class="ds">
+    <div class="ds-title">Matières &amp; Coefficients</div>
+    <div class="ds-sub">Gérez les matières par filière · Les coefficients sont utilisés pour les bulletins de notes</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <select class="fsel" id="mat-filter-filiere" onchange="renderAdminMatieres()" style="min-width:240px">
+        <option value="">Toutes les filières</option>
+        <option value="2MA">2MA — Mécanique Automobile</option>
+        <option value="IDA">IDA — Informatique &amp; Développement</option>
+        <option value="MSP">MSP — Maintenance des Systèmes de Production</option>
+        <option value="RHC">RHC — Ressources Humaines &amp; Communication</option>
+        <option value="RIT">RIT — Réseaux &amp; Télécommunications</option>
+        <option value="FCGE">FCGE — Finances Comptabilité Gestion</option>
+        <option value="GEC">GEC — Gestion Commerciale</option>
+        <option value="ATV">ATV — Agriculture Tropicale Végétale</option>
+        <option value="ATA">ATA — Agriculture Tropicale Animale</option>
+        <option value="ELT">ELT — Electrotechnique</option>
+      </select>
+      <button onclick="openAddMatiereModal()" style="padding:8px 20px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">+ Ajouter une matière</button>
+    </div>
+    <div id="matieres-table-wrap"><p style="color:var(--g400);font-size:13px">Sélectionnez une filière ou chargez toutes les matières.</p></div>
+  </div>
+
+  <!-- Modal ajout/édition matière -->
+  <div class="overlay-modal" id="matiere-modal" onclick="if(event.target===this)closeMatiereModal()">
+    <div class="obox" style="max-width:460px">
+      <button class="obox-close" onclick="closeMatiereModal()">×</button>
+      <div class="obox-title" id="mat-modal-title">Ajouter une matière</div>
+      <input type="hidden" id="mat-edit-id">
+      <div style="display:grid;gap:14px;margin-bottom:18px">
+        <div><label class="fl">Filière *</label>
+          <select class="fsel" id="mat-filiere">
+            <option value="2MA">2MA — Mécanique Automobile</option>
+            <option value="IDA">IDA — Informatique Développeur d'Applications</option>
+            <option value="MSP">MSP — Maintenance des Systèmes de Production</option>
+            <option value="RHC">RHC — Ressources Humaines et Communication</option>
+            <option value="RIT">RIT — Réseaux Informatiques et Télécommunications</option>
+            <option value="FCGE">FCGE — Finances Comptabilité Gestion des Entreprises</option>
+            <option value="GEC">GEC — Gestion Commerciale</option>
+            <option value="ATV">ATV — Agriculture Tropicale option Végétale</option>
+            <option value="ATA">ATA — Agriculture Tropicale option Animale</option>
+            <option value="ELT">ELT — Electrotechnique</option>
+          </select>
+        </div>
+        <div><label class="fl">Nom de la matière *</label><input type="text" class="fi" id="mat-nom" placeholder="Ex: Comptabilité Générale"></div>
+        <div><label class="fl">Coefficient</label><input type="number" class="fi" id="mat-coeff" min="1" max="10" value="2" style="max-width:100px"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="closeMatiereModal()" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer;border-radius:3px">Annuler</button>
+        <button onclick="saveMatiereModal()" style="padding:9px 20px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── CMS — ÉDITEUR DE SITE ── -->
   <div id="a-cms" class="ds">
     <div class="ds-title">Éditeur de site (CMS)</div>
@@ -2701,7 +2761,26 @@ tr:hover td{background:var(--navy-l)}
         <div><label class="fl">Nom *</label><input type="text" class="fi" id="new-teacher-nom" placeholder="Nom de famille"></div>
         <div><label class="fl">Prénom *</label><input type="text" class="fi" id="new-teacher-prenom" placeholder="Prénom"></div>
         <div style="grid-column:1/-1"><label class="fl">Email professionnel *</label><input type="email" class="fi" id="new-teacher-email" placeholder="prenom.nom@ihbi.ci"></div>
-        <div style="grid-column:1/-1"><label class="fl">Matière enseignée *</label><input type="text" class="fi" id="new-teacher-matieres" placeholder="Ex: Droit commercial"></div>
+        <div><label class="fl">Filière *</label>
+          <select class="fsel" id="new-teacher-filiere" onchange="loadMatieresForFiliere(this.value,'new-teacher-matieres')">
+            <option value="">— Sélectionner la filière —</option>
+            <option value="2MA">2MA — Mécanique Automobile</option>
+            <option value="IDA">IDA — Informatique Développeur d'Applications</option>
+            <option value="MSP">MSP — Maintenance des Systèmes de Production</option>
+            <option value="RHC">RHC — Ressources Humaines et Communication</option>
+            <option value="RIT">RIT — Réseaux Informatiques et Télécommunications</option>
+            <option value="FCGE">FCGE — Finances Comptabilité Gestion des Entreprises</option>
+            <option value="GEC">GEC — Gestion Commerciale</option>
+            <option value="ATV">ATV — Agriculture Tropicale option Végétale</option>
+            <option value="ATA">ATA — Agriculture Tropicale option Animale</option>
+            <option value="ELT">ELT — Electrotechnique</option>
+          </select>
+        </div>
+        <div><label class="fl">Matière enseignée *</label>
+          <select class="fsel" id="new-teacher-matieres">
+            <option value="">— Choisir d'abord la filière —</option>
+          </select>
+        </div>
         <div style="grid-column:1/-1">
           <label class="fl">Classes assignées *</label>
           <div id="teacher-classes-checkboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:3px;padding:10px;background:var(--off)">
@@ -3365,6 +3444,7 @@ function showA(id, el) {
   if (id === 'a-news')          renderAdminNews();
   if (id === 'a-emploi')        renderAdminJobApplications();
   if (id === 'a-cms')           loadCMSEditor();
+  if (id === 'a-matieres')      renderAdminMatieres();
   _historyPush({page:'pg-admin', section:id});
 }
 
@@ -4788,7 +4868,14 @@ function removeEdtSlot(day, startTime) {
   toast('Créneau supprimé — brouillon mis à jour ✓');
 }
 
-function openSlotModal() { document.getElementById('slot-modal').classList.add('on'); }
+function openSlotModal() {
+  const classeId = document.getElementById('admin-edt-class')?.value || '';
+  if (classeId) {
+    const filiere = classeId.replace(/\d+$/, '');
+    loadMatieresForFiliere(filiere, 'slot-matiere');
+  }
+  document.getElementById('slot-modal').classList.add('on');
+}
 function closeSlotModal(){ document.getElementById('slot-modal').classList.remove('on'); }
 
 function saveSlot() {
@@ -5753,10 +5840,13 @@ function downloadCredentialsCSV() {
 function closeCreateTeacher() {
   document.getElementById('create-teacher-modal').style.display = 'none';
   // Réinitialiser le formulaire
-  ['new-teacher-nom','new-teacher-prenom','new-teacher-email','new-teacher-matieres'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
+  ['new-teacher-nom','new-teacher-prenom','new-teacher-email'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
   });
+  const filEl = document.getElementById('new-teacher-filiere');
+  if (filEl) filEl.value = '';
+  const matEl = document.getElementById('new-teacher-matieres');
+  if (matEl) { matEl.innerHTML = "<option value=''>— Choisir d'abord la filière —</option>"; }
   const cb = document.getElementById('teacher-classes-checkboxes');
   if (cb) cb.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
 }
@@ -6755,6 +6845,151 @@ async function saveCMSKey(key, titre, contenu) {
     if (_cmsData[key]) { _cmsData[key].titre = titre; _cmsData[key].contenu = contenu; }
     else _cmsData[key] = { titre, contenu };
   } catch(e) { toast('Erreur lors de l\'enregistrement', '#CC1A27'); }
+}
+
+// ════════════════════════════════════════════════════════
+//   MATIÈRES — chargement & admin
+// ════════════════════════════════════════════════════════
+
+async function loadMatieresForFiliere(filiere, selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  if (!filiere) {
+    sel.innerHTML = "<option value=''>— Choisir d'abord la filière —</option>";
+    return;
+  }
+  sel.innerHTML = "<option value=''>Chargement…</option>";
+  try {
+    const res  = await fetch('/api/matieres/' + encodeURIComponent(filiere));
+    const list = await res.json();
+    if (!Array.isArray(list) || !list.length) {
+      sel.innerHTML = "<option value=''>Aucune matière trouvée</option>";
+      return;
+    }
+    sel.innerHTML = "<option value=''>— Sélectionner la matière —</option>" +
+      list.map(m => `<option value="${escHtml(m.nom)}">${escHtml(m.nom)}</option>`).join('');
+  } catch(e) {
+    sel.innerHTML = "<option value=''>Erreur de chargement</option>";
+  }
+}
+
+async function renderAdminMatieres() {
+  const wrap = document.getElementById('matieres-table-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<p style="color:var(--g400);font-size:13px">Chargement…</p>';
+  const token   = sessionStorage.getItem('ihbi_token');
+  const filiere = document.getElementById('mat-filter-filiere')?.value || '';
+  try {
+    const res  = await fetch('/api/admin/matieres', { headers: { 'Authorization': 'Bearer ' + token } });
+    let list   = await res.json();
+    if (filiere) list = list.filter(m => m.filiere === filiere);
+    if (!list.length) { wrap.innerHTML = '<p style="color:var(--g400);font-size:13px">Aucune matière pour cette filière.</p>'; return; }
+    const byFiliere = {};
+    list.forEach(m => { if (!byFiliere[m.filiere]) byFiliere[m.filiere] = []; byFiliere[m.filiere].push(m); });
+    let html = '';
+    const FILIERE_LABELS = {
+      '2MA':'Moteur et Mécanique Automobile','IDA':"Informatique Développeur d'Applications",
+      'MSP':'Maintenance des Systèmes de Production','RHC':'Ressources Humaines et Communication',
+      'RIT':'Réseaux Informatiques et Télécommunications','FCGE':'Finances Comptabilité Gestion des Entreprises',
+      'GEC':'Gestion Commerciale','ATV':'Agriculture Tropicale option Végétale',
+      'ATA':'Agriculture Tropicale option Animale','ELT':'Electrotechnique'
+    };
+    Object.entries(byFiliere).forEach(([f, mats]) => {
+      html += `<div style="margin-bottom:28px">
+        <div style="font-weight:700;font-size:14px;color:#250D42;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #250D42">
+          ${escHtml(f)} <span style="font-weight:400;color:var(--g400);font-size:12px">— ${escHtml(FILIERE_LABELS[f]||'')} · ${mats.length} matières</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--off)">
+            <th style="padding:8px 12px;text-align:left;border:1px solid var(--border);color:var(--g600);font-weight:600">Matière</th>
+            <th style="padding:8px 12px;text-align:center;width:90px;border:1px solid var(--border);color:var(--g600);font-weight:600">Coeff.</th>
+            <th style="padding:8px 12px;text-align:center;width:90px;border:1px solid var(--border);color:var(--g600);font-weight:600">Actions</th>
+          </tr></thead>
+          <tbody>${mats.map(m => `<tr>
+            <td style="padding:8px 12px;border:1px solid var(--border)">${escHtml(m.nom)}</td>
+            <td style="padding:8px 12px;text-align:center;border:1px solid var(--border);font-weight:700;color:#250D42">${m.coefficient}</td>
+            <td style="padding:8px 12px;text-align:center;border:1px solid var(--border)">
+              <button onclick="editMatiere(${m.id},${JSON.stringify(m.nom)},${m.coefficient},${JSON.stringify(m.filiere)})" title="Modifier" style="background:none;border:none;color:var(--b600);cursor:pointer;font-size:15px;margin-right:6px">✎</button>
+              <button onclick="deleteMatiere(${m.id},${JSON.stringify(m.nom)},${JSON.stringify(m.filiere)})" title="Supprimer" style="background:none;border:none;color:#CC1A27;cursor:pointer;font-size:15px">✕</button>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table></div>`;
+    });
+    wrap.innerHTML = html;
+  } catch(e) {
+    wrap.innerHTML = '<p style="color:#CC1A27">Erreur : ' + escHtml(e.message) + '</p>';
+  }
+}
+
+function openAddMatiereModal() {
+  document.getElementById('mat-modal-title').textContent = 'Ajouter une matière';
+  document.getElementById('mat-edit-id').value = '';
+  document.getElementById('mat-nom').value = '';
+  document.getElementById('mat-coeff').value = '2';
+  const fSel = document.getElementById('mat-filiere');
+  const curFiliere = document.getElementById('mat-filter-filiere')?.value;
+  if (fSel) { fSel.disabled = false; fSel.value = curFiliere || '2MA'; }
+  document.getElementById('matiere-modal').classList.add('on');
+}
+
+function editMatiere(id, nom, coeff, filiere) {
+  document.getElementById('mat-modal-title').textContent = 'Modifier la matière';
+  document.getElementById('mat-edit-id').value = id;
+  document.getElementById('mat-nom').value = nom;
+  document.getElementById('mat-coeff').value = coeff;
+  const fSel = document.getElementById('mat-filiere');
+  if (fSel) { fSel.value = filiere; fSel.disabled = true; }
+  document.getElementById('matiere-modal').classList.add('on');
+}
+
+function closeMatiereModal() {
+  document.getElementById('matiere-modal').classList.remove('on');
+  const fSel = document.getElementById('mat-filiere');
+  if (fSel) fSel.disabled = false;
+}
+
+async function saveMatiereModal() {
+  const id     = document.getElementById('mat-edit-id').value;
+  const nom    = document.getElementById('mat-nom').value.trim();
+  const coeff  = parseInt(document.getElementById('mat-coeff').value) || 1;
+  const filiere= document.getElementById('mat-filiere').value;
+  if (!nom)    { toast('Le nom de la matière est obligatoire', '#CC1A27'); return; }
+  if (!filiere){ toast('La filière est obligatoire', '#CC1A27'); return; }
+  const token  = sessionStorage.getItem('ihbi_token');
+  const btn    = document.querySelector('#matiere-modal button[onclick="saveMatiereModal()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+  try {
+    const url    = id ? '/api/admin/matieres/' + id : '/api/admin/matieres';
+    const method = id ? 'PUT' : 'POST';
+    const body   = id ? { nom, coefficient: coeff } : { nom, filiere, coefficient: coeff };
+    const res    = await fetch(url, {
+      method, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const d = await res.json(); toast(d.error || 'Erreur serveur', '#CC1A27'); return; }
+    closeMatiereModal();
+    toast(id ? 'Matière modifiée ✓' : 'Matière ajoutée ✓', '#15803D');
+    renderAdminMatieres();
+  } catch(e) {
+    toast('Erreur réseau', '#CC1A27');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
+}
+
+async function deleteMatiere(id, nom, filiere) {
+  if (!confirm(`Supprimer la matière "${nom}" (${filiere}) ?`)) return;
+  const token = sessionStorage.getItem('ihbi_token');
+  try {
+    const res = await fetch('/api/admin/matieres/' + id, {
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { toast('Erreur lors de la suppression', '#CC1A27'); return; }
+    toast('Matière supprimée ✓', '#15803D');
+    renderAdminMatieres();
+  } catch(e) {
+    toast('Erreur réseau', '#CC1A27');
+  }
 }
 
 // ════════════════════════════════════════════════════════
