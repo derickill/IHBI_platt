@@ -1381,7 +1381,7 @@ tr:hover td{background:var(--navy-l)}
         <div class="section-label" style="color:rgba(255,255,255,.5)">Digital &amp; Innovation</div>
         <h2 class="section-title" style="color:white" id="cms-elearning-titre">Notre plateforme E-Learning</h2>
         <p style="color:rgba(255,255,255,.7);line-height:1.7;font-size:15px;margin:16px 0 28px" id="cms-elearning-contenu">Accédez à vos cours, ressources pédagogiques et supports de formation en ligne, à tout moment et depuis n'importe quel appareil.</p>
-        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+        <div id="cms-elearning-points" style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
           <div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">
             <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Cours vidéo et supports PDF
@@ -2655,9 +2655,14 @@ tr:hover td{background:var(--navy-l)}
         <div class="bx-h"><span class="bx-t">Section E-Learning</span></div>
         <div style="padding:0 2px">
           <div><label class="fl">Titre</label><input type="text" class="fi" id="cms-elearning-t" placeholder="Titre de la section E-Learning"></div>
-          <div><label class="fl">Contenu</label><textarea class="fta" id="cms-elearning-c" style="min-height:80px" placeholder="Description..."></textarea></div>
+          <div><label class="fl">Description</label><textarea class="fta" id="cms-elearning-c" style="min-height:70px" placeholder="Texte de présentation..."></textarea></div>
+          <div style="margin-top:12px">
+            <label class="fl" style="margin-bottom:6px;display:block">Points clés <span style="color:var(--g400);font-weight:400;font-size:11px">(liste avec coches)</span></label>
+            <div id="cms-elearning-points-editor" style="display:flex;flex-direction:column;gap:6px"></div>
+            <button onclick="addElearningPoint()" style="margin-top:8px;padding:5px 14px;background:none;border:1px dashed var(--border);color:var(--b600);font-size:12px;font-weight:600;cursor:pointer;border-radius:3px;width:100%">+ Ajouter un point</button>
+          </div>
         </div>
-        <button onclick="saveCMSSection('elearning')" style="margin-top:10px;padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer</button>
+        <button onclick="saveCMSElearning()" style="margin-top:12px;padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer</button>
       </div>
       <!-- Section FAQ -->
       <div class="bx" style="grid-column:1/-1">
@@ -6345,6 +6350,13 @@ async function initSiteVitrine() {
       if (tEl && cms.elearning.titre) tEl.textContent = cms.elearning.titre;
       if (cEl && cms.elearning.contenu) cEl.textContent = cms.elearning.contenu;
     }
+    const svgCheck = `<svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    let elPoints = [];
+    try { elPoints = JSON.parse((cms.elearning_points || {}).contenu || '[]'); } catch(e) {}
+    if (elPoints.length) {
+      const pEl = document.getElementById('cms-elearning-points');
+      if (pEl) pEl.innerHTML = elPoints.map(p => `<div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">${svgCheck}${escHtml(p)}</div>`).join('');
+    }
   } catch(e) { console.warn('initSiteVitrine:', e); }
 }
 
@@ -6672,6 +6684,9 @@ async function loadCMSEditor() {
   const cInp = document.getElementById('cms-elearning-c');
   if (tInp) tInp.value = el.titre || '';
   if (cInp) cInp.value = el.contenu || '';
+  let elPoints = ['Cours vidéo et supports PDF','Emplois du temps en ligne','Suivi des notes et résultats','Messagerie avec les enseignants'];
+  try { const p = JSON.parse((_cmsData.elearning_points || {}).contenu || '[]'); if (p.length) elPoints = p; } catch(e) {}
+  renderCMSElearningPointsEditor(elPoints);
 
   // FAQ
   let faqItems = [];
@@ -6819,6 +6834,59 @@ async function saveCMSSection(key) {
   const c = document.getElementById('cms-' + key + '-c')?.value || '';
   await saveCMSKey(key, t, c);
   toast('Section enregistrée ✓', '#0A3D2D');
+}
+
+function renderCMSElearningPointsEditor(points) {
+  const wrap = document.getElementById('cms-elearning-points-editor');
+  if (!wrap) return;
+  wrap.innerHTML = points.map((p, i) => `
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" class="fi" id="el-point-${i}" value="${escHtml(p)}" placeholder="Point ${i+1}…" style="flex:1;margin:0">
+      <button onclick="removeElearningPoint(${i})" title="Supprimer" style="flex-shrink:0;padding:0 8px;height:36px;background:none;border:1px solid #CC1A2740;color:#CC1A27;cursor:pointer;border-radius:3px;font-size:14px">×</button>
+    </div>`).join('');
+}
+
+function addElearningPoint() {
+  const pts = _collectElearningPoints();
+  pts.push('');
+  renderCMSElearningPointsEditor(pts);
+  const last = document.getElementById('el-point-' + (pts.length - 1));
+  if (last) last.focus();
+}
+
+function removeElearningPoint(i) {
+  const pts = _collectElearningPoints();
+  pts.splice(i, 1);
+  renderCMSElearningPointsEditor(pts);
+}
+
+function _collectElearningPoints() {
+  const pts = [];
+  let i = 0;
+  while (document.getElementById('el-point-' + i)) {
+    pts.push(document.getElementById('el-point-' + i).value);
+    i++;
+  }
+  return pts;
+}
+
+async function saveCMSElearning() {
+  const t    = document.getElementById('cms-elearning-t')?.value || '';
+  const c    = document.getElementById('cms-elearning-c')?.value || '';
+  const pts  = _collectElearningPoints().filter(p => p.trim());
+  await saveCMSKey('elearning', t, c);
+  await saveCMSKey('elearning_points', 'Points E-Learning', JSON.stringify(pts));
+  // Mettre à jour la page publique immédiatement
+  const tEl = document.getElementById('cms-elearning-titre');
+  const cEl = document.getElementById('cms-elearning-contenu');
+  if (tEl && t) tEl.textContent = t;
+  if (cEl && c) cEl.textContent = c;
+  if (pts.length) {
+    const svgCheck = `<svg width="20" height="20" fill="none" stroke="rgba(255,255,255,.6)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const pEl = document.getElementById('cms-elearning-points');
+    if (pEl) pEl.innerHTML = pts.map(p => `<div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">${svgCheck}${escHtml(p)}</div>`).join('');
+  }
+  toast('Section E-Learning enregistrée ✓', '#0A3D2D');
 }
 
 async function saveCMSContacts() {
