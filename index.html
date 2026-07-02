@@ -335,6 +335,143 @@ img{display:block;max-width:100%}
 }
 .f-item:hover .f-arrow{opacity:1;transform:translateX(0)}
 
+/* ── Filières actives (avec fiche détaillée) ── */
+.f-item.f-active::after{
+  content:'';position:absolute;
+  top:20px;right:18px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);opacity:.85;
+}
+.f-item.f-active:hover .f-arrow{color:var(--red)}
+
+/* ── Filières verrouillées (sans description encore) ── */
+.f-item.f-locked{cursor:default}
+.f-item.f-locked:hover{background:transparent}
+.f-item.f-locked:hover::before{transform:scaleX(0)}
+.f-item.f-locked:hover .f-idx{color:var(--g100)}
+.f-item.f-locked .f-arrow{display:none}
+
+/* ─────────────────────────────────────────
+   MODAL FILIÈRE
+───────────────────────────────────────── */
+.fm-overlay{
+  position:fixed;inset:0;
+  background:rgba(8,15,40,.82);
+  z-index:10000;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 16px 40px;
+  overflow-y:auto;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.fm-overlay.open{opacity:1;pointer-events:all}
+.fm-box{
+  background:#fff;
+  width:100%;max-width:740px;
+  border-radius:2px;overflow:hidden;
+  transform:translateY(28px);
+  transition:transform .3s ease;
+  margin:auto;
+}
+.fm-overlay.open .fm-box{transform:translateY(0)}
+
+/* Hero du modal */
+.fm-hero{
+  background:var(--navy-d);
+  padding:44px 48px 40px;
+  position:relative;
+}
+.fm-hero-icon{
+  width:62px;height:62px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:22px;
+}
+.fm-hero-icon svg{
+  width:30px;height:30px;
+  fill:none;stroke:#fff;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.fm-badge{
+  display:inline-block;
+  background:var(--red);color:#fff;
+  font-size:9.5px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
+  padding:5px 14px;margin-bottom:16px;
+}
+.fm-htitle{
+  font-family:'Playfair Display',serif;
+  font-size:27px;font-weight:800;color:#fff;
+  line-height:1.25;margin-bottom:16px;
+  max-width:580px;
+}
+.fm-meta{
+  display:flex;align-items:center;gap:18px;
+  color:rgba(255,255,255,.6);font-size:13px;
+}
+.fm-meta-item{display:flex;align-items:center;gap:7px}
+.fm-meta-item svg{flex-shrink:0}
+.fm-close{
+  position:absolute;top:14px;right:16px;
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.5);
+  font-size:21px;line-height:1;padding:8px 12px;
+  transition:color .18s;
+}
+.fm-close:hover{color:#fff}
+
+/* Corps du modal */
+.fm-body{padding:38px 48px;display:flex;flex-direction:column;gap:30px}
+.fm-section-label{
+  font-size:9.5px;font-weight:800;letter-spacing:3px;
+  text-transform:uppercase;color:var(--red);
+  margin-bottom:8px;
+}
+.fm-section-title{
+  font-family:'Playfair Display',serif;
+  font-size:16.5px;font-weight:700;color:var(--navy-d);
+  margin-bottom:10px;line-height:1.3;
+}
+.fm-text{font-size:14.5px;line-height:1.8;color:var(--g600);margin:0}
+.fm-divider{height:1px;background:var(--border)}
+.fm-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.fm-chip{
+  background:var(--navy-l);color:var(--navy);
+  font-size:12px;font-weight:700;
+  padding:6px 14px;
+  border:1px solid rgba(26,44,107,.15);
+}
+.fm-list{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:10px}
+.fm-list li{
+  display:flex;align-items:flex-start;gap:11px;
+  font-size:14px;line-height:1.6;color:var(--g700);
+}
+.fm-list li::before{
+  content:'';flex-shrink:0;width:18px;height:18px;
+  border-radius:50%;background:var(--red);margin-top:2px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.5 6.5 12 13 5'/%3E%3C/svg%3E");
+  background-size:11px 11px;background-repeat:no-repeat;background-position:center;
+}
+.fm-cta{
+  display:flex;justify-content:center;
+  padding-top:6px;padding-bottom:4px;
+}
+.fm-cta-btn{
+  background:var(--red);color:#fff;
+  font-size:13.5px;font-weight:700;letter-spacing:.5px;
+  padding:14px 44px;border:none;cursor:pointer;
+  transition:background .2s;
+}
+.fm-cta-btn:hover{background:#a01420}
+
+@media(max-width:640px){
+  .fm-hero{padding:28px 24px 26px}
+  .fm-htitle{font-size:20px}
+  .fm-body{padding:24px 20px;gap:22px}
+  .fm-meta{flex-direction:column;align-items:flex-start;gap:8px}
+}
+
 /* ─────────────────────────────────────────
    FILIÈRES À VENIR — fond off-white
 ───────────────────────────────────────── */
@@ -952,17 +1089,17 @@ tr:hover td{background:var(--navy-l)}
       <p class="section-sub">Des formations Brevet de Technicien Supérieur, dispensées en français et en anglais, couvrant les secteurs tertiaires et industriels.</p>
     </div>
     <div class="f-grid reveal">
-      <div class="f-item"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">03</div><span class="f-code-tag">GEC</span><div class="f-title">Gestion Commerciale</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">04</div><span class="f-code-tag">IDA</span><div class="f-title">Informatique et Développeur d'Applications</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">06</div><span class="f-code-tag">RHC</span><div class="f-title">Ressources Humaines et Communication</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">07</div><span class="f-code-tag">RIT</span><div class="f-title">Réseaux Informatique et Télécommunication</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">08</div><span class="f-code-tag">ELT</span><div class="f-title">Electrotechnique</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">09</div><span class="f-code-tag">TH</span><div class="f-title">Tourisme et Hôtellerie</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">10</div><span class="f-code-tag">ATA</span><div class="f-title">Agriculture Tropicale option Animale</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item"><div class="f-idx">11</div><span class="f-code-tag">ATV</span><div class="f-title">Agriculture Tropicale option Végétale</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-locked"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div></div>
+      <div class="f-item f-locked"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div></div>
+      <div class="f-item f-locked"><div class="f-idx">03</div><span class="f-code-tag">GEC</span><div class="f-title">Gestion Commerciale</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('IDA')"><div class="f-idx">04</div><span class="f-code-tag">IDA</span><div class="f-title">Informatique et Développeur d'Applications</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-locked"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div></div>
+      <div class="f-item f-locked"><div class="f-idx">06</div><span class="f-code-tag">RHC</span><div class="f-title">Ressources Humaines et Communication</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('RIT')"><div class="f-idx">07</div><span class="f-code-tag">RIT</span><div class="f-title">Réseaux Informatique et Télécommunication</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('ELT')"><div class="f-idx">08</div><span class="f-code-tag">ELT</span><div class="f-title">Electrotechnique</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-locked"><div class="f-idx">09</div><span class="f-code-tag">TH</span><div class="f-title">Tourisme et Hôtellerie</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('ATA')"><div class="f-idx">10</div><span class="f-code-tag">ATA</span><div class="f-title">Agriculture Tropicale option Animale</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('ATV')"><div class="f-idx">11</div><span class="f-code-tag">ATV</span><div class="f-title">Agriculture Tropicale option Végétale</div><div class="f-arrow">Découvrir →</div></div>
     </div>
   </div>
 </section>
@@ -6619,7 +6756,229 @@ async function saveCMSKey(key, titre, contenu) {
     else _cmsData[key] = { titre, contenu };
   } catch(e) { toast('Erreur lors de l\'enregistrement', '#CC1A27'); }
 }
+
+// ════════════════════════════════════════════════════════
+//   MODAL FILIÈRES — données & fonctions
+// ════════════════════════════════════════════════════════
+
+const _FILIERES_DATA = {
+  IDA: {
+    titre: "Informatique Développeur d'Applications",
+    code: 'IDA',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    intro: "De l'agriculture à l'industrie, en passant par les transports et le commerce, l'informatique est présente dans tous les domaines d'activité. Ce secteur en perpétuelle évolution a fait apparaître de nombreux e-services comme le commerce en ligne, le paiement électronique et les réservations en ligne. La filière IDA offre l'opportunité aux étudiants d'acquérir toutes les connaissances nécessaires pour exercer dans le domaine de la conception des applications.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Diplôme équivalent'],
+    competences: [
+      "Analyser les cahiers de charge et concevoir des bases de données",
+      "Réaliser et administrer des bases de données (MySQL, SQL Server, Oracle, HFSQL)",
+      "Concevoir les designs d'applications desktop, web et mobile (Photoshop)",
+      "Développer des applications desktop (Windev, .Net, Java)",
+      "Développer des applications web et mobile (HTML/CSS, JavaScript, PHP, Python, Java)",
+      "Maîtriser les frameworks modernes : Bootstrap, AngularJS, Laravel, Symfony, Springboot"
+    ],
+    activites: [
+      "Développement de services USSD et solutions fintech chez un opérateur télécom",
+      "Déploiement de progiciels (ERP) et développement d'applications métiers en industrie",
+      "Administration de bases de données dans une banque ou administration publique",
+      "Conception d'affiches et sites web dans une entreprise de communication",
+      "Consultant informatique indépendant"
+    ],
+    orientation: "La 1ère année pose les bases de l'algorithmique, de la programmation et de la conception des systèmes d'information. Un stage en entreprise aboutit à un projet présenté devant jury. En 2ème année, les cours pratiques approfondissent le projet initial, complétés par des séminaires animés par des professionnels en sécurité informatique, marketing digital et frameworks d'actualité."
+  },
+  ELT: {
+    titre: "Électrotechnique",
+    code: 'ELT',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    intro: "La filière Électrotechnique prépare des techniciens supérieurs capables de concevoir, installer, exploiter, contrôler et assurer la maintenance des systèmes électriques et électromécaniques. Elle couvre l'ensemble des applications liées à la production, au transport, à la distribution et à l'utilisation de l'énergie électrique dans les secteurs industriel, tertiaire et résidentiel.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Brevet de Technicien de la spécialité'],
+    competences: [
+      "Électricité générale et industrielle",
+      "Électronique de puissance",
+      "Machines électriques (moteurs, transformateurs, générateurs)",
+      "Automatisme et informatique industrielle",
+      "Installation et maintenance des équipements électriques",
+      "Sécurité électrique et réglementation en vigueur",
+      "Gestion de projets techniques et efficacité énergétique"
+    ],
+    activites: [
+      "Technicien ou Responsable de maintenance électrique",
+      "Technicien en automatismes industriels",
+      "Conducteur de travaux électriques / Chef d'équipe d'installation",
+      "Chargé d'études électriques en bureau d'ingénierie",
+      "Technicien en énergie solaire et énergies renouvelables",
+      "Technico-commercial en équipements électriques"
+    ],
+    orientation: "La formation met l'accent sur les compétences pratiques à travers travaux dirigés, travaux pratiques en laboratoires, projets techniques et stages en entreprise. Les candidats sans baccalauréat doivent effectuer une année préparatoire de mise à niveau avant la 1ère année de BTS."
+  },
+  RIT: {
+    titre: "Réseaux Informatiques et Télécommunications",
+    code: 'RIT',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><path d="M12 6v4M8.5 18.5l-2.5-1M15.5 18.5l2.5-1M10 10l-4 8M14 10l4 8"/></svg>',
+    intro: "Le secteur des TIC est en plein essor partout dans le monde et particulièrement en Côte d'Ivoire. Tous les secteurs d'activités sont impactés positivement par ce développement, faisant naître la notion d'économie numérique. La formation en RIT — Réseaux Informatiques et Télécoms — offre de grandes opportunités d'insertion professionnelle dans de nombreux secteurs d'activités.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Diplôme équivalent'],
+    competences: [
+      "Installer et configurer les systèmes d'exploitation Windows et Linux",
+      "Concevoir et réaliser un réseau informatique complet (câblage, switches, routeurs, WiFi)",
+      "Administrer des services réseaux en entreprise (comptes, sécurité, sauvegarde, pare-feux)",
+      "Interconnecter des sites par faisceaux hertziens (FH) ou Fibre Optique (FO)",
+      "Réaliser un réseau téléphonique d'entreprise (PABX, IPBX, VoIP)",
+      "Installer et configurer des équipements de réseaux GSM"
+    ],
+    activites: [
+      "Technicien réseaux chez un opérateur de télécommunications",
+      "Réalisation de liaisons FH/FO, déploiement FTTH et solutions VoIP",
+      "Infogérance de systèmes informatiques en banque, industrie ou administration",
+      "Conception, administration et maintenance d'une infrastructure réseau",
+      "Supervision de réseaux avec des outils opensource"
+    ],
+    orientation: "La 1ère année couvre les bases de l'électronique, l'informatique et des télécoms, puis la maintenance informatique, le câblage et la configuration réseau pour faciliter les stages d'immersion. La 2ème année approfondit l'administration système Windows/Linux, le câblage RTC et Fibre Optique, avec un projet final sur des solutions de supervision réseau."
+  },
+  ATA: {
+    titre: "Agriculture Tropicale — option Production Animale",
+    code: 'ATA',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><path d="M20 7c0 3.9-3.1 7-7 7s-7-3.1-7-7c0-2.5 3.5-5 7-5s7 2.5 7 5z"/><circle cx="9.5" cy="6.5" r="1"/><circle cx="14.5" cy="6.5" r="1"/><path d="M9 11v2m6-2v2M9 22v-5m6 5v-5M7 17h10"/></svg>',
+    intro: "L'évolution de la population crée des besoins importants en protéines animales, obligeant l'État à accroître ses importations. Pour pallier cette dépendance extérieure, il faut créer et vulgariser un nouveau type d'élevage piloté par des techniciens qualifiés. La filière BTS Agriculture Tropicale, option Production Animale forme ces spécialistes capables de concevoir, gérer et optimiser des fermes de production animale.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F7', 'Brevet de Technicien Agricole (BTA)', 'Diplôme équivalent'],
+    competences: [
+      "Concevoir l'implantation d'un élevage et planifier sa production",
+      "Gérer une ferme de production animale au quotidien",
+      "Conseiller les éleveurs sur les meilleures pratiques",
+      "Fabriquer et contrôler des aliments pour les animaux",
+      "Réaliser une analyse technique et économique d'un projet d'élevage",
+      "Contrôler la qualité des produits d'origine animale et halieutiques"
+    ],
+    activites: [
+      "Chef de ferme ou Responsable de couvoirs",
+      "Responsable des services de production d'aliments pour bétail",
+      "Contrôleur des produits halieutiques",
+      "Conseiller spécialiste en production animale",
+      "Assistant vétérinaire",
+      "Chef d'exploitation agricole indépendant"
+    ],
+    orientation: "La formation s'articule autour de cours magistraux, travaux pratiques, visites de sites de fermes, dossiers d'étude, exposés, études de cas concrets et stages en entreprise pour une immersion professionnelle complète."
+  },
+  ATV: {
+    titre: "Agriculture Tropicale — option Production Végétale",
+    code: 'ATV',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><path d="M12 22V10"/><path d="M5 3c0 7 3 10 7 10s7-3 7-10"/><path d="M5 10c2 3 4.5 4 7 4"/></svg>',
+    intro: "Le BTS Agriculture Tropicale, option Production Végétale répond à la nécessité de former des techniciens supérieurs capables de relever le défi de l'autosuffisance alimentaire. L'économie de la Côte d'Ivoire reposant en grande partie sur l'agriculture, la formation de ces spécialistes est indispensable pour l'accroissement des performances agricoles nationales.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F7', 'Brevet de Technicien Agricole (BTA)', 'Diplôme équivalent'],
+    competences: [
+      "Maîtriser les techniques culturales tropicales",
+      "Diagnostiquer les maladies des plantes et proposer des méthodes de lutte",
+      "Encadrer et accompagner les populations rurales",
+      "Gérer une exploitation agricole (analyse technique et économique)",
+      "Travailler en amont et en aval de la chaîne de production végétale"
+    ],
+    activites: [
+      "Chef d'exploitation ou Contrôleur d'exploitation",
+      "Responsable de production végétale",
+      "Conseiller agricole auprès des exploitants",
+      "Agrochimiste",
+      "Agent technico-commercial en agrofournitures",
+      "Gestionnaire d'organisations économiques agricoles"
+    ],
+    orientation: "La formation s'articule autour de cours magistraux, travaux pratiques sur parcelle expérimentale, visites de sites d'exploitation et de laboratoires de recherche, dossiers d'étude, exposés, études de cas concrets et stages en entreprise."
+  }
+};
+
+function openFiliereModal(code) {
+  const d = _FILIERES_DATA[code];
+  if (!d) return;
+
+  // Remplir le hero
+  document.getElementById('fm-badge').textContent = d.code;
+  document.getElementById('fm-htitle').textContent = d.titre;
+  document.getElementById('fm-icon').innerHTML = d.icon;
+  document.getElementById('fm-duree').innerHTML =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + d.duree;
+
+  // Construire le corps
+  const chipsHtml = d.acces.map(a => `<span class="fm-chip">${escHtml(a)}</span>`).join('');
+  const compHtml  = d.competences.map(c => `<li>${escHtml(c)}</li>`).join('');
+  const actHtml   = d.activites.map(a => `<li>${escHtml(a)}</li>`).join('');
+
+  document.getElementById('fm-body').innerHTML = `
+    <div>
+      <div class="fm-section-label">Présentation de la filière</div>
+      <p class="fm-text">${escHtml(d.intro)}</p>
+    </div>
+    <div class="fm-divider"></div>
+    <div>
+      <div class="fm-section-label">Conditions d'accès</div>
+      <div class="fm-section-title">Baccalauréats acceptés</div>
+      <div class="fm-chips">${chipsHtml}</div>
+    </div>
+    <div class="fm-divider"></div>
+    <div>
+      <div class="fm-section-label">Programme</div>
+      <div class="fm-section-title">Compétences développées en 2 ans</div>
+      <ul class="fm-list">${compHtml}</ul>
+    </div>
+    <div class="fm-divider"></div>
+    <div>
+      <div class="fm-section-label">Insertion professionnelle</div>
+      <div class="fm-section-title">Débouchés & domaines d'activité</div>
+      <ul class="fm-list">${actHtml}</ul>
+    </div>
+    <div class="fm-divider"></div>
+    <div>
+      <div class="fm-section-label">Organisation à l'IHBI</div>
+      <div class="fm-section-title">Déroulement de la formation</div>
+      <p class="fm-text">${escHtml(d.orientation)}</p>
+    </div>
+    <div class="fm-cta">
+      <button class="fm-cta-btn" onclick="closeFiliereModal();setTimeout(()=>document.getElementById('admissions').scrollIntoView({behavior:'smooth'}),200)">
+        Candidater à cette filière →
+      </button>
+    </div>
+  `;
+
+  document.getElementById('filiere-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFiliereModal() {
+  document.getElementById('filiere-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeFiliereModal();
+});
 </script>
+
+<!-- ════ MODAL FILIÈRE ════ -->
+<div id="filiere-modal" class="fm-overlay" onclick="if(event.target===this)closeFiliereModal()">
+  <div class="fm-box">
+    <!-- Hero -->
+    <div class="fm-hero">
+      <button class="fm-close" onclick="closeFiliereModal()" aria-label="Fermer">&#10005;</button>
+      <div class="fm-hero-icon" id="fm-icon"></div>
+      <div class="fm-badge" id="fm-badge">—</div>
+      <div class="fm-htitle" id="fm-htitle">Chargement…</div>
+      <div class="fm-meta">
+        <span class="fm-meta-item" id="fm-duree"></span>
+        <span class="fm-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Formation BTS
+        </span>
+        <span class="fm-meta-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Abidjan, Côte d'Ivoire
+        </span>
+      </div>
+    </div>
+    <!-- Corps dynamique -->
+    <div class="fm-body" id="fm-body"></div>
+  </div>
+</div>
+
 </body>
 </html>
 </body>
