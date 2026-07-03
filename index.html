@@ -1906,9 +1906,8 @@ tr:hover td{background:var(--navy-l)}
     <div class="bx">
       <div class="bx-h"><span class="bx-t">Dernières notes saisies</span><span onclick="showT('t-notes',document.querySelectorAll('#pg-teacher .dsb-a')[2])" style="font-size:12px;font-weight:600;color:#0A3D2D;cursor:pointer">Saisir des notes →</span></div>
       <table><thead><tr><th>Date</th><th>Classe</th><th>Matière</th><th>Évaluation</th><th>Statut</th></tr></thead>
-      <tbody>
-        <tr><td>25 jan.</td><td>FCGE 2</td><td>Comptabilité générale</td><td>Devoir n°2</td><td><span class="bdg bg">Publié</span></td></tr>
-        <tr><td>18 jan.</td><td>FCGE 1</td><td>Gestion financière</td><td>Examen S1</td><td><span class="bdg ba">Brouillon</span></td></tr>
+      <tbody id="t-recent-notes-tbody">
+        <tr><td colspan="5" style="color:var(--g400);text-align:center">Chargement…</td></tr>
       </tbody></table>
     </div>
   </div>
@@ -4211,6 +4210,7 @@ async function initTeacher() {
   renderEvalHistory('all');
   renderTmsgList();
   renderTeacherBoard();
+  renderRecentNotes();
   renderTeacherDelegateMsgs();
 }
 
@@ -4250,6 +4250,40 @@ async function renderTeacherClasses() {
       </div>`).join('');
   } catch (e) {
     if (grid) grid.innerHTML = '<div style="color:#CC1A27;grid-column:1/-1">Erreur réseau.</div>';
+  }
+}
+
+async function renderRecentNotes() {
+  const tbody = document.getElementById('t-recent-notes-tbody');
+  if (!tbody) return;
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res   = await fetch('/api/teacher/evaluations', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error();
+    const list  = await res.json();
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center">Aucune note saisie pour le moment.</td></tr>';
+      return;
+    }
+    const recent = list.slice(0, 5);
+    const MOIS = ['jan.','fév.','mar.','avr.','mai','juin','juil.','aoû.','sep.','oct.','nov.','déc.'];
+    tbody.innerHTML = recent.map(e => {
+      const d    = new Date(e.date_eval || e.created_at);
+      const date = d.getDate() + ' ' + MOIS[d.getMonth()];
+      const badge = e.statut === 'publie'
+        ? '<span class="bdg bg">Publié</span>'
+        : '<span class="bdg ba">Brouillon</span>';
+      return `<tr>
+        <td>${date}</td>
+        <td>${escHtml(e.classe_id || '—')}</td>
+        <td>${escHtml(e.matiere || '—')}</td>
+        <td>${escHtml(e.titre || '—')}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    const tbody2 = document.getElementById('t-recent-notes-tbody');
+    if (tbody2) tbody2.innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center">Aucune note disponible.</td></tr>';
   }
 }
 
