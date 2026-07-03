@@ -1404,7 +1404,7 @@ tr:hover td{background:var(--navy-l)}
       <div class="reveal" style="transition-delay:.15s">
         <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:28px 24px">
           <div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px">Votre espace personnel</div>
-          <div style="display:flex;flex-direction:column;gap:4px">
+          <div id="cms-elearning-espace" style="display:flex;flex-direction:column;gap:4px">
             <div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)">
               <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               <span style="color:rgba(255,255,255,.75);font-size:13.5px;flex:1">Emploi du temps</span>
@@ -2660,6 +2660,11 @@ tr:hover td{background:var(--navy-l)}
             <label class="fl" style="margin-bottom:6px;display:block">Points clés <span style="color:var(--g400);font-weight:400;font-size:11px">(liste avec coches)</span></label>
             <div id="cms-elearning-points-editor" style="display:flex;flex-direction:column;gap:6px"></div>
             <button onclick="addElearningPoint()" style="margin-top:8px;padding:5px 14px;background:none;border:1px dashed var(--border);color:var(--b600);font-size:12px;font-weight:600;cursor:pointer;border-radius:3px;width:100%">+ Ajouter un point</button>
+          </div>
+          <div style="margin-top:14px">
+            <label class="fl" style="margin-bottom:6px;display:block">Espace personnel <span style="color:var(--g400);font-weight:400;font-size:11px">(fonctionnalités du panneau droite)</span></label>
+            <div id="cms-elearning-espace-editor" style="display:flex;flex-direction:column;gap:6px"></div>
+            <button onclick="addEspaceItem()" style="margin-top:8px;padding:5px 14px;background:none;border:1px dashed var(--border);color:var(--b600);font-size:12px;font-weight:600;cursor:pointer;border-radius:3px;width:100%">+ Ajouter une fonctionnalité</button>
           </div>
         </div>
         <button onclick="saveCMSElearning()" style="margin-top:12px;padding:8px 18px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;border-radius:3px">Enregistrer</button>
@@ -6357,6 +6362,9 @@ async function initSiteVitrine() {
       const pEl = document.getElementById('cms-elearning-points');
       if (pEl) pEl.innerHTML = elPoints.map(p => `<div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">${svgCheck}${escHtml(p)}</div>`).join('');
     }
+    let elEspace = [];
+    try { elEspace = JSON.parse((cms.elearning_espace || {}).contenu || '[]'); } catch(e) {}
+    if (elEspace.length) _renderEspacePanel(elEspace);
   } catch(e) { console.warn('initSiteVitrine:', e); }
 }
 
@@ -6688,6 +6696,10 @@ async function loadCMSEditor() {
   try { const p = JSON.parse((_cmsData.elearning_points || {}).contenu || '[]'); if (p.length) elPoints = p; } catch(e) {}
   renderCMSElearningPointsEditor(elPoints);
 
+  let elEspace = [{label:'Emploi du temps',statut:'actif'},{label:'Notes & résultats',statut:'actif'},{label:'Messagerie',statut:'actif'},{label:'Ressources de cours',statut:'bientot'}];
+  try { const e = JSON.parse((_cmsData.elearning_espace || {}).contenu || '[]'); if (e.length) elEspace = e; } catch(e2) {}
+  renderCMSEspaceEditor(elEspace);
+
   // FAQ
   let faqItems = [];
   try { faqItems = JSON.parse((_cmsData.faq || {}).contenu || '[]'); } catch(e) {}
@@ -6870,13 +6882,86 @@ function _collectElearningPoints() {
   return pts;
 }
 
+// Icons prédéfinis pour l'espace personnel (cycle si > 5 items)
+const _ESPACE_ICONS = [
+  `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>`,
+  `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>`,
+  `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>`,
+  `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>`,
+  `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>`,
+];
+
+function _renderEspacePanel(items) {
+  const wrap = document.getElementById('cms-elearning-espace');
+  if (!wrap) return;
+  wrap.innerHTML = items.map((item, i) => {
+    const actif   = item.statut === 'actif';
+    const isLast  = i === items.length - 1;
+    const stroke  = actif ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.3)';
+    const txtCol  = actif ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.35)';
+    const badge   = actif
+      ? `<span style="color:#4ADE80;font-size:12px">✓ actif</span>`
+      : `<span style="color:rgba(255,255,255,.3);font-size:12px">bientôt</span>`;
+    const border  = isLast ? '' : 'border-bottom:1px solid rgba(255,255,255,.06);';
+    const iconPath = _ESPACE_ICONS[i % _ESPACE_ICONS.length];
+    return `<div style="padding:13px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;${border}">
+      <svg width="16" height="16" fill="none" stroke="${stroke}" viewBox="0 0 24 24">${iconPath}</svg>
+      <span style="color:${txtCol};font-size:13.5px;flex:1">${escHtml(item.label)}</span>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+function renderCMSEspaceEditor(items) {
+  const wrap = document.getElementById('cms-elearning-espace-editor');
+  if (!wrap) return;
+  wrap.innerHTML = items.map((item, i) => `
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" class="fi" id="esp-label-${i}" value="${escHtml(item.label)}" placeholder="Fonctionnalité…" style="flex:1;margin:0">
+      <select id="esp-statut-${i}" class="fsel" style="width:100px;margin:0">
+        <option value="actif"${item.statut==='actif'?' selected':''}>✓ actif</option>
+        <option value="bientot"${item.statut==='bientot'?' selected':''}>bientôt</option>
+      </select>
+      <button onclick="removeEspaceItem(${i})" title="Supprimer" style="flex-shrink:0;padding:0 8px;height:36px;background:none;border:1px solid #CC1A2740;color:#CC1A27;cursor:pointer;border-radius:3px;font-size:14px">×</button>
+    </div>`).join('');
+}
+
+function addEspaceItem() {
+  const items = _collectEspaceItems();
+  items.push({ label: '', statut: 'bientot' });
+  renderCMSEspaceEditor(items);
+  const last = document.getElementById('esp-label-' + (items.length - 1));
+  if (last) last.focus();
+}
+
+function removeEspaceItem(i) {
+  const items = _collectEspaceItems();
+  items.splice(i, 1);
+  renderCMSEspaceEditor(items);
+}
+
+function _collectEspaceItems() {
+  const items = [];
+  let i = 0;
+  while (document.getElementById('esp-label-' + i)) {
+    items.push({
+      label:  document.getElementById('esp-label-' + i).value,
+      statut: document.getElementById('esp-statut-' + i).value,
+    });
+    i++;
+  }
+  return items;
+}
+
 async function saveCMSElearning() {
-  const t    = document.getElementById('cms-elearning-t')?.value || '';
-  const c    = document.getElementById('cms-elearning-c')?.value || '';
-  const pts  = _collectElearningPoints().filter(p => p.trim());
+  const t      = document.getElementById('cms-elearning-t')?.value || '';
+  const c      = document.getElementById('cms-elearning-c')?.value || '';
+  const pts    = _collectElearningPoints().filter(p => p.trim());
+  const espace = _collectEspaceItems().filter(e => e.label.trim());
   await saveCMSKey('elearning', t, c);
   await saveCMSKey('elearning_points', 'Points E-Learning', JSON.stringify(pts));
-  // Mettre à jour la page publique immédiatement
+  await saveCMSKey('elearning_espace', 'Espace Personnel', JSON.stringify(espace));
+  // Mise à jour immédiate page publique
   const tEl = document.getElementById('cms-elearning-titre');
   const cEl = document.getElementById('cms-elearning-contenu');
   if (tEl && t) tEl.textContent = t;
@@ -6886,6 +6971,7 @@ async function saveCMSElearning() {
     const pEl = document.getElementById('cms-elearning-points');
     if (pEl) pEl.innerHTML = pts.map(p => `<div style="display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.85);font-size:14px">${svgCheck}${escHtml(p)}</div>`).join('');
   }
+  if (espace.length) _renderEspacePanel(espace);
   toast('Section E-Learning enregistrée ✓', '#0A3D2D');
 }
 
