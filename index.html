@@ -1892,9 +1892,9 @@ tr:hover td{background:var(--navy-l)}
       <div class="d-user" id="teacher-avatar"></div>
     </div>
     <div class="kpi-row">
-      <div class="kpi" style="border-top-color:#0A3D2D"><div class="kpi-l">Mes classes</div><div class="kpi-v" style="color:#0A3D2D">2</div><div class="kpi-s">FCGE 1 · FCGE 2</div></div>
-      <div class="kpi" style="border-top-color:#0A3D2D"><div class="kpi-l">Étudiants encadrés</div><div class="kpi-v" style="color:#0A3D2D">42</div><div class="kpi-s">Répartis sur 2 classes</div></div>
-      <div class="kpi"><div class="kpi-l">Notes en attente</div><div class="kpi-v warn">2</div><div class="kpi-s">À publier pour FCGE 1</div></div>
+      <div class="kpi" style="border-top-color:#0A3D2D"><div class="kpi-l">Mes classes</div><div class="kpi-v" style="color:#0A3D2D" id="t-kpi-classes-v">—</div><div class="kpi-s" id="t-kpi-classes-s">Chargement…</div></div>
+      <div class="kpi" style="border-top-color:#0A3D2D"><div class="kpi-l">Étudiants encadrés</div><div class="kpi-v" style="color:#0A3D2D" id="t-kpi-students-v">—</div><div class="kpi-s" id="t-kpi-students-s">Chargement…</div></div>
+      <div class="kpi"><div class="kpi-l">Notes en attente</div><div class="kpi-v" id="t-kpi-notes-v">—</div><div class="kpi-s" id="t-kpi-notes-s">brouillons non publiés</div></div>
     </div>
     <!-- Cours du jour — dynamique depuis COURSES -->
     <div class="bx">
@@ -4261,13 +4261,23 @@ async function renderRecentNotes() {
     const res   = await fetch('/api/teacher/evaluations', { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) throw new Error();
     const list  = await res.json();
+
+    // KPI notes en attente
+    const nbBrouillons = list.filter(e => e.statut !== 'publie').length;
+    const kpiNV = document.getElementById('t-kpi-notes-v');
+    const kpiNS = document.getElementById('t-kpi-notes-s');
+    if (kpiNV) {
+      kpiNV.textContent = nbBrouillons;
+      kpiNV.className   = 'kpi-v' + (nbBrouillons > 0 ? ' warn' : '');
+    }
+    if (kpiNS) kpiNS.textContent = nbBrouillons > 0 ? 'brouillon(s) à publier' : 'tout est publié ✓';
+
     if (!list.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="color:var(--g400);text-align:center">Aucune note saisie pour le moment.</td></tr>';
       return;
     }
-    const recent = list.slice(0, 5);
     const MOIS = ['jan.','fév.','mar.','avr.','mai','juin','juil.','aoû.','sep.','oct.','nov.','déc.'];
-    tbody.innerHTML = recent.map(e => {
+    tbody.innerHTML = list.slice(0, 5).map(e => {
       const d    = new Date(e.date_eval || e.created_at);
       const date = d.getDate() + ' ' + MOIS[d.getMonth()];
       const badge = e.statut === 'publie'
@@ -4288,6 +4298,34 @@ async function renderRecentNotes() {
 }
 
 function renderTeacherBoard() {
+  // ── Greeting ──
+  if (CURRENT_USER) {
+    const greet = document.getElementById('teacher-greeting');
+    if (greet) {
+      const h = new Date().getHours();
+      const salut = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+      greet.innerHTML = `<div class="d-hi">${salut}, ${escHtml(CURRENT_USER.prenom || CURRENT_USER.nom)} 👋</div>`
+        + `<div class="d-sub">${escHtml(CURRENT_USER.matiere || 'Enseignant')}</div>`;
+    }
+    const av = document.getElementById('teacher-avatar');
+    if (av) av.textContent = (CURRENT_USER.prenom?.[0] || '') + (CURRENT_USER.nom?.[0] || '');
+  }
+
+  // ── KPIs classes & étudiants depuis _teacherClasses ──
+  const nbClasses  = _teacherClasses.length;
+  const nbEtuds    = _teacherClasses.reduce((s, c) => s + (c.student_count || 0), 0);
+  const classNames = _teacherClasses.map(c => c.id).join(' · ') || '—';
+
+  const kpiCV = document.getElementById('t-kpi-classes-v');
+  const kpiCS = document.getElementById('t-kpi-classes-s');
+  const kpiSV = document.getElementById('t-kpi-students-v');
+  const kpiSS = document.getElementById('t-kpi-students-s');
+  if (kpiCV) kpiCV.textContent = nbClasses || '0';
+  if (kpiCS) kpiCS.textContent = classNames;
+  if (kpiSV) kpiSV.textContent = nbEtuds;
+  if (kpiSS) kpiSS.textContent = `Répartis sur ${nbClasses} classe${nbClasses > 1 ? 's' : ''}`;
+
+  // ── Cours du jour ──
   const tbody = document.getElementById('t-today-tbody');
   if (!tbody) return;
   const todayIdx = (new Date().getDay() || 7) - 1;
