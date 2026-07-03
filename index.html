@@ -4938,12 +4938,12 @@ function buildEdtRows() {
     edtSlots.filter(c => c.d === d).forEach(slot => {
       const top    = _adminTimeToPx(slot.s);
       const height = Math.max(_adminTimeToPx(slot.e) - top, 22);
-      html += `<div onclick="openSlotModal()"
+      html += `<div onclick="editSlot(${d},'${slot.s}')"
         style="position:absolute;left:3px;right:3px;top:${top}px;height:${height}px;
                background:${slot.c};border-radius:3px;padding:4px 7px;cursor:pointer;
                z-index:2;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.18)">
         <div style="font-size:11px;font-weight:700;color:white;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${slot.n}</div>
-        ${height >= 36 ? `<div style="font-size:10px;color:rgba(255,255,255,.85);line-height:1.3;margin-top:1px">${slot.s}–${slot.e}${slot.r ? ' · ' + slot.r : ''}</div>` : ''}
+        ${height >= 36 ? `<div style="font-size:10px;color:rgba(255,255,255,.85);line-height:1.3;margin-top:1px">${slot.s}–${slot.e}${slot.r ? ' · ' + slot.r : ''}${slot.t ? ' · ' + slot.t : ' · <span style="opacity:.6;font-style:italic">Sans enseignant</span>'}</div>` : ''}
         <button onclick="event.stopPropagation();removeEdtSlot(${d},'${slot.s}')"
           style="position:absolute;top:2px;right:3px;background:rgba(0,0,0,.35);border:none;
                  color:white;cursor:pointer;font-size:10px;padding:0 4px;border-radius:2px;line-height:1.5">×</button>
@@ -4978,25 +4978,50 @@ function removeEdtSlot(day, startTime) {
   toast('Créneau supprimé — brouillon mis à jour ✓');
 }
 
+let _editSlotIdx = null;
+function _populateTeacherSelect(currentVal) {
+  const tsel = document.getElementById('slot-teacher');
+  if (!tsel) return;
+  const teachers = (DB.users || []).filter(u => u.role === 'teacher');
+  tsel.innerHTML = '<option value="">— Sélectionner un enseignant —</option>'
+    + teachers.map(u => {
+        const name = (u.prenom + ' ' + u.nom).trim();
+        return `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
+      }).join('');
+  if (currentVal) tsel.value = currentVal;
+}
 function openSlotModal() {
+  _editSlotIdx = null;
+  const classeId = document.getElementById('admin-edt-class')?.value || '';
+  if (classeId) loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere');
+  _populateTeacherSelect('');
+  document.getElementById('slot-modal').classList.add('on');
+}
+async function editSlot(day, startTime) {
+  const idx = edtSlots.findIndex(s => s.d === day && s.s === startTime);
+  if (idx === -1) return;
+  _editSlotIdx = idx;
+  const slot = edtSlots[idx];
+  document.getElementById('slot-day').value   = slot.d;
+  document.getElementById('slot-start').value = slot.s;
+  document.getElementById('slot-end').value   = slot.e;
+  document.getElementById('slot-room').value  = slot.r || '';
+  const typeEl = document.getElementById('slot-type');
+  if (typeEl) typeEl.value = slot.type || 'Cours intégré';
+  const colorEl = document.getElementById('slot-color');
+  if (colorEl) colorEl.value = slot.c || '#1A2C6B';
+  _populateTeacherSelect(slot.t || '');
   const classeId = document.getElementById('admin-edt-class')?.value || '';
   if (classeId) {
-    const filiere = classeId.replace(/\d+$/, '');
-    loadMatieresForFiliere(filiere, 'slot-matiere');
-  }
-  // Populate teacher select from real teacher accounts
-  const tsel = document.getElementById('slot-teacher');
-  if (tsel) {
-    const teachers = (DB.users || []).filter(u => u.role === 'teacher');
-    tsel.innerHTML = '<option value="">— Sélectionner un enseignant —</option>'
-      + teachers.map(u => {
-          const name = (u.prenom + ' ' + u.nom).trim();
-          return `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
-        }).join('');
+    await loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere');
+    document.getElementById('slot-matiere').value = slot.n || '';
   }
   document.getElementById('slot-modal').classList.add('on');
 }
-function closeSlotModal(){ document.getElementById('slot-modal').classList.remove('on'); }
+function closeSlotModal() {
+  _editSlotIdx = null;
+  document.getElementById('slot-modal').classList.remove('on');
+}
 
 function saveSlot() {
   const day   = parseInt(document.getElementById('slot-day').value);
@@ -5026,7 +5051,13 @@ function saveSlot() {
       if (!confirm(`⚠️ Conflit d'emploi du temps\n\n${teach} est déjà assigné à :\n${conflicts.join('\n')}\nà ce créneau.\n\nAjouter quand même ?`)) return;
     }
   }
-  edtSlots.push({d:day, s:start, e:end, n:mat, r:room, t:teach, type, grp:'', c:color});
+  const slotData = {d:day, s:start, e:end, n:mat, r:room, t:teach, type, grp:'', c:color};
+  if (_editSlotIdx !== null) {
+    edtSlots[_editSlotIdx] = slotData;
+    _editSlotIdx = null;
+  } else {
+    edtSlots.push(slotData);
+  }
   edtDraftStatus = 'brouillon';
   const badge = document.getElementById('edt-status-badge');
   if (badge) badge.innerHTML = '<span class="badge-draft">Brouillon non publié</span>';
