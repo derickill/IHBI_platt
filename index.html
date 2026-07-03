@@ -1259,17 +1259,17 @@ tr:hover td{background:var(--navy-l)}
             <label class="fl">Filière souhaitée <span style="color:var(--red)">*</span></label>
             <select id="adm-filiere" class="fsel">
               <option value="">Sélectionner une filière</option>
-              <option>Moteur et Mécanique Automobile (2MA)</option>
-              <option>Finances Comptabilité Gestion des Entreprises (FCGE)</option>
-              <option>Gestion Commerciale (GEC)</option>
-              <option>Informatique et Développeur d'Applications (IDA)</option>
-              <option>Maintenance des Systèmes de Production (MSP)</option>
-              <option>Ressources Humaines et Communication (RHC)</option>
-              <option>Réseaux Informatique et Télécommunication (RIT)</option>
-              <option>Electrotechnique (ELT)</option>
-              <option>Tourisme et Hôtellerie (TH)</option>
-              <option>Agriculture Tropicale option Animale (ATA)</option>
-              <option>Agriculture Tropicale option Végétale (ATV)</option>
+              <option value="2MA">Moteur et Mécanique Automobile (2MA)</option>
+              <option value="FCGE">Finances Comptabilité Gestion des Entreprises (FCGE)</option>
+              <option value="GEC">Gestion Commerciale (GEC)</option>
+              <option value="IDA">Informatique et Développeur d'Applications (IDA)</option>
+              <option value="MSP">Maintenance des Systèmes de Production (MSP)</option>
+              <option value="RHC">Ressources Humaines et Communication (RHC)</option>
+              <option value="RIT">Réseaux Informatique et Télécommunication (RIT)</option>
+              <option value="ELT">Electrotechnique (ELT)</option>
+              <option value="TH">Tourisme et Hôtellerie (TH)</option>
+              <option value="ATA">Agriculture Tropicale option Animale (ATA)</option>
+              <option value="ATV">Agriculture Tropicale option Végétale (ATV)</option>
             </select>
           </div>
           <div class="fg"><label class="fl">Email du parent / tuteur</label><input id="adm-email-parent" class="fi" type="email" placeholder="parent.kouassi@email.com"></div>
@@ -7324,7 +7324,7 @@ function openFiliereModal(code) {
       <p class="fm-text">${escHtml(d.orientation)}</p>
     </div>
     <div class="fm-cta">
-      <button class="fm-cta-btn" onclick="closeFiliereModal();setTimeout(()=>document.getElementById('admissions').scrollIntoView({behavior:'smooth'}),200)">
+      <button class="fm-cta-btn" onclick="candidaterFiliere('${d.code}')">
         Candidater à cette filière →
       </button>
     </div>
@@ -7337,6 +7337,15 @@ function openFiliereModal(code) {
 function closeFiliereModal() {
   document.getElementById('filiere-modal').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function candidaterFiliere(code) {
+  closeFiliereModal();
+  setTimeout(() => {
+    const sel = document.getElementById('adm-filiere');
+    if (sel) sel.value = code;
+    document.getElementById('admissions').scrollIntoView({ behavior: 'smooth' });
+  }, 250);
 }
 
 document.addEventListener('keydown', function(e) {
