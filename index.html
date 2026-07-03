@@ -2243,21 +2243,20 @@ tr:hover td{background:var(--navy-l)}
         <div><label class="fl">Salle</label><input type="text" class="fi" id="slot-room" placeholder="Ex: Salle A2"></div>
         <div>
           <label class="fl">Enseignant</label>
-          <select class="fsel" id="slot-teacher">
+          <select class="fsel" id="slot-teacher" onchange="onSlotTeacherChange()">
             <option value="">— Choisir d'abord la matière —</option>
           </select>
           <div id="slot-teacher-info" style="font-size:11px;margin-top:3px;min-height:15px"></div>
+          <div id="slot-color-preview" style="margin-top:5px;display:none;align-items:center;gap:6px;font-size:11px;color:var(--g600)">
+            <div id="slot-color-swatch" style="width:14px;height:14px;border-radius:3px"></div>
+            <span>Couleur auto-assignée à cet enseignant</span>
+          </div>
         </div>
         <div><label class="fl">Type</label>
           <select class="fsel" id="slot-type"><option>Cours intégré</option><option>TD</option><option>TP</option><option>Cours Magistral</option><option>Soutenance</option></select>
         </div>
-        <div><label class="fl">Couleur</label>
-          <select class="fsel" id="slot-color">
-            <option value="#1A2C6B">Bleu marine</option><option value="#0E7490">Bleu cyan</option>
-            <option value="#15803D">Vert</option><option value="#B45309">Orange</option>
-            <option value="#CC1A27">Rouge</option><option value="#7C3AED">Violet</option>
-          </select>
-        </div>
+        <!-- Couleur gérée automatiquement par enseignant — champ caché -->
+        <input type="hidden" id="slot-color" value="#1A2C6B">
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button onclick="closeSlotModal()" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer">Annuler</button>
@@ -5046,6 +5045,35 @@ function _resetTeacherSelect() {
   const info = document.getElementById('slot-teacher-info');
   if (tsel) { tsel.innerHTML = '<option value="">— Choisir d\'abord la matière —</option>'; }
   if (info) { info.style.color = '#6B7280'; info.textContent = ''; }
+  _applyTeacherColor('');
+}
+
+// Couleur déterministe par nom d'enseignant (hash stable → toujours la même couleur)
+function _teacherColor(teacherName) {
+  const palette = ['#1A2C6B','#0E7490','#15803D','#B45309','#7C3AED','#CC1A27','#0F766E','#9333EA'];
+  if (!teacherName) return palette[0];
+  let h = 0;
+  for (let i = 0; i < teacherName.length; i++) h = Math.imul(31, h) + teacherName.charCodeAt(i) | 0;
+  return palette[Math.abs(h) % palette.length];
+}
+
+function _applyTeacherColor(teacherName) {
+  const color = _teacherColor(teacherName);
+  const hidden = document.getElementById('slot-color');
+  if (hidden) hidden.value = color;
+  const preview = document.getElementById('slot-color-preview');
+  const swatch  = document.getElementById('slot-color-swatch');
+  if (teacherName && preview && swatch) {
+    swatch.style.background = color;
+    preview.style.display = 'flex';
+  } else if (preview) {
+    preview.style.display = 'none';
+  }
+}
+
+function onSlotTeacherChange() {
+  const name = document.getElementById('slot-teacher')?.value || '';
+  _applyTeacherColor(name);
 }
 
 function onSlotMatiereChange() {
@@ -5076,17 +5104,20 @@ function onSlotMatiereChange() {
   });
 
   if (matching.length === 1) {
-    // Un seul enseignant → auto-renseignement
+    // Un seul enseignant → auto-renseignement + couleur auto
     const name = `${matching[0].prenom} ${matching[0].nom}`.trim();
     tsel.innerHTML = `<option value="${escHtml(name)}" selected>${escHtml(name)}</option>`;
+    _applyTeacherColor(name);
     if (info) { info.style.color = '#15803D'; info.textContent = '✓ Enseignant auto-renseigné'; }
   } else if (matching.length > 1) {
     // Plusieurs → sélection parmi les correspondances
     _populateTeacherSelect(matching, '');
+    _applyTeacherColor('');
     if (info) { info.style.color = '#B45309'; info.textContent = `${matching.length} enseignants enseignent cette matière dans cette classe`; }
   } else {
     // Aucune correspondance par matière → tous les profs de la classe
     _populateTeacherSelect(pool, '');
+    _applyTeacherColor('');
     if (info) { info.style.color = '#6B7280'; info.textContent = 'Aucune correspondance par matière — tous les enseignants de la classe affichés'; }
   }
 }
@@ -5127,6 +5158,7 @@ async function editSlot(day, startTime) {
   }
   // En mode édition : afficher les profs de la classe et pré-sélectionner le prof du slot
   _populateTeacherSelect(_classTeachers.length ? _classTeachers : (DB.users||[]).filter(u => u.role === 'teacher'), slot.t || '');
+  _applyTeacherColor(slot.t || '');
   const info = document.getElementById('slot-teacher-info');
   if (info) { info.style.color = '#6B7280'; info.textContent = slot.t ? '' : 'Aucun enseignant assigné à ce créneau'; }
   document.getElementById('slot-modal').classList.add('on');
