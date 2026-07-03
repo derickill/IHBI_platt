@@ -1111,20 +1111,125 @@ app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
   if (req.user.id === parseInt(req.params.id)) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
   const email = req.body?.email;
   try {
+    // Récupérer le profil avant suppression pour nettoyer l'EDT si c'est un enseignant
+    let teacherName = null;
+    const lookupId = parseInt(req.params.id);
+    const { rows: uRows } = await pool.query(
+      'SELECT role, prenom, nom FROM users WHERE (id = $1 OR LOWER(email) = LOWER($2))',
+      [lookupId || 0, email || '']
+    );
+    const uInfo = uRows[0];
+    if (uInfo?.role === 'teacher') teacherName = `${uInfo.prenom} ${uInfo.nom}`;
+
     let deleted = 0;
-    // Suppression par email (source de vérité)
     if (email) {
       const r = await pool.query('DELETE FROM users WHERE LOWER(email) = LOWER($1) AND id != $2', [email, req.user.id]);
       deleted = r.rowCount;
     }
-    // Fallback par id si email non fourni ou non trouvé
     if (!deleted) {
       const id = parseInt(req.params.id);
       if (id) await pool.query('DELETE FROM users WHERE id = $1 AND id != $2', [id, req.user.id]);
     }
+
+    // Nettoyer tous les créneaux EDT portant le nom de cet enseignant
+    if (teacherName) {
+      const { rows: drafts } = await pool.query('SELECT id, slots FROM edt_drafts');
+      for (const draft of drafts) {
+        const orig = Array.isArray(draft.slots) ? draft.slots : [];
+        const clean = orig.filter(s => s.t !== teacherName);
+        if (clean.length !== orig.length) {
+          await pool.query('UPDATE edt_drafts SET slots = $1 WHERE id = $2', [JSON.stringify(clean), draft.id]);
+        }
+      }
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error('Delete user error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── GET /api/admin/teacher-classes/:teacher_id — classes assignées à un enseignant ──
+app.get('/api/admin/teacher-classes/:teacher_id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT tc.classe_id, c.nom FROM teacher_classes tc
+       JOIN classes c ON c.id = tc.classe_id
+       WHERE tc.teacher_id = $1 ORDER BY tc.classe_id`,
+      [req.params.teacher_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get teacher classes error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PUT /api/admin/teachers/:id — modifier infos d'un enseignant ─────────────
+app.put('/api/admin/teachers/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { nom, prenom, matiere } = req.body || {};
+  if (!nom || !prenom) return res.status(400).json({ error: 'Nom et prénom requis' });
+  try {
+    await pool.query(
+      `UPDATE users SET nom = $1, prenom = $2, matiere = $3 WHERE id = $4 AND role = 'teacher'`,
+      [nom.trim(), prenom.trim(), (matiere || '').trim(), req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Update teacher error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── POST /api/admin/teacher-classes — assigner une classe à un enseignant ────
+app.post('/api/admin/teacher-classes', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { teacher_id, classe_id } = req.body || {};
+  if (!teacher_id || !classe_id) return res.status(400).json({ error: 'teacher_id et classe_id requis' });
+  try {
+    await pool.query(
+      `INSERT INTO teacher_classes (teacher_id, classe_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [teacher_id, classe_id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Assign teacher class error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── DELETE /api/admin/teacher-classes/:teacher_id/:classe_id — retrait + nettoyage EDT ──
+app.delete('/api/admin/teacher-classes/:teacher_id/:classe_id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  const { teacher_id, classe_id } = req.params;
+  try {
+    // 1. Récupérer le nom de l'enseignant (source de vérité pour les slots EDT)
+    const { rows: uRows } = await pool.query('SELECT prenom, nom FROM users WHERE id = $1', [teacher_id]);
+    const teacherName = uRows.length ? `${uRows[0].prenom} ${uRows[0].nom}` : null;
+
+    // 2. Supprimer l'assignation
+    await pool.query('DELETE FROM teacher_classes WHERE teacher_id = $1 AND classe_id = $2', [teacher_id, classe_id]);
+
+    // 3. Nettoyer les slots EDT de cette classe qui portent le nom de l'enseignant
+    let slotsRemoved = 0;
+    if (teacherName) {
+      const { rows: drafts } = await pool.query('SELECT id, slots FROM edt_drafts WHERE classe_id = $1', [classe_id]);
+      for (const draft of drafts) {
+        const orig  = Array.isArray(draft.slots) ? draft.slots : [];
+        const clean = orig.filter(s => s.t !== teacherName);
+        if (clean.length !== orig.length) {
+          slotsRemoved += orig.length - clean.length;
+          await pool.query('UPDATE edt_drafts SET slots = $1 WHERE id = $2', [JSON.stringify(clean), draft.id]);
+        }
+      }
+    }
+
+    res.json({ ok: true, slotsRemoved, teacherName });
+  } catch (err) {
+    console.error('Remove teacher class error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

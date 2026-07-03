@@ -2811,6 +2811,36 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 
+  <!-- ── Modal édition enseignant ── -->
+  <div class="overlay-modal" id="teacher-edit-modal" onclick="if(event.target===this)closeTeacherEditModal()">
+    <div class="obox" style="max-width:540px">
+      <button class="obox-close" onclick="closeTeacherEditModal()">×</button>
+      <div class="obox-title">Modifier l'enseignant</div>
+      <input type="hidden" id="edit-teacher-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div><label class="fl">Nom *</label><input type="text" class="fi" id="edit-teacher-nom"></div>
+        <div><label class="fl">Prénom *</label><input type="text" class="fi" id="edit-teacher-prenom"></div>
+        <div style="grid-column:1/-1"><label class="fl">Email <span style="color:var(--g400)">(non modifiable)</span></label>
+          <input type="text" class="fi" id="edit-teacher-email" disabled style="color:var(--g400);background:var(--off);cursor:not-allowed"></div>
+        <div style="grid-column:1/-1"><label class="fl">Matière principale</label>
+          <input type="text" class="fi" id="edit-teacher-matiere" placeholder="Ex: Algorithmique et Langages"></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="fl">Classes assignées</label>
+        <div id="edit-teacher-classes" style="display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:3px;padding:10px;background:var(--off)">
+          <span style="color:var(--g400);font-size:12px">Chargement…</span>
+        </div>
+      </div>
+      <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;padding:10px 12px;font-size:12px;color:#92400E;margin-bottom:16px">
+        ⚠️ Retirer une classe supprimera automatiquement tous les créneaux EDT de cet enseignant dans cette classe (brouillons et publiés).
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="closeTeacherEditModal()" style="padding:9px 20px;background:var(--off);border:1px solid var(--border);font-size:13px;cursor:pointer">Annuler</button>
+        <button id="save-teacher-edit-btn" onclick="saveTeacherEdit()" style="padding:9px 22px;background:#250D42;color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 </div>
@@ -5725,17 +5755,131 @@ function renderTeacherAccounts() {
   if (!el) return;
   const teachers = DB.users.filter(u => u.role === 'teacher');
   el.innerHTML = `<div class="bx"><div class="bx-h"><span class="bx-t">Enseignants</span><span class="bdg bl">${teachers.length} comptes</span></div>
-  <table><thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Matières</th><th>Compte</th><th>Actions</th></tr></thead>
+  <table><thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Matière</th><th>Compte</th><th>Actions</th></tr></thead>
   <tbody>${teachers.map(u => `
     <tr class="${u.status !== 'active' ? 'account-inactive' : ''}">
-      <td><strong>${u.nom}</strong></td><td>${u.prenom}</td><td>${u.email}</td>
-      <td><span style="font-size:12px">${(u.matieres||[]).join(', ')}</span></td>
+      <td><strong>${escHtml(u.nom)}</strong></td>
+      <td>${escHtml(u.prenom)}</td>
+      <td style="font-size:12px">${escHtml(u.email)}</td>
+      <td><span style="font-size:12px">${escHtml(u.matiere || (u.matieres||[]).join(', ') || '—')}</span></td>
       <td><span class="bdg ${u.status === 'active' ? 'bg' : ''}" style="${u.status !== 'active' ? 'background:#E5E7EB;color:#6B7280' : ''}">${u.status === 'active' ? 'Actif' : 'Désactivé'}</span></td>
-      <td style="display:flex;gap:4px">
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button onclick="openTeacherEditModal(${u.id})" style="padding:4px 10px;background:#250D42;color:white;border:none;font-size:12px;cursor:pointer">Modifier</button>
         <button onclick="toggleAccount(${u.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:${u.status === 'active' ? '#CC1A27' : '#15803D'}">${u.status === 'active' ? 'Désactiver' : 'Réactiver'}</button>
         <button onclick="deleteAccount(${u.id})" style="padding:4px 10px;background:#CC1A27;color:white;border:none;font-size:12px;cursor:pointer">Supprimer</button>
       </td>
     </tr>`).join('')}</tbody></table></div>`;
+}
+
+let _editTeacherOriginalClasses = [];
+
+async function openTeacherEditModal(teacherId) {
+  const user = DB.users.find(u => u.id === teacherId);
+  if (!user) return;
+  document.getElementById('edit-teacher-id').value      = teacherId;
+  document.getElementById('edit-teacher-nom').value     = user.nom || '';
+  document.getElementById('edit-teacher-prenom').value  = user.prenom || '';
+  document.getElementById('edit-teacher-email').value   = user.email || '';
+  document.getElementById('edit-teacher-matiere').value = user.matiere || (user.matieres||[]).join(', ') || '';
+  document.getElementById('edit-teacher-classes').innerHTML = '<span style="color:var(--g400);font-size:12px">Chargement…</span>';
+  document.getElementById('teacher-edit-modal').classList.add('on');
+
+  // Charger les classes actuellement assignées depuis l'API
+  let assigned = [];
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch(`/api/admin/teacher-classes/${teacherId}`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    assigned = data.map(r => r.classe_id);
+  } catch(e) { /* continue with empty list */ }
+  _editTeacherOriginalClasses = [...assigned];
+
+  // Construire les checkboxes à partir de la liste globale des classes
+  const allClasses = (typeof _IHBI_CLASSES !== 'undefined' && _IHBI_CLASSES.length) ? _IHBI_CLASSES : (DB.classes || []);
+  const container = document.getElementById('edit-teacher-classes');
+  if (!allClasses.length) {
+    container.innerHTML = '<span style="color:var(--g400);font-size:12px">Aucune classe disponible</span>';
+    return;
+  }
+  container.innerHTML = allClasses.map(c => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none">
+      <input type="checkbox" value="${escHtml(c.id)}" ${assigned.includes(c.id) ? 'checked' : ''} style="cursor:pointer">
+      <span>${escHtml(c.id)} — ${escHtml(c.nom)}</span>
+    </label>`
+  ).join('');
+}
+
+function closeTeacherEditModal() {
+  document.getElementById('teacher-edit-modal').classList.remove('on');
+  _editTeacherOriginalClasses = [];
+}
+
+async function saveTeacherEdit() {
+  const teacherId = parseInt(document.getElementById('edit-teacher-id').value);
+  const nom     = document.getElementById('edit-teacher-nom').value.trim();
+  const prenom  = document.getElementById('edit-teacher-prenom').value.trim();
+  const matiere = document.getElementById('edit-teacher-matiere').value.trim();
+  if (!nom || !prenom) { toast('Nom et prénom sont requis', '#CC1A27'); return; }
+
+  // Collecter la sélection actuelle
+  const currentClasses = [];
+  document.querySelectorAll('#edit-teacher-classes input[type="checkbox"]:checked').forEach(cb => currentClasses.push(cb.value));
+  const added   = currentClasses.filter(c => !_editTeacherOriginalClasses.includes(c));
+  const removed = _editTeacherOriginalClasses.filter(c => !currentClasses.includes(c));
+
+  // Avertissement si retrait de classes
+  if (removed.length) {
+    const names = removed.map(id => {
+      const cls = (typeof _IHBI_CLASSES !== 'undefined' && _IHBI_CLASSES.length ? _IHBI_CLASSES : DB.classes||[]).find(c => c.id === id);
+      return cls ? `${id} — ${cls.nom}` : id;
+    });
+    if (!confirm(`⚠️ Retrait de ${removed.length} classe(s) :\n\n${names.join('\n')}\n\nTous les créneaux EDT de cet enseignant dans ces classes seront supprimés définitivement.\n\nContinuer ?`)) return;
+  }
+
+  const btn = document.getElementById('save-teacher-edit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+  const token = sessionStorage.getItem('ihbi_token');
+
+  try {
+    // 1. Mettre à jour les infos de base
+    const r1 = await fetch(`/api/admin/teachers/${teacherId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ nom, prenom, matiere })
+    });
+    if (!r1.ok) throw new Error('Erreur mise à jour enseignant');
+
+    // 2. Ajouter les nouvelles classes
+    for (const classeId of added) {
+      await fetch('/api/admin/teacher-classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ teacher_id: teacherId, classe_id: classeId })
+      });
+    }
+
+    // 3. Retirer les classes supprimées (+ nettoyage EDT côté serveur)
+    for (const classeId of removed) {
+      const r = await fetch(`/api/admin/teacher-classes/${teacherId}/${encodeURIComponent(classeId)}`, {
+        method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await r.json().catch(() => ({}));
+      if (data.slotsRemoved > 0) toast(`${data.slotsRemoved} créneau(x) EDT retiré(s) pour ${classeId}`, '#B45309');
+    }
+
+    // 4. Mise à jour locale (anti-flicker)
+    const user = DB.users.find(u => u.id === teacherId);
+    if (user) { user.nom = nom; user.prenom = prenom; user.matiere = matiere; }
+
+    closeTeacherEditModal();
+    renderTeacherAccounts();
+    const delta = added.length || removed.length ? ` · ${added.length} classe(s) ajoutée(s), ${removed.length} retirée(s)` : '';
+    toast(`Enseignant ${prenom} ${nom} mis à jour ✓${delta}`, '#0A3D2D');
+  } catch(e) {
+    toast('Erreur : ' + e.message, '#CC1A27');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
 }
 
 function renderAdminAccounts() {
