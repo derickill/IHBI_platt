@@ -2234,17 +2234,19 @@ tr:hover td{background:var(--navy-l)}
           </select>
         </div>
         <div><label class="fl">Matière</label>
-          <select class="fsel" id="slot-matiere">
+          <select class="fsel" id="slot-matiere" onchange="onSlotMatiereChange()">
             <option value="">— Chargement… —</option>
           </select>
         </div>
         <div><label class="fl">Heure début</label><input type="time" class="fi" id="slot-start" value="08:00"></div>
         <div><label class="fl">Heure fin</label><input type="time" class="fi" id="slot-end" value="10:00"></div>
         <div><label class="fl">Salle</label><input type="text" class="fi" id="slot-room" placeholder="Ex: Salle A2"></div>
-        <div><label class="fl">Enseignant</label>
+        <div>
+          <label class="fl">Enseignant</label>
           <select class="fsel" id="slot-teacher">
-            <option value="">— Sélectionner un enseignant —</option>
+            <option value="">— Choisir d'abord la matière —</option>
           </select>
+          <div id="slot-teacher-info" style="font-size:11px;margin-top:3px;min-height:15px"></div>
         </div>
         <div><label class="fl">Type</label>
           <select class="fsel" id="slot-type"><option>Cours intégré</option><option>TD</option><option>TP</option><option>Cours Magistral</option><option>Soutenance</option></select>
@@ -5009,24 +5011,99 @@ function removeEdtSlot(day, startTime) {
 }
 
 let _editSlotIdx = null;
-function _populateTeacherSelect(currentVal) {
+let _classTeachers = []; // enseignants assignés à la classe courante (filtrés depuis teacher_classes)
+
+async function loadClassTeachers(classeId) {
+  try {
+    const token = sessionStorage.getItem('ihbi_token');
+    const res = await fetch(`/api/admin/class-teachers/${encodeURIComponent(classeId)}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    _classTeachers = res.ok ? await res.json() : [];
+  } catch(e) { _classTeachers = []; }
+}
+
+function _populateTeacherSelect(teachers, currentVal) {
   const tsel = document.getElementById('slot-teacher');
+  const info = document.getElementById('slot-teacher-info');
   if (!tsel) return;
-  const teachers = (DB.users || []).filter(u => u.role === 'teacher');
+  if (!teachers || !teachers.length) {
+    tsel.innerHTML = '<option value="">— Aucun enseignant assigné à cette classe —</option>';
+    if (info) { info.style.color = '#CC1A27'; info.textContent = 'Assignez d\'abord un enseignant à cette classe.'; }
+    return;
+  }
   tsel.innerHTML = '<option value="">— Sélectionner un enseignant —</option>'
-    + teachers.map(u => {
-        const name = (u.prenom + ' ' + u.nom).trim();
+    + teachers.map(t => {
+        const name = `${t.prenom} ${t.nom}`.trim();
         return `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
       }).join('');
   if (currentVal) tsel.value = currentVal;
+  if (info && !currentVal) info.textContent = '';
 }
-function openSlotModal() {
+
+function _resetTeacherSelect() {
+  const tsel = document.getElementById('slot-teacher');
+  const info = document.getElementById('slot-teacher-info');
+  if (tsel) { tsel.innerHTML = '<option value="">— Choisir d\'abord la matière —</option>'; }
+  if (info) { info.style.color = '#6B7280'; info.textContent = ''; }
+}
+
+function onSlotMatiereChange() {
+  const matiere = document.getElementById('slot-matiere').value;
+  const tsel    = document.getElementById('slot-teacher');
+  const info    = document.getElementById('slot-teacher-info');
+  if (!tsel) return;
+
+  if (!matiere) { _resetTeacherSelect(); return; }
+
+  // Si aucun prof de classe chargé (API échouée), fallback tous les profs
+  const pool = _classTeachers.length
+    ? _classTeachers
+    : (DB.users || []).filter(u => u.role === 'teacher');
+
+  if (!pool.length) {
+    tsel.innerHTML = '<option value="">— Aucun enseignant disponible —</option>';
+    if (info) { info.style.color = '#CC1A27'; info.textContent = 'Aucun enseignant assigné à cette classe.'; }
+    return;
+  }
+
+  // Filtrer par matière (correspondance insensible à la casse, partielle dans les deux sens)
+  const matLow = matiere.toLowerCase();
+  const matching = pool.filter(t => {
+    if (!t.matiere) return false;
+    const tLow = t.matiere.toLowerCase();
+    return tLow === matLow || tLow.includes(matLow) || matLow.includes(tLow);
+  });
+
+  if (matching.length === 1) {
+    // Un seul enseignant → auto-renseignement
+    const name = `${matching[0].prenom} ${matching[0].nom}`.trim();
+    tsel.innerHTML = `<option value="${escHtml(name)}" selected>${escHtml(name)}</option>`;
+    if (info) { info.style.color = '#15803D'; info.textContent = '✓ Enseignant auto-renseigné'; }
+  } else if (matching.length > 1) {
+    // Plusieurs → sélection parmi les correspondances
+    _populateTeacherSelect(matching, '');
+    if (info) { info.style.color = '#B45309'; info.textContent = `${matching.length} enseignants enseignent cette matière dans cette classe`; }
+  } else {
+    // Aucune correspondance par matière → tous les profs de la classe
+    _populateTeacherSelect(pool, '');
+    if (info) { info.style.color = '#6B7280'; info.textContent = 'Aucune correspondance par matière — tous les enseignants de la classe affichés'; }
+  }
+}
+
+async function openSlotModal() {
   _editSlotIdx = null;
   const classeId = document.getElementById('admin-edt-class')?.value || '';
-  if (classeId) loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere');
-  _populateTeacherSelect('');
+  if (classeId) {
+    loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere');
+    await loadClassTeachers(classeId);
+  } else {
+    _classTeachers = [];
+  }
+  _resetTeacherSelect();
   document.getElementById('slot-modal').classList.add('on');
 }
+
 async function editSlot(day, startTime) {
   const idx = edtSlots.findIndex(s => s.d === day && s.s === startTime);
   if (idx === -1) return;
@@ -5040,14 +5117,21 @@ async function editSlot(day, startTime) {
   if (typeEl) typeEl.value = slot.type || 'Cours intégré';
   const colorEl = document.getElementById('slot-color');
   if (colorEl) colorEl.value = slot.c || '#1A2C6B';
-  _populateTeacherSelect(slot.t || '');
   const classeId = document.getElementById('admin-edt-class')?.value || '';
   if (classeId) {
-    await loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere');
+    await Promise.all([
+      loadMatieresForFiliere(classeId.replace(/\d+$/, ''), 'slot-matiere'),
+      loadClassTeachers(classeId)
+    ]);
     document.getElementById('slot-matiere').value = slot.n || '';
   }
+  // En mode édition : afficher les profs de la classe et pré-sélectionner le prof du slot
+  _populateTeacherSelect(_classTeachers.length ? _classTeachers : (DB.users||[]).filter(u => u.role === 'teacher'), slot.t || '');
+  const info = document.getElementById('slot-teacher-info');
+  if (info) { info.style.color = '#6B7280'; info.textContent = slot.t ? '' : 'Aucun enseignant assigné à ce créneau'; }
   document.getElementById('slot-modal').classList.add('on');
 }
+
 function closeSlotModal() {
   _editSlotIdx = null;
   document.getElementById('slot-modal').classList.remove('on');

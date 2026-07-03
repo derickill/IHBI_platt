@@ -1150,6 +1150,25 @@ app.delete('/api/admin/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ── GET /api/admin/class-teachers/:classe_id — enseignants assignés à une classe ───
+app.get('/api/admin/class-teachers/:classe_id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.prenom, u.nom, u.matiere
+       FROM teacher_classes tc
+       JOIN users u ON u.id = tc.teacher_id
+       WHERE tc.classe_id = $1 AND u.role = 'teacher' AND u.status = 'active'
+       ORDER BY u.nom, u.prenom`,
+      [req.params.classe_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get class teachers error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ── GET /api/admin/teacher-classes/:teacher_id — classes assignées à un enseignant ──
 app.get('/api/admin/teacher-classes/:teacher_id', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé' });
