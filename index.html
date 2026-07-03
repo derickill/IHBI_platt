@@ -1915,16 +1915,16 @@ tr:hover td{background:var(--navy-l)}
   <!-- ── MON PLANNING (EDT enseignant — dynamique) ── -->
   <div id="t-planning" class="ds">
     <div class="ds-title">Mon planning</div>
-    <div class="ds-sub">Semaine 23 · du 01 au 05 juin 2025 · Mes cours</div>
+    <div class="ds-sub" id="t-planning-sub">Chargement…</div>
     <div class="cal-outer">
       <div class="cal-nav">
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="cal-btn">‹</button>
-          <button class="cal-btn">Aujourd'hui</button>
-          <button class="cal-btn">›</button>
+          <button class="cal-btn" onclick="changeTeacherWeek(-1)">‹</button>
+          <button class="cal-btn" onclick="changeTeacherWeek(0)">Aujourd'hui</button>
+          <button class="cal-btn" onclick="changeTeacherWeek(1)">›</button>
         </div>
-        <div class="cal-nav-title">Semaine 23 — Juin 2025</div>
-        <div class="cal-nav-btns"><button class="cal-btn on">Semaine</button><button class="cal-btn">Jour</button></div>
+        <div class="cal-nav-title" id="t-cal-nav-title">—</div>
+        <div class="cal-nav-btns"><button class="cal-btn on">Semaine</button></div>
       </div>
       <div class="cal-scroll">
         <div class="cal-inner">
@@ -2241,7 +2241,11 @@ tr:hover td{background:var(--navy-l)}
         <div><label class="fl">Heure début</label><input type="time" class="fi" id="slot-start" value="08:00"></div>
         <div><label class="fl">Heure fin</label><input type="time" class="fi" id="slot-end" value="10:00"></div>
         <div><label class="fl">Salle</label><input type="text" class="fi" id="slot-room" placeholder="Ex: Salle A2"></div>
-        <div><label class="fl">Enseignant</label><input type="text" class="fi" id="slot-teacher" placeholder="Ex: M. Diallo"></div>
+        <div><label class="fl">Enseignant</label>
+          <select class="fsel" id="slot-teacher">
+            <option value="">— Sélectionner un enseignant —</option>
+          </select>
+        </div>
         <div><label class="fl">Type</label>
           <select class="fsel" id="slot-type"><option>Cours intégré</option><option>TD</option><option>TP</option><option>Cours Magistral</option><option>Soutenance</option></select>
         </div>
@@ -3014,7 +3018,7 @@ function _restoreCoursesFromEdt() {
   const published = DB.edt_drafts.filter(d =>
     d.statut === 'publie' && (!classeId || d.classe_id === classeId)
   );
-  published.forEach(d => { if (d.slots) d.slots.forEach(s => COURSES.push({...s})); });
+  published.forEach(d => { if (d.slots) d.slots.forEach(s => COURSES.push({...s, classe_id: d.classe_id})); });
 }
 
 // Clés gérées par leurs propres tables SQL — exclure du blob app_data
@@ -3492,6 +3496,7 @@ function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '�
 // En prod : GET /api/edt?classe_id=X&week=Y → remplace ce tableau
 const COURSES = [];
 let _studentWeekOffset = 0;
+let _teacherWeekOffset = 0;
 let _miniCalCourses = []; // cours semaine courante pour le widget dashboard
 const H_START = 7, H_END = 20, PX_H = 64;
 function timeToPx(t) { const [h, m] = t.split(':').map(Number); return ((h * 60 + m) - H_START * 60) * (PX_H / 60); }
@@ -3564,7 +3569,7 @@ function buildCalColumn(containerId, timesId, courses, todayColIdx) {
       const ev = document.createElement('div');
       ev.className = 'cal-event';
       ev.style.cssText = `top:${top}px;height:${height}px;background:${c.c}`;
-      ev.innerHTML = `<div class="cal-event-name">${c.n}</div><div class="cal-event-room">${c.r}</div><div class="cal-event-time">${c.s} – ${c.e}</div>`;
+      ev.innerHTML = `<div class="cal-event-name">${c.n}</div>${c.classe_id ? `<div class="cal-event-room" style="font-weight:700;opacity:0.95">${c.classe_id}</div>` : ''}<div class="cal-event-room">${c.r}</div><div class="cal-event-time">${c.s} – ${c.e}</div>`;
       ev.onclick = () => showCourse(idx, courses);
       col.appendChild(ev);
     });
@@ -3665,18 +3670,20 @@ function showMiniCalCourse(idx) {
 }
 function showCourse(idx, courseList) {
   const c = courseList[idx];
-  const offset = CURRENT_USER?.role === 'teacher' ? 0 : _studentWeekOffset;
+  const offset = CURRENT_USER?.role === 'teacher' ? _teacherWeekOffset : _studentWeekOffset;
   const _mon = _getMondayOfWeek(offset);
   const _dc  = new Date(_mon); _dc.setDate(_mon.getDate() + c.d);
   const _dateStr = `${_JOURS_FR[c.d]} ${String(_dc.getDate()).padStart(2,'0')} ${_MOIS_FR[_dc.getMonth()]}`;
   document.getElementById('cbox-name').textContent = c.n;
   document.getElementById('cbox-head').style.background = c.c;
+  const isTeacher = CURRENT_USER?.role === 'teacher';
   document.getElementById('cbox-body').innerHTML = `
     <div class="cbox-row"><div class="cbox-label">Date</div><div class="cbox-val">${_dateStr} · ${c.s} – ${c.e}</div></div>
     <div class="cbox-row"><div class="cbox-label">Type</div><div class="cbox-val">${c.type}</div></div>
     <div class="cbox-row"><div class="cbox-label">Salle</div><div class="cbox-val">${c.r}</div></div>
-    <div class="cbox-row"><div class="cbox-label">Enseignant</div><div class="cbox-val">${c.t}</div></div>
-    <div class="cbox-row"><div class="cbox-label">Groupe</div><div class="cbox-val">${c.grp}</div></div>`;
+    ${isTeacher && c.classe_id ? `<div class="cbox-row"><div class="cbox-label">Classe</div><div class="cbox-val" style="font-weight:700">${c.classe_id}</div></div>` : ''}
+    ${!isTeacher ? `<div class="cbox-row"><div class="cbox-label">Enseignant</div><div class="cbox-val">${c.t}</div></div>` : ''}
+    <div class="cbox-row"><div class="cbox-label">Groupe</div><div class="cbox-val">${c.grp||'—'}</div></div>`;
   document.getElementById('course-popup').classList.add('on');
 }
 function hideCourse() { document.getElementById('course-popup').classList.remove('on'); }
@@ -4344,22 +4351,41 @@ function renderTeacherBoard() {
   }
   tbody.innerHTML = todayCourses.map(c =>
     '<tr><td>' + c.s + ' – ' + c.e + '</td><td>' + c.n + '</td>'
-    + '<td><span class="bdg bl">' + (c.grp || '') + '</span></td>'
+    + '<td><span class="bdg bg">' + (c.classe_id || c.grp || '—') + '</span></td>'
     + '<td>' + c.r + '</td><td>' + c.type + '</td></tr>'
   ).join('');
 }
 
 function renderTeacherCal() {
   const teacherName = CURRENT_USER ? (CURRENT_USER.prenom + ' ' + CURRENT_USER.nom) : '';
-  const teacherSlots = COURSES.filter(c => c.t === teacherName);
+  const mon = _getMondayOfWeek(_teacherWeekOffset);
+  const weekId = _weekKey(mon);
+  // Collect all published slots for this teacher across all classes for this week
+  const teacherSlots = [];
+  (DB.edt_drafts || []).forEach(d => {
+    if (d.statut !== 'publie' || d.week_id !== weekId) return;
+    (d.slots || []).forEach(s => {
+      if (s.t === teacherName) teacherSlots.push({...s, classe_id: d.classe_id});
+    });
+  });
   ['tcal-times','tcal-day-0','tcal-day-1','tcal-day-2','tcal-day-3','tcal-day-4'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.innerHTML = ''; el.removeAttribute('data-built'); }
   });
-  const mon = _getMondayOfWeek();
   _updateCalHeaders('#t-planning .cal-days', mon);
-  const todayCol = (new Date().getDay() || 7) - 1;
+  const isCurrentWeek = _teacherWeekOffset === 0;
+  const todayCol = isCurrentWeek ? ((new Date().getDay() || 7) - 1) : -1;
   buildCalColumn('tcal-day-', 'tcal-times', teacherSlots, todayCol < 5 ? todayCol : -1);
+  const label = _weekLabel(mon);
+  const sub = document.getElementById('t-planning-sub');
+  if (sub) sub.textContent = label + ' · Mes cours';
+  const navTitle = document.getElementById('t-cal-nav-title');
+  if (navTitle) navTitle.textContent = label;
+}
+function changeTeacherWeek(delta) {
+  if (delta === 0) _teacherWeekOffset = 0;
+  else _teacherWeekOffset += delta;
+  renderTeacherCal();
 }
 
 // ── Évaluations enseignant — tout en base SQL ─────────────────────────────
@@ -4958,6 +4984,16 @@ function openSlotModal() {
     const filiere = classeId.replace(/\d+$/, '');
     loadMatieresForFiliere(filiere, 'slot-matiere');
   }
+  // Populate teacher select from real teacher accounts
+  const tsel = document.getElementById('slot-teacher');
+  if (tsel) {
+    const teachers = (DB.users || []).filter(u => u.role === 'teacher');
+    tsel.innerHTML = '<option value="">— Sélectionner un enseignant —</option>'
+      + teachers.map(u => {
+          const name = (u.prenom + ' ' + u.nom).trim();
+          return `<option value="${escHtml(name)}">${escHtml(name)}</option>`;
+        }).join('');
+  }
   document.getElementById('slot-modal').classList.add('on');
 }
 function closeSlotModal(){ document.getElementById('slot-modal').classList.remove('on'); }
@@ -4972,6 +5008,24 @@ function saveSlot() {
   const type  = document.getElementById('slot-type').value;
   const color = document.getElementById('slot-color').value;
   if (!mat || !start || !end) { toast('Remplissez matière, heure début et fin', '#CC1A27'); return; }
+  // Conflict detection: check if this teacher already has a slot overlapping in another class
+  if (teach) {
+    const currentClasse = document.getElementById('admin-edt-class')?.value || '';
+    const weekSel = document.getElementById('admin-edt-week');
+    const weekId = weekSel?.value || _weekKey(_getMondayOfWeek());
+    const conflicts = [];
+    (DB.edt_drafts || []).forEach(d => {
+      if (d.statut !== 'publie' || d.week_id !== weekId || d.classe_id === currentClasse) return;
+      (d.slots || []).forEach(s => {
+        if (s.t === teach && s.d === day && s.s < end && s.e > start) {
+          conflicts.push(`${d.classe_id} (${s.s}–${s.e})`);
+        }
+      });
+    });
+    if (conflicts.length) {
+      if (!confirm(`⚠️ Conflit d'emploi du temps\n\n${teach} est déjà assigné à :\n${conflicts.join('\n')}\nà ce créneau.\n\nAjouter quand même ?`)) return;
+    }
+  }
   edtSlots.push({d:day, s:start, e:end, n:mat, r:room, t:teach, type, grp:'', c:color});
   edtDraftStatus = 'brouillon';
   const badge = document.getElementById('edt-status-badge');
