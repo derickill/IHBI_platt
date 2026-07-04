@@ -1249,11 +1249,11 @@ tr:hover td{background:var(--navy-l)}
       <p class="section-sub">Des formations Brevet de Technicien Supérieur, dispensées en français et en anglais, couvrant les secteurs tertiaires et industriels.</p>
     </div>
     <div class="f-grid reveal">
-      <div class="f-item f-locked"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div></div>
-      <div class="f-item f-locked"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('2MA')"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('FCGE')"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div><div class="f-arrow">Découvrir →</div></div>
       <div class="f-item f-locked"><div class="f-idx">03</div><span class="f-code-tag">GEC</span><div class="f-title">Gestion Commerciale</div></div>
       <div class="f-item f-active" onclick="openFiliereModal('IDA')"><div class="f-idx">04</div><span class="f-code-tag">IDA</span><div class="f-title">Informatique et Développeur d'Applications</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-locked"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div></div>
+      <div class="f-item f-active" onclick="openFiliereModal('MSP')"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div><div class="f-arrow">Découvrir →</div></div>
       <div class="f-item f-locked"><div class="f-idx">06</div><span class="f-code-tag">RHC</span><div class="f-title">Ressources Humaines et Communication</div></div>
       <div class="f-item f-active" onclick="openFiliereModal('RIT')"><div class="f-idx">07</div><span class="f-code-tag">RIT</span><div class="f-title">Réseaux Informatique et Télécommunication</div><div class="f-arrow">Découvrir →</div></div>
       <div class="f-item f-active" onclick="openFiliereModal('ELT')"><div class="f-idx">08</div><span class="f-code-tag">ELT</span><div class="f-title">Electrotechnique</div><div class="f-arrow">Découvrir →</div></div>
@@ -7748,6 +7748,81 @@ async function deleteMatiere(id, nom, filiere) {
 // ════════════════════════════════════════════════════════
 
 const _FILIERES_DATA = {
+  '2MA': {
+    titre: "Moteur et Mécanique Automobile",
+    code: '2MA',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8zM8 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>',
+    intro: "IHBI est le premier établissement en Côte d'Ivoire autorisé à former des techniciens supérieurs en Moteur et Mécanique Automobile (arrêté N° 257/MESRS du 21 novembre 2014). Face à l'essor du parc automobile ivoirien et à l'évolution rapide des technologies embarquées (injection électronique, systèmes de freinage assisté, moteurs électriques), la filière prépare des mécaniciens hautement qualifiés capables d'assurer la maintenance et le suivi des véhicules légers, camions et engins modernes.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
+    competences: [
+      "Effectuer un diagnostic complexe des systèmes électroniques et mécaniques d'un véhicule",
+      "Réaliser des opérations de maintenance et réparations complexes (moteur, transmission, suspension)",
+      "Intervenir sur les organes d'injection, d'électricité, d'hydraulique et de pneumatique",
+      "Organiser et superviser les activités d'un service de maintenance automobile",
+      "Assurer la relation client : réception, restitution et suivi technique du véhicule",
+      "Maîtriser les outils de diagnostic embarqués et les équipements modernes d'atelier"
+    ],
+    activites: [
+      "Mécanicien chez un concessionnaire ou responsable d'atelier de maintenance",
+      "Responsable du service de maintenance d'un parc de véhicules ou d'engins",
+      "Expert ou inspecteur automobile",
+      "Gérant de PME de maintenance automobile (auto-emploi)",
+      "Aviseur technique pour concessionnaire ou centre spécialisé",
+      "Conseiller technique dans les entreprises de transport et de logistique"
+    ],
+    orientation: "IHBI est l'établissement pionnier du BTS 2MA en Côte d'Ivoire. La formation alterne cours magistraux et travaux pratiques intensifs en atelier : TP moteur (montage, démontage, calage), TP transmission (embrayage, boîtes de vitesse), TP injection, TP électricité, TP climatisation, TP diagnostic automobile, etc. Des séminaires professionnels et voyages d'étude en entreprise jalonnent la 1ère année. Un stage d'immersion clôture cette première année en garage partenaire, suivi d'un stage de validation de 3 mois minimum après admissibilité."
+  },
+  FCGE: {
+    titre: "Finances Comptabilité Gestion des Entreprises",
+    code: 'FCGE',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    intro: "La filière FCGE forme des techniciens supérieurs aux fondamentaux de la gestion financière, comptable et administrative des organisations. Elle prépare les apprenants à comprendre, analyser et piloter les performances d'une entreprise, en leur apportant des compétences immédiatement opérationnelles pour intégrer les structures économiques et financières dès l'obtention de leur diplôme.",
+    acces: ['BAC A1', 'BAC B', 'BAC C', 'BAC D', 'BAC G2', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
+    competences: [
+      "Produire l'ensemble des états financiers d'une entreprise (bilan, compte de résultat, analyse financière)",
+      "Maîtriser les logiciels de gestion comptable : Excel, Sage Comptabilité, Sage Paie",
+      "Effectuer les déclarations fiscales et sociales de l'entreprise (Impôts et CNPS)",
+      "Élaborer des outils de suivi et de contrôle de gestion",
+      "Contribuer aux stratégies financières et à la prise de décision",
+      "Comprendre l'environnement économique, juridique et numérique des entreprises"
+    ],
+    activites: [
+      "Assistant Comptable, Comptable ou Chef Comptable",
+      "Contrôleur de Gestion ou Auditeur en cabinet d'expertise comptable",
+      "Gestionnaire administratif et financier en entreprise industrielle ou commerciale",
+      "Chef du Service Approvisionnement ou Administrateur des ventes",
+      "Assistant de gestion de PME/PMI",
+      "Entrepreneur : création et gestion de sa propre entreprise"
+    ],
+    orientation: "À IHBI, la formation vise à produire des comptables immédiatement opérationnels. Dès la 1ère année, les étudiants maîtrisent les logiciels professionnels utilisés en entreprise et en cabinet (Sage, Excel avancé). Un stage d'immersion en fin de 1ère année permet de confronter les acquis aux réalités du terrain. Une initiation au marketing digital complète le profil. Après admissibilité, stage de validation d'au moins 3 mois en structure partenaire ; stage de perfectionnement disponible après soutenance."
+  },
+  MSP: {
+    titre: "Maintenance des Systèmes de Production",
+    code: 'MSP',
+    duree: '2 ans',
+    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    intro: "Face à l'installation croissante d'entreprises industrielles en Côte d'Ivoire, la filière MSP forme des techniciens supérieurs spécialisés dans l'acquisition, l'installation, la maintenance et l'amélioration des performances des équipements de production. Alliant mécanique, électricité industrielle, électronique et automatisme, elle prépare des professionnels capables de garantir la continuité de la production dans tout type d'environnement industriel.",
+    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
+    competences: [
+      "Diagnostiquer et réparer les pannes d'équipements industriels électriques, électroniques et mécaniques",
+      "Conduire une politique de maintenance préventive et curative",
+      "Établir des programmes de maintenance et améliorer les performances des équipements",
+      "Maîtriser l'électricité domestique et industrielle, l'électronique et l'automatisme",
+      "Réaliser des travaux de construction métallique, d'usinage et de dessin industriel (AUTOCAD)",
+      "Diriger une équipe, gérer les commandes d'équipements et rédiger des rapports techniques"
+    ],
+    activites: [
+      "Technicien de Maintenance dans l'industrie mécanique, chimique ou agroalimentaire",
+      "Responsable de Maintenance ou Responsable des systèmes automatisés",
+      "Chef d'équipe ou Superviseur électromécaniciens",
+      "Responsable de bureau d'étude technique",
+      "Technicien de Production dans l'industrie des transports ou de l'aéronautique",
+      "Technicien en équipements industriels dans les secteurs miniers ou sucriers"
+    ],
+    orientation: "L'approche pédagogique d'IHBI repose sur l'alternance de cours théoriques et de travaux pratiques intensifs en atelier : TP de mesure, d'électricité domestique et industrielle, de construction métallique, d'usinage, d'automatisme, d'hydraulique, de pneumatique et de dessin industriel sur AUTOCAD. Des séminaires de formation et des voyages d'étude en entreprise sont organisés en 1ère année. Chaque étudiant effectue un stage d'immersion en structure industrielle partenaire à la fin de la 1ère année, puis un stage de validation de 3 mois minimum après admissibilité."
+  },
   IDA: {
     titre: "Informatique Développeur d'Applications",
     code: 'IDA',
