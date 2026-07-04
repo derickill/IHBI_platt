@@ -978,6 +978,152 @@ tr:hover td{background:var(--navy-l)}
 .obox-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--g400)}
 .account-inactive{opacity:.55;background:var(--g100)}
 .bdg-delegue{background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:2px;font-size:11px;font-weight:700;margin-left:4px}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — Student · Teacher · Vitrine
+   (Admin panel remains desktop-only)
+═══════════════════════════════════════════════════════ */
+
+/* ── HAMBURGER — hidden by default ── */
+.nav-hamburger{display:none;background:none;border:1px solid var(--g200);color:var(--navy);cursor:pointer;padding:7px 10px;border-radius:3px;line-height:1;align-items:center}
+
+/* ── MOBILE NAV MENU ── */
+.nav-mobile-menu{display:none;flex-direction:column;position:fixed;top:58px;left:0;right:0;background:var(--white);border-bottom:2px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:799;padding:8px 0 16px}
+.nav-mobile-menu.open{display:flex}
+.nav-mobile-menu .nav-a{padding:14px 24px;font-size:15px;border-bottom:1px solid var(--border);color:var(--navy-d);font-weight:500;display:block;letter-spacing:.1px}
+.nav-mobile-menu .nav-a:last-of-type{border-bottom:none}
+.nav-mob-login{margin:16px 24px 0;padding:13px;font-size:14px;background:var(--red);color:white;border:none;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;width:calc(100% - 48px)}
+
+/* ── MOBILE TOPBAR (dashboards) ── */
+.mob-topbar{display:none;align-items:center;height:54px;background:var(--navy-d);padding:0 16px;gap:12px;position:sticky;top:0;z-index:201;flex-shrink:0}
+.mob-topbar-logo{height:20px;flex-shrink:0}
+.mob-topbar-title{color:rgba(255,255,255,.82);font-size:13px;font-weight:600;flex:1;letter-spacing:.2px}
+.mob-burger{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── SIDEBAR OVERLAY ── */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:398}
+.mob-overlay.open{display:block}
+
+/* ══════════════════════════════════
+   ≤ 768px — MOBILE + TABLET
+══════════════════════════════════ */
+@media(max-width:768px){
+  /* Topbar + navbar */
+  .topbar{display:none}
+  .nav-center{display:none}
+  .nav-brand-sub,.nav-brand-sep{display:none}
+  .nav-login-btn{display:none}
+  .nav-hamburger{display:flex}
+  .navbar{height:58px}
+  .navbar .wrap{padding:0 16px}
+
+  /* ── VITRINE HERO ── */
+  .hero{min-height:auto}
+  .hero .wrap{grid-template-columns:1fr;gap:32px;padding-top:48px;padding-bottom:48px}
+  .hero-panel{display:none}
+  .hero-h1{font-size:clamp(30px,9vw,46px)}
+  .hero-desc{font-size:15px;margin-bottom:28px}
+
+  /* ── SECTIONS / WRAP ── */
+  .sec{padding:52px 0}
+  .sec-head{margin-bottom:32px}
+  .wrap{padding:0 18px}
+
+  /* ── FILIÈRES ── */
+  .f-grid{grid-template-columns:1fr}
+
+  /* ── COMING ── */
+  .coming-grid{grid-template-columns:repeat(2,1fr)}
+  .coming-box{padding:22px 18px}
+
+  /* ── ABOUT ── */
+  .about-top{grid-template-columns:1fr;gap:28px;margin-bottom:36px}
+  .mosaic{display:none}
+  .about-facts{grid-template-columns:1fr}
+  .fact{border-right:none;border-bottom:1px solid var(--border);padding:24px 0!important}
+  .fact:last-child{border-bottom:none}
+
+  /* ── WHY ── */
+  .why-cols{grid-template-columns:1fr}
+  .why-col{border-right:none;border-bottom:1px solid rgba(255,255,255,.1);padding:28px 0!important}
+  .why-col:last-child{border-bottom:none;padding-bottom:0!important}
+
+  /* ── ADMISSIONS ── */
+  .adm-grid{grid-template-columns:1fr;gap:32px}
+
+  /* ── BAND ── */
+  .band .wrap{flex-direction:column;gap:14px;align-items:flex-start}
+
+  /* ── FOOTER ── */
+  .footer-top{grid-template-columns:1fr 1fr;gap:28px}
+  .footer-bot{flex-direction:column;gap:10px;text-align:center}
+
+  /* ── FORMATIONS CARDS ── */
+  .formations-grid{grid-template-columns:1fr}
+
+  /* ══════════════════════════════════
+     DASHBOARDS — STUDENT + TEACHER
+  ══════════════════════════════════ */
+  .mob-topbar{display:flex}
+
+  /* Sidebar → slide-in drawer */
+  .dsb{
+    position:fixed;
+    top:0;left:0;bottom:0;
+    width:260px;height:100%!important;
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:400;
+  }
+  .dsb.mob-open{transform:translateX(0)}
+
+  .dash-layout{min-height:calc(100vh - 54px)}
+  .dash-main{padding:16px 14px}
+
+  /* KPI single column */
+  .kpi-row{grid-template-columns:1fr}
+  .notes-kpi{grid-template-columns:1fr}
+  .kpi{padding:16px 18px}
+  .kpi-v{font-size:26px}
+
+  /* Greeting row */
+  .d-top{flex-direction:column;gap:10px;margin-bottom:18px;align-items:flex-start}
+  .d-hi{font-size:20px}
+
+  /* Messages stacked */
+  .msg-layout{grid-template-columns:1fr;min-height:auto}
+  .msg-list-col{border-right:none;border-bottom:1px solid var(--border)}
+  .msg-preview{max-width:100%}
+
+  /* Calendar nav */
+  .cal-nav{flex-wrap:wrap;gap:8px;padding:10px 12px}
+  .cal-nav-btns{display:none}
+
+  /* Scolarité payment hero */
+  .payment-hero{flex-direction:column;gap:14px;padding:18px 20px}
+  .payment-meta{margin-left:0;text-align:left}
+
+  /* Tables scroll horizontally */
+  .bx{overflow-x:auto}
+  .bx>table{min-width:500px}
+
+  /* Titles */
+  .ds-title{font-size:18px}
+  .ds-sub{margin-bottom:16px}
+}
+
+/* ══════════════════════════════════
+   ≤ 480px — SMALL PHONES
+══════════════════════════════════ */
+@media(max-width:480px){
+  .footer-top{grid-template-columns:1fr}
+  .coming-grid{grid-template-columns:1fr}
+  .fr{grid-template-columns:1fr}
+  .hero-actions{flex-direction:column}
+  .btn-primary,.btn-secondary{width:100%;justify-content:center;text-align:center}
+  .dash-main{padding:12px}
+  .kpi{padding:14px 16px}
+}
 </style>
 </head>
 <body>
@@ -992,12 +1138,12 @@ tr:hover td{background:var(--navy-l)}
   </div>
 </div>
 <script>
-  (function(){
+  function _checkAdminMobile() {
     if(window.innerWidth < 900){
       var w = document.getElementById('mobile-warning');
       if(w) w.style.display='flex';
     }
-  })();
+  }
 </script>
 
 <!-- ═══════════ SITE PUBLIC ═══════════ -->
@@ -1028,10 +1174,22 @@ tr:hover td{background:var(--navy-l)}
       <a href="#contact" class="nav-a">Contact</a>
     </div>
     <div class="nav-right">
-      <button class="btn-nav-fill" onclick="showLogin(event)">Mon espace</button>
+      <button class="btn-nav-fill nav-login-btn" onclick="showLogin(event)">Mon espace</button>
+      <button class="nav-hamburger" onclick="toggleNavMenu()" aria-label="Menu">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
     </div>
   </div>
 </nav>
+<div class="nav-mobile-menu" id="nav-mobile-menu">
+  <a href="#filieres" class="nav-a" onclick="closeNavMenu()">Formations</a>
+  <a href="#about" class="nav-a" onclick="closeNavMenu()">L'école</a>
+  <a href="#admissions" class="nav-a" onclick="closeNavMenu()">Admissions</a>
+  <a href="#news" class="nav-a" onclick="closeNavMenu()">Événements</a>
+  <a href="#faq" class="nav-a" onclick="closeNavMenu()">FAQ</a>
+  <a href="#contact" class="nav-a" onclick="closeNavMenu()">Contact</a>
+  <button class="nav-mob-login" onclick="showLogin(event);closeNavMenu()">Mon espace</button>
+</div>
 
 <!-- HERO — fond navy très foncé -->
 <section class="hero" id="top">
@@ -1634,6 +1792,14 @@ tr:hover td{background:var(--navy-l)}
 
 
 <div id="pg-dash" style="display:none">
+<div class="mob-topbar">
+  <button class="mob-burger" onclick="openSidebar('pg-dash')" aria-label="Menu">
+    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <img src="logo.png" alt="IHBI" class="mob-topbar-logo">
+  <span class="mob-topbar-title">Espace Étudiant</span>
+</div>
+<div class="mob-overlay" id="pg-dash-overlay" onclick="closeSidebar('pg-dash')"></div>
 <div class="dash-layout">
 
 <!-- SIDEBAR -->
@@ -1860,6 +2026,14 @@ tr:hover td{background:var(--navy-l)}
 
 <!-- ═══════════════ ESPACE ENSEIGNANT ═══════════════ -->
 <div id="pg-teacher" style="display:none">
+<div class="mob-topbar" style="background:linear-gradient(90deg,#062A1F,#0A3D2D)">
+  <button class="mob-burger" onclick="openSidebar('pg-teacher')" aria-label="Menu">
+    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <img src="logo.png" alt="IHBI" class="mob-topbar-logo">
+  <span class="mob-topbar-title">Espace Enseignant</span>
+</div>
+<div class="mob-overlay" id="pg-teacher-overlay" onclick="closeSidebar('pg-teacher')"></div>
 <div class="dash-layout">
 <aside class="dsb" style="background:linear-gradient(180deg,#062A1F 0%,#0A3D2D 60%,#0D4F3C 100%)">
   <div class="dsb-top">
@@ -3156,6 +3330,7 @@ function _navigateAfterLogin(user) {
     initParent();
   } else {
     document.getElementById('pg-admin').style.display = 'block';
+    _checkAdminMobile();
     initAdmin();
   }
   window.scrollTo(0, 0);
@@ -3442,6 +3617,7 @@ window.addEventListener('popstate', function(e) {
     ['pg-site','pg-dash','pg-teacher','pg-parent'].forEach(id =>
       document.getElementById(id).style.display = 'none');
     document.getElementById('pg-admin').style.display = 'block';
+    _checkAdminMobile();
     if (s.section) showA(s.section, null);
   } else if (s.page === 'pg-parent') {
     ['pg-site','pg-dash','pg-teacher','pg-admin'].forEach(id =>
@@ -3461,6 +3637,7 @@ function showDS(id, el) {
   if (id === 'msg')          { initStudentMessaging(); }
   if (id === 'reclamations') { renderStudentReclamations(); }
   _historyPush({page:'pg-dash', section:id});
+  closeSidebar('pg-dash');
 }
 function showT(id, el) {
   document.querySelectorAll('#pg-teacher .ds').forEach(d => d.classList.remove('active'));
@@ -3473,6 +3650,7 @@ function showT(id, el) {
   if (id === 't-msg')     { renderTeacherDelegateMsgs(); renderTmsgList(); }
   if (id === 't-volume')  renderTeacherVolume();
   _historyPush({page:'pg-teacher', section:id});
+  closeSidebar('pg-teacher');
 }
 function showA(id, el) {
   document.querySelectorAll('#pg-admin .ds').forEach(d => d.classList.remove('active'));
@@ -7768,6 +7946,30 @@ function candidaterFiliere(code) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeFiliereModal();
 });
+
+/* ── RESPONSIVE MOBILE HELPERS ── */
+function toggleNavMenu() {
+  const m = document.getElementById('nav-mobile-menu');
+  if (m) m.classList.toggle('open');
+}
+function closeNavMenu() {
+  const m = document.getElementById('nav-mobile-menu');
+  if (m) m.classList.remove('open');
+}
+function openSidebar(pgId) {
+  const pg = document.getElementById(pgId);
+  if (!pg) return;
+  pg.querySelector('.dsb')?.classList.add('mob-open');
+  document.getElementById(pgId + '-overlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar(pgId) {
+  const pg = document.getElementById(pgId);
+  if (!pg) return;
+  pg.querySelector('.dsb')?.classList.remove('mob-open');
+  document.getElementById(pgId + '-overlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
 </script>
 
 <!-- ════ MODAL FILIÈRE ════ -->
