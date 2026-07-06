@@ -6124,7 +6124,7 @@ function markContactDone(cid) {
 }
 
 function exportContactsExcel() {
-  const contacts = (_DB.contact_submissions || []);
+  const contacts = (DB.contact_submissions || []);
   if (!contacts.length) { alert('Aucune candidature à exporter.'); return; }
   const cols = ['Nom','Prénom','Email','Téléphone','Filière','Email parent','Message','Date','Statut'];
   const rows = contacts.map(c => [
