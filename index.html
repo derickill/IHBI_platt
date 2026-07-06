@@ -1151,10 +1151,11 @@ tr:hover td{background:var(--navy-l)}
 .hero-panel-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,15,42,.25) 0%,rgba(8,15,42,.75) 100%)}
 .hero-panel-content{position:relative;z-index:1;padding:32px 28px}
 
-/* ── ABOUT PHOTO ── */
-.about-photo-wrap{overflow:hidden;border-left:4px solid var(--red)}
-.about-photo{width:100%;height:100%;min-height:360px;object-fit:cover;object-position:center top;display:block}
-@media(max-width:768px){.about-photo-wrap{border-left:none;border-top:4px solid var(--red)}.about-photo{min-height:240px;height:240px}}
+/* ── ABOUT PHOTO SLIDER ── */
+.about-photo-wrap{position:relative;overflow:hidden;border-left:4px solid var(--red);min-height:420px}
+.about-slide{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity .9s ease}
+.about-slide.on{opacity:1}
+@media(max-width:768px){.about-photo-wrap{border-left:none;border-top:4px solid var(--red);min-height:260px}}
 
 /* ── PHOTO STRIP ── */
 .photo-strip{position:relative;overflow:hidden;height:400px;margin-bottom:0}
@@ -1348,9 +1349,7 @@ tr:hover td{background:var(--navy-l)}
         <h2 class="section-title" style="margin-bottom:20px">L'IHBI, l'école qui prépare au monde professionnel</h2>
         <p class="about-lead">L'<strong>International High Business Institute (IHBI)</strong> est un établissement privé d'enseignement supérieur implanté à Yamoussoukro. Il propose des formations BTS dans des filières tertiaires et industrielles, dispensées en français et en anglais.</p>
       </div>
-      <div class="about-photo-wrap">
-        <img src="photos/etudiants/belle_photo2.JPG" alt="Étudiants IHBI" class="about-photo">
-      </div>
+      <div class="about-photo-wrap" id="about-slider"></div>
     </div>
 
     <!-- ══ GALERIE PHOTOS ══ -->
@@ -8253,10 +8252,40 @@ function _galAutoPlay() {
   }, { passive: true });
 })();
 
+// ── ABOUT PHOTO SLIDER ──────────────────────────────────────────────────────
+const _ABOUT_PHOTOS = [
+  'photos/etudiants/belle_photo1.JPG',
+  'photos/etudiants/belle_photo2.JPG',
+  'photos/etudiants/belle_photo3.JPG',
+  'photos/mecanique/belle_photo1.JPG',
+  'photos/mecanique/bele_photo2.JPG',
+  'photos/informatique/belle_photo.JPG',
+  'photos/telecom/belle_photo.JPG',
+  'photos/usinage/belle_photo.JPG',
+  'photos/agriculture/belle_photo1.JPG',
+  'photos/agriculture/belle_photo2.JPG'
+];
+
+function _initAboutSlider() {
+  const wrap = document.getElementById('about-slider');
+  if (!wrap) return;
+  let idx = 0;
+  wrap.innerHTML = _ABOUT_PHOTOS.map((p, i) =>
+    `<div class="about-slide${i === 0 ? ' on' : ''}" style="background-image:url('${p}')"></div>`
+  ).join('');
+  setInterval(() => {
+    const slides = wrap.querySelectorAll('.about-slide');
+    slides[idx].classList.remove('on');
+    idx = (idx + 1) % slides.length;
+    slides[idx].classList.add('on');
+  }, 3200);
+}
+
 // Init gallery on page load
 document.addEventListener('DOMContentLoaded', () => {
   _renderGallery();
   _galAutoPlay();
+  _initAboutSlider();
 });
 
 /* ── RESPONSIVE MOBILE HELPERS ── */
