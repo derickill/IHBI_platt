@@ -1151,6 +1151,29 @@ tr:hover td{background:var(--navy-l)}
 .hero-panel-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,15,42,.25) 0%,rgba(8,15,42,.75) 100%)}
 .hero-panel-content{position:relative;z-index:1;padding:32px 28px}
 
+/* ── WHY LIST (atouts/ressources/valeurs) ── */
+.why-list{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:7px}
+.why-list li{font-size:13.5px;color:rgba(255,255,255,.72);padding-left:16px;position:relative;line-height:1.55}
+.why-list li::before{content:'—';position:absolute;left:0;color:var(--red);font-weight:700;line-height:1.55}
+.why-list li em{color:white;font-style:italic}
+
+/* ── MOT DU DIRECTEUR ── */
+.dir-grid{display:grid;grid-template-columns:.36fr 1fr;gap:64px;align-items:start}
+.dir-photo-side{display:flex;flex-direction:column;align-items:center;gap:20px}
+.dir-placeholder{width:100%;min-height:380px;background:var(--g20);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--g300);border:2px dashed var(--g100)}
+.dir-placeholder svg{opacity:.18;width:72px;height:72px;stroke:var(--navy-d)}
+.dir-placeholder p{font-size:13px;text-align:center;color:var(--g300);line-height:1.6;margin:0}
+.dir-name-block{text-align:center}
+.dir-name-block strong{display:block;font-size:15px;color:var(--navy-d);font-weight:700;margin-bottom:3px}
+.dir-name-block span{font-size:13px;color:var(--g400)}
+.dir-body p{font-size:15.5px;color:var(--g600);line-height:1.8;margin-bottom:15px}
+.dir-quote{font-style:italic;font-size:1.08em;color:var(--navy-d);border-left:4px solid var(--red);padding:6px 0 6px 18px;margin:24px 0 26px;line-height:1.6}
+.dir-quote em{color:var(--red);font-style:normal;font-weight:600}
+.dir-sig{margin-top:30px;padding-top:22px;border-top:1px solid var(--border)}
+.dir-sig strong{display:block;font-size:15px;color:var(--navy-d);font-weight:700;margin-bottom:3px}
+.dir-sig span{font-size:13px;color:var(--g400)}
+@media(max-width:768px){.dir-grid{grid-template-columns:1fr}.dir-placeholder{min-height:220px}}
+
 /* ── ABOUT PHOTO SLIDER ── */
 .about-photo-wrap{position:relative;overflow:hidden;border-left:4px solid var(--red);min-height:420px}
 .about-slide{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity .9s ease}
@@ -1408,29 +1431,51 @@ tr:hover td{background:var(--navy-l)}
   </div>
 </section>
 
-<!-- POURQUOI — fond navy foncé → textes blancs -->
+<!-- ATOUTS / RESSOURCES / VALEURS — fond navy foncé → textes blancs -->
 <section class="sec sec-navy">
   <div class="wrap">
     <div class="why-head reveal">
-      <div class="section-label">Pourquoi nous choisir</div>
-      <h2 class="section-title" style="color:var(--white)">Ce qui fait la différence à l'IHBI</h2>
-      <p class="section-sub" style="color:rgba(255,255,255,.45)">Trois raisons pour lesquelles nos étudiants s'intègrent dans le monde professionnel avec confiance.</p>
+      <div class="section-label">Notre force</div>
+      <h2 class="section-title" style="color:var(--white)">Nos Atouts, Ressources &amp; Valeurs</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,.45)">IHBI met tout en œuvre pour offrir aux étudiants un cadre de formation agréable, sécurisé et favorable à la réussite.</p>
     </div>
     <div class="why-cols reveal">
       <div class="why-col">
         <div class="why-n">01</div>
-        <h3>La pratique avant tout</h3>
-        <p>Chaque formation intègre des sessions en atelier, des séminaires professionnels et des visites en entreprise. Nos étudiants savent faire, pas seulement théoriser.</p>
+        <h3>Nos Atouts</h3>
+        <p>IHBI est accessible en toute sécurité par taxis communaux, bus ou à pied, dans un environnement calme propice à la concentration et au développement personnel.</p>
+        <p>L'établissement dispose d'une <strong style="color:var(--white)">infirmerie</strong> pour une première prise en charge médicale, et organise des <strong style="color:var(--white)">actions de santé préventive</strong>, notamment des consultations ophtalmologiques au profit des étudiants. Ces initiatives traduisent notre volonté d'accompagner les apprenants sur le plan humain, social et sanitaire.</p>
       </div>
       <div class="why-col">
         <div class="why-n">02</div>
-        <h3>Un réseau professionnel actif</h3>
-        <p>Des entreprises partenaires offrent des opportunités de stage et d'emploi directement depuis l'école. L'insertion commence bien avant la fin des études.</p>
+        <h3>Nos Ressources</h3>
+        <ul class="why-list">
+          <li>Corps enseignant qualifié, expérimenté et engagé</li>
+          <li>Salles de classe climatisées et confortables</li>
+          <li>Salle informatique équipée pour les cours pratiques</li>
+          <li>Atelier d'application automobile (mécanique)</li>
+          <li>4 laboratoires télécom : faisceaux hertziens, fibre optique, réseaux d'accès, énergie</li>
+          <li>Laboratoire de génie électrique</li>
+          <li>Atelier d'usinage &amp; atelier de construction métallique</li>
+          <li>Périmètre expérimental hors-sol (irrigation goutte à goutte)</li>
+          <li>Bibliothèque physique</li>
+          <li>Radio-école <em>Life Radio 107.1 FM</em></li>
+          <li>Internet haut débit par fibre optique</li>
+          <li>Plateforme e-learning (cours en ligne)</li>
+          <li>Foyers d'hébergement garçons et filles</li>
+        </ul>
       </div>
       <div class="why-col">
         <div class="why-n">03</div>
-        <h3>La formation bilingue</h3>
-        <p>La maîtrise du français et de l'anglais ouvre des portes au-delà des frontières ivoiriennes. Un avantage concret sur le marché du travail régional.</p>
+        <h3>Nos Valeurs</h3>
+        <p>IHBI repose sur <strong style="color:var(--white)">l'excellence, la discipline, la proximité, le professionnalisme et l'ouverture au monde</strong>.</p>
+        <ul class="why-list">
+          <li>Formation professionnalisante : cours théoriques, travaux pratiques et alternance en entreprise</li>
+          <li>Suivi régulier des enseignements pour garantir l'achèvement effectif des programmes</li>
+          <li>Encadrement de proximité et accompagnement personnalisé de chaque étudiant</li>
+          <li>Promotion de la langue anglaise pour renforcer l'ouverture internationale</li>
+          <li>Célébration du mérite : prix d'honneur et <strong style="color:var(--white)">ordinateur portable</strong> pour les meilleurs étudiants</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -1446,6 +1491,48 @@ tr:hover td{background:var(--navy-l)}
     <p class="photo-strip-sub">Des ateliers équipés, des enseignants qualifiés,<br>des stages en entreprises partenaires.</p>
   </div>
 </div>
+
+<!-- MOT DU DIRECTEUR -->
+<section class="sec" id="directeur" style="background:var(--g10)">
+  <div class="wrap">
+    <div class="why-head reveal" style="text-align:center;margin-bottom:52px">
+      <div class="section-label">Mot du Directeur Général</div>
+      <h2 class="section-title">M. James Nicaise YAO</h2>
+      <p class="section-sub" style="font-style:italic;color:var(--g400)">"Nous transformons les potentiels inexploités en valeurs absolues<br>
+      <em style="font-size:.92em;color:var(--g300)">We convert untapped potential into absolute value</em>"</p>
+    </div>
+    <div class="dir-grid reveal">
+      <!-- Colonne gauche : photo + nom -->
+      <div class="dir-photo-side">
+        <div class="dir-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <p>Photo du Directeur<br>à venir</p>
+        </div>
+        <div class="dir-name-block">
+          <strong>M. James Nicaise YAO</strong>
+          <span>Directeur Général de l'IHBI</span>
+        </div>
+      </div>
+      <!-- Colonne droite : texte -->
+      <div class="dir-body">
+        <p>Chers étudiants, chers parents, chers partenaires,</p>
+        <p>L'Institut des Hautes Études en Brevet de technicien supérieur (IHBI) est une école supérieure bilingue (français/anglais) qui se distingue par sa vision résolument pratique, son exigence pédagogique et son ouverture au monde professionnel. Notre mission première est de <strong>révéler le potentiel unique de chaque apprenant et de le transformer en compétences réelles, immédiatement opérationnelles</strong>.</p>
+        <div class="dir-quote">
+          IHBI est la première école en Côte d'Ivoire à proposer le <em>BTS 2MA — Moteurs et Mécanique Automobile</em>, une filière pionnière qui témoigne de notre volonté d'anticiper les besoins du marché.
+        </div>
+        <p>Pour atteindre cet objectif, nous nous appuyons sur une <strong>équipe enseignante expérimentée</strong>, des <strong>ateliers de travaux pratiques</strong> modernes, des séminaires professionnels, des stages en entreprises et des visites de terrain. Des partenariats solides avec le monde économique garantissent à nos diplômés une insertion rapide et durable.</p>
+        <p>Notre ambition est claire : former non seulement des diplômés, mais de véritables professionnels dotés du <strong>savoir, du savoir-faire et du savoir-être</strong> qu'exige le marché du travail contemporain.</p>
+        <p>Je vous invite à découvrir, à travers ce site, nos filières, nos valeurs et nos atouts. L'IHBI est là pour vous accompagner vers la réussite.</p>
+        <div class="dir-sig">
+          <strong>M. James Nicaise YAO</strong>
+          <span>Directeur de IHBI</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ADMISSIONS — fond blanc -->
 <section class="sec" id="admissions">
