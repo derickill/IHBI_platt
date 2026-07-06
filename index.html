@@ -500,10 +500,9 @@ img{display:block;max-width:100%}
    À PROPOS — fond blanc, textes sombres
 ───────────────────────────────────────── */
 .about-top{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:80px;align-items:end;margin-bottom:64px;
+  display:grid;grid-template-columns:1fr .7fr;
+  gap:60px;align-items:start;margin-bottom:64px;
 }
-.about-top .section-title{margin-bottom:0}
 .about-lead{font-size:16.5px;font-weight:400;color:#444444;line-height:1.88;letter-spacing:.1px}
 .about-lead strong{color:var(--b900);font-weight:700}
 
@@ -1124,6 +1123,56 @@ tr:hover td{background:var(--navy-l)}
   .dash-main{padding:12px}
   .kpi{padding:14px 16px}
 }
+
+/* ═══════════════════════════════════════════════════════
+   GALERIE PHOTOS
+═══════════════════════════════════════════════════════ */
+.gallery-section{margin-bottom:64px}
+.gallery-tabs{display:flex;overflow-x:auto;border-bottom:2px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.gallery-tabs::-webkit-scrollbar{display:none}
+.gtab{padding:13px 18px;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--g400);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
+.gtab:hover{color:var(--navy-d)}
+.gtab.on{color:var(--navy-d);border-bottom-color:var(--red)}
+.gallery-carousel{position:relative;background:var(--navy-d);overflow:hidden;aspect-ratio:16/9;max-height:600px}
+.gc-track{position:absolute;inset:0}
+.gc-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .7s ease}
+.gc-slide.on{opacity:1}
+.gc-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.42);color:white;border:none;width:48px;height:48px;border-radius:50%;font-size:24px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;transition:background .18s;backdrop-filter:blur(6px);font-weight:300}
+.gc-btn:hover{background:rgba(0,0,0,.72)}
+.gc-prev{left:16px}.gc-next{right:16px}
+.gc-dots{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:5}
+.gc-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.38);cursor:pointer;transition:all .22s;border:none;padding:0}
+.gc-dot.on{background:white;transform:scale(1.25)}
+.gc-counter{position:absolute;top:14px;right:16px;background:rgba(0,0,0,.42);color:white;font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;z-index:5;backdrop-filter:blur(6px);letter-spacing:.5px}
+.gc-cat{position:absolute;bottom:18px;left:16px;background:rgba(0,0,0,.45);color:white;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:5px 12px;border-radius:3px;z-index:5;backdrop-filter:blur(6px)}
+
+/* ── HERO PHOTO PANEL ── */
+.hero-panel{position:relative;overflow:hidden;padding:0}
+.hero-panel-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+.hero-panel-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,15,42,.25) 0%,rgba(8,15,42,.75) 100%)}
+.hero-panel-content{position:relative;z-index:1;padding:32px 28px}
+
+/* ── ABOUT PHOTO ── */
+.about-photo-wrap{overflow:hidden;border-left:4px solid var(--red)}
+.about-photo{width:100%;height:100%;min-height:360px;object-fit:cover;object-position:center top;display:block}
+@media(max-width:768px){.about-photo-wrap{border-left:none;border-top:4px solid var(--red)}.about-photo{min-height:240px;height:240px}}
+
+/* ── PHOTO STRIP ── */
+.photo-strip{position:relative;overflow:hidden;height:400px;margin-bottom:0}
+.photo-strip img{width:100%;height:100%;object-fit:cover;object-position:center 35%}
+.photo-strip-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,15,42,.82) 0%,rgba(8,15,42,.18) 60%,transparent 100%)}
+.photo-strip-caption{position:absolute;left:0;top:50%;transform:translateY(-50%);padding:0 60px;max-width:580px}
+.photo-strip-label{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--red);display:block;margin-bottom:12px}
+.photo-strip-h{font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,40px);font-weight:700;color:white;line-height:1.18;margin-bottom:12px}
+.photo-strip-sub{font-size:15px;color:rgba(255,255,255,.72);line-height:1.7}
+@media(max-width:768px){
+  .photo-strip{height:280px}
+  .photo-strip-caption{padding:0 24px;max-width:100%}
+  .photo-strip-overlay{background:rgba(8,15,42,.65)}
+  .gallery-carousel{aspect-ratio:4/3}
+  .gc-btn{width:38px;height:38px;font-size:20px}
+  .gtab{padding:11px 14px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -1210,23 +1259,27 @@ tr:hover td{background:var(--navy-l)}
         <button class="btn-secondary" onclick="document.getElementById('admissions').scrollIntoView({behavior:'smooth'})">Candidater</button>
       </div>
     </div>
-    <div class="hero-panel reveal" style="transition-delay:.15s">
-      <div class="hero-panel-title">IHBI en quelques chiffres</div>
-      <div class="hero-stat">
-        <div class="hero-stat-val">BTS</div>
-        <div class="hero-stat-lbl">Brevet de Technicien Supérieur — cycle unique</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-val" data-to="11">0</div>
-        <div class="hero-stat-lbl">Filières actives et ouvertes aux inscriptions</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-val" data-to="38">0</div>
-        <div class="hero-stat-lbl">Classes organisées sur deux niveaux</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-val">FR<sup>/</sup>EN</div>
-        <div class="hero-stat-lbl">Formation intégralement bilingue</div>
+    <div class="hero-panel reveal" style="transition-delay:.15s;min-height:360px">
+      <img src="photos/etudiants/super_bonne_photo_pour_la_presentation.jpg" alt="Étudiants IHBI" class="hero-panel-img">
+      <div class="hero-panel-overlay"></div>
+      <div class="hero-panel-content">
+        <div class="hero-panel-title">IHBI en quelques chiffres</div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">BTS</div>
+          <div class="hero-stat-lbl">Brevet de Technicien Supérieur — cycle unique</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" data-to="11">0</div>
+          <div class="hero-stat-lbl">Filières actives et ouvertes aux inscriptions</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" data-to="38">0</div>
+          <div class="hero-stat-lbl">Classes organisées sur deux niveaux</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">FR<sup>/</sup>EN</div>
+          <div class="hero-stat-lbl">Formation intégralement bilingue</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1293,36 +1346,32 @@ tr:hover td{background:var(--navy-l)}
     <div class="about-top reveal">
       <div>
         <div class="section-label">À propos de nous</div>
-        <h2 class="section-title">L'IHBI, l'école qui prépare au monde professionnel</h2>
+        <h2 class="section-title" style="margin-bottom:20px">L'IHBI, l'école qui prépare au monde professionnel</h2>
+        <p class="about-lead">L'<strong>International High Business Institute (IHBI)</strong> est un établissement privé d'enseignement supérieur implanté à Yamoussoukro. Il propose des formations BTS dans des filières tertiaires et industrielles, dispensées en français et en anglais.</p>
       </div>
-      <p class="about-lead">L'<strong>International High Business Institute (IHBI)</strong> est un établissement privé d'enseignement supérieur implanté à Yamoussoukro. Il propose des formations BTS dans des filières tertiaires et industrielles, dispensées en français et en anglais.</p>
+      <div class="about-photo-wrap">
+        <img src="photos/etudiants/belle_photo2.JPG" alt="Étudiants IHBI" class="about-photo">
+      </div>
     </div>
 
-    <div class="mosaic reveal">
-      <div class="m-slot m-main">
-        <div class="m-ico"><svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-        <span class="m-lbl">Photo du campus</span>
-        <div class="m-add-btn">+</div>
+    <!-- ══ GALERIE PHOTOS ══ -->
+    <div class="gallery-section reveal" id="galerie">
+      <div class="gallery-tabs" id="gallery-tabs">
+        <button class="gtab on" onclick="switchGallery('etudiants',this)">Vie Étudiante</button>
+        <button class="gtab" onclick="switchGallery('campus',this)">Le Campus</button>
+        <button class="gtab" onclick="switchGallery('mecanique',this)">Mécanique Auto</button>
+        <button class="gtab" onclick="switchGallery('informatique',this)">Salle Informatique</button>
+        <button class="gtab" onclick="switchGallery('telecom',this)">Ateliers Télécom</button>
+        <button class="gtab" onclick="switchGallery('usinage',this)">Atelier Usinage</button>
+        <button class="gtab" onclick="switchGallery('agriculture',this)">Agriculture</button>
       </div>
-      <div class="m-slot m-b">
-        <div class="m-ico"><svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-        <span class="m-lbl">Ateliers pratiques</span>
-        <div class="m-add-btn">+</div>
-      </div>
-      <div class="m-slot m-c">
-        <div class="m-ico"><svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-        <span class="m-lbl">Vie étudiante</span>
-        <div class="m-add-btn">+</div>
-      </div>
-      <div class="m-slot m-d">
-        <div class="m-ico"><svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-        <span class="m-lbl">Remise des diplômes</span>
-        <div class="m-add-btn">+</div>
-      </div>
-      <div class="m-slot m-e">
-        <div class="m-ico"><svg viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-        <span class="m-lbl">Entreprises partenaires</span>
-        <div class="m-add-btn">+</div>
+      <div class="gallery-carousel" id="gallery-carousel">
+        <div class="gc-track" id="gc-track"></div>
+        <button class="gc-btn gc-prev" onclick="galleryNav(-1)" aria-label="Photo précédente">&#8249;</button>
+        <button class="gc-btn gc-next" onclick="galleryNav(1)" aria-label="Photo suivante">&#8250;</button>
+        <div class="gc-dots" id="gc-dots"></div>
+        <div class="gc-counter" id="gc-counter">1 / 1</div>
+        <div class="gc-cat" id="gc-cat">Vie Étudiante</div>
       </div>
     </div>
 
@@ -1388,6 +1437,17 @@ tr:hover td{background:var(--navy-l)}
     </div>
   </div>
 </section>
+
+<!-- BANDE PHOTO — mécanique ateliers -->
+<div class="photo-strip">
+  <img src="photos/mecanique/belle_photo1.JPG" alt="Atelier Mécanique Automobile IHBI">
+  <div class="photo-strip-overlay"></div>
+  <div class="photo-strip-caption">
+    <span class="photo-strip-label">La Pratique avant tout</span>
+    <p class="photo-strip-h">Des techniciens formés<br>pour le terrain.</p>
+    <p class="photo-strip-sub">Des ateliers équipés, des enseignants qualifiés,<br>des stages en entreprises partenaires.</p>
+  </div>
+</div>
 
 <!-- ADMISSIONS — fond blanc -->
 <section class="sec" id="admissions">
@@ -8020,6 +8080,166 @@ function candidaterFiliere(code) {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeFiliereModal();
+});
+
+/* ════════════════════════════════
+   GALERIE PHOTOS
+════════════════════════════════ */
+const _GALLERY_DATA = {
+  etudiants: {
+    label: 'Vie Étudiante',
+    photos: [
+      'photos/etudiants/super_bonne_photo_pour_la_presentation.jpg',
+      'photos/etudiants/belle_photo1.JPG',
+      'photos/etudiants/belle_photo2.JPG',
+      'photos/etudiants/belle_photo3.JPG',
+      'photos/etudiants/IMG_2916.JPG',
+      'photos/etudiants/IMG_2891_Mod.jpg'
+    ]
+  },
+  campus: {
+    label: 'Le Campus',
+    photos: [
+      'photos/campus/IMG_6969.jpg',
+      'photos/campus/IMG_2970.JPG',
+      'photos/campus/IMG_2977.JPG',
+      'photos/campus/IMG_2990.JPG'
+    ]
+  },
+  mecanique: {
+    label: 'Atelier Mécanique Auto',
+    photos: [
+      'photos/mecanique/belle_photo1.JPG',
+      'photos/mecanique/bele_photo2.JPG',
+      'photos/mecanique/IMG_2743.JPG',
+      'photos/mecanique/IMG_2753.JPG',
+      'photos/mecanique/IMG_2767.JPG',
+      'photos/mecanique/IMG_2772.JPG',
+      'photos/mecanique/IMG_2785.JPG',
+      'photos/mecanique/IMG_2800.JPG',
+      'photos/mecanique/IMG_2806.JPG',
+      'photos/mecanique/IMG_2815.JPG',
+      'photos/mecanique/IMG_2937.JPG',
+      'photos/mecanique/IMG_2940.JPG',
+      'photos/mecanique/IMG_7005.jpg',
+      'photos/mecanique/IMG_7009.jpg'
+    ]
+  },
+  informatique: {
+    label: 'Salle Informatique',
+    photos: [
+      'photos/informatique/belle_photo.JPG',
+      'photos/informatique/IMG_2680.JPG',
+      'photos/informatique/IMG_2692.JPG',
+      'photos/informatique/IMG_2724.JPG',
+      'photos/informatique/IMG_2726.JPG',
+      'photos/informatique/1782957114296.png'
+    ]
+  },
+  telecom: {
+    label: 'Ateliers Télécom',
+    photos: [
+      'photos/telecom/belle_photo.JPG',
+      'photos/telecom/IMG_2656.JPG',
+      'photos/telecom/IMG_2660.JPG',
+      'photos/telecom/IMG_2712.JPG',
+      'photos/telecom/IMG_2717.JPG'
+    ]
+  },
+  usinage: {
+    label: "Atelier d'Usinage",
+    photos: [
+      'photos/usinage/belle_photo.JPG',
+      'photos/usinage/IMG_2792.JPG',
+      'photos/usinage/IMG_6898.jpg',
+      'photos/usinage/IMG_6962.jpg',
+      'photos/usinage/IMG_6984.jpg'
+    ]
+  },
+  agriculture: {
+    label: 'Agriculture Hors Sol',
+    photos: [
+      'photos/agriculture/belle_photo1.JPG',
+      'photos/agriculture/belle_photo2.JPG',
+      'photos/agriculture/IMG_2835.JPG',
+      'photos/agriculture/IMG_2840.JPG',
+      'photos/agriculture/IMG_2935.JPG',
+      'photos/agriculture/IMG_6893.jpg',
+      'photos/agriculture/IMG_6956_1.jpg',
+      'photos/agriculture/IMG_6959.jpg'
+    ]
+  }
+};
+
+let _galKey   = 'etudiants';
+let _galIdx   = 0;
+let _galTimer = null;
+
+function switchGallery(key, el) {
+  _galKey = key;
+  _galIdx = 0;
+  document.querySelectorAll('.gtab').forEach(b => b.classList.remove('on'));
+  if (el) el.classList.add('on');
+  _renderGallery();
+  _galAutoPlay();
+}
+
+function _renderGallery() {
+  const d = _GALLERY_DATA[_galKey];
+  if (!d) return;
+  const track = document.getElementById('gc-track');
+  const dotsEl = document.getElementById('gc-dots');
+  const counter = document.getElementById('gc-counter');
+  const catEl = document.getElementById('gc-cat');
+  if (!track) return;
+
+  track.innerHTML = d.photos.map((p, i) =>
+    `<div class="gc-slide${i === _galIdx ? ' on' : ''}" style="background-image:url('${p}')"></div>`
+  ).join('');
+
+  if (dotsEl) dotsEl.innerHTML = d.photos.map((_, i) =>
+    `<button class="gc-dot${i === _galIdx ? ' on' : ''}" onclick="galGoTo(${i})" aria-label="Photo ${i+1}"></button>`
+  ).join('');
+
+  if (counter) counter.textContent = `${_galIdx + 1} / ${d.photos.length}`;
+  if (catEl)   catEl.textContent   = d.label;
+}
+
+function galleryNav(delta) {
+  const len = _GALLERY_DATA[_galKey].photos.length;
+  _galIdx = (_galIdx + delta + len) % len;
+  _renderGallery();
+  _galAutoPlay();
+}
+
+function galGoTo(i) {
+  _galIdx = i;
+  _renderGallery();
+  _galAutoPlay();
+}
+
+function _galAutoPlay() {
+  if (_galTimer) clearInterval(_galTimer);
+  _galTimer = setInterval(() => galleryNav(1), 4500);
+}
+
+// Touch / swipe support
+(function() {
+  let _tx = 0;
+  document.addEventListener('touchstart', e => {
+    if (e.target.closest('#gallery-carousel')) _tx = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!e.target.closest('#gallery-carousel')) return;
+    const dx = e.changedTouches[0].clientX - _tx;
+    if (Math.abs(dx) > 40) galleryNav(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+// Init gallery on page load
+document.addEventListener('DOMContentLoaded', () => {
+  _renderGallery();
+  _galAutoPlay();
 });
 
 /* ── RESPONSIVE MOBILE HELPERS ── */
