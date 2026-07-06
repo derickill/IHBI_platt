@@ -2737,10 +2737,14 @@ tr:hover td{background:var(--navy-l)}
     <div class="bx">
       <div class="bx-h">
         <span class="bx-t">Demandes reçues</span>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button onclick="filterContacts('all',this)" class="eval-filter on" id="cf-all">Tous</button>
           <button onclick="filterContacts('nouveau',this)" class="eval-filter" id="cf-new">Nouveaux</button>
           <button onclick="filterContacts('traité',this)" class="eval-filter" id="cf-done">Traités</button>
+          <button onclick="exportContactsExcel()" style="margin-left:8px;padding:7px 16px;background:#15803D;color:white;border:none;font-size:12px;font-weight:600;cursor:pointer;border-radius:3px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Exporter Excel
+          </button>
         </div>
       </div>
       <table>
@@ -6117,6 +6121,27 @@ function markContactDone(cid) {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
     body: JSON.stringify({ statut: 'traité' }),
   }).catch(e => console.warn('markContactDone API:', e.message));
+}
+
+function exportContactsExcel() {
+  const contacts = (_DB.contact_submissions || []);
+  if (!contacts.length) { alert('Aucune candidature à exporter.'); return; }
+  const cols = ['Nom','Prénom','Email','Téléphone','Filière','Email parent','Message','Date','Statut'];
+  const rows = contacts.map(c => [
+    c.nom || '', c.prenom || '', c.email || '', c.telephone || '',
+    c.filiere || '', c.email_parent || '', (c.message || '').replace(/"/g,'""'),
+    c.date ? new Date(c.date).toLocaleDateString('fr-FR') : '',
+    c.statut || ''
+  ]);
+  const csv = [cols, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
+  const bom = '﻿'; // BOM pour Excel (accents)
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'candidatures_ihbi_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function sendRelance() {
