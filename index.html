@@ -7198,7 +7198,8 @@ function renderPartenaires(cms) {
     let items = [];
     try { items = JSON.parse(sc.partenaires.contenu || '[]'); } catch(e) {}
     grid.innerHTML = items.map(p => `
-      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:20px 28px;text-align:center;min-width:130px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:20px 28px;text-align:center;min-width:130px;max-width:180px;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+        ${p.logo ? `<div style="display:flex;align-items:center;justify-content:center;height:56px;margin-bottom:10px"><img src="${escHtml(p.logo)}" style="max-height:56px;max-width:130px;object-fit:contain"></div>` : ''}
         <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">${escHtml(p.nom||'')}</div>
         ${p.description ? `<div style="font-size:12px;color:var(--g400)">${escHtml(p.description)}</div>` : ''}
       </div>`).join('') || '<div style="color:var(--g400);padding:24px">Aucun partenaire renseigné.</div>';
@@ -7584,12 +7585,31 @@ function renderCMSPartenairesEditor(items) {
         <input type="text" class="fi" style="flex:1" value="${escHtml(p.nom||'')}" placeholder="Nom partenaire" id="part-nom-${i}">
         <button onclick="removePartenaireItem(${i})" style="padding:4px 8px;background:none;border:1px solid #CC1A2730;color:#CC1A27;border-radius:3px;cursor:pointer">×</button>
       </div>
-      <input type="text" class="fi" value="${escHtml(p.description||'')}" placeholder="Description" id="part-desc-${i}">
+      <input type="text" class="fi" value="${escHtml(p.description||'')}" placeholder="Description" id="part-desc-${i}" style="margin-bottom:8px">
+      <div id="part-logo-preview-${i}" style="text-align:center;min-height:40px;margin-bottom:6px">
+        ${p.logo ? `<img src="${escHtml(p.logo)}" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:4px">` : `<span style="font-size:11px;color:var(--g400)">Aucun logo</span>`}
+      </div>
+      <label style="display:block;padding:6px 10px;background:white;border:1px dashed var(--border);border-radius:4px;cursor:pointer;text-align:center;font-size:12px;color:var(--g400)">
+        🖼 Choisir un logo
+        <input type="file" accept="image/*" style="display:none" onchange="handleLogoUpload(${i},this)">
+      </label>
+      <input type="hidden" id="part-logo-${i}" value="${escHtml(p.logo||'')}">
     </div>`).join('');
+}
+function handleLogoUpload(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('part-logo-' + i).value = e.target.result;
+    const preview = document.getElementById('part-logo-preview-' + i);
+    if (preview) preview.innerHTML = `<img src="${e.target.result}" style="max-height:48px;max-width:120px;object-fit:contain;border-radius:4px">`;
+  };
+  reader.readAsDataURL(file);
 }
 function addPartenaireItem() {
   const items = collectPartenaireItems();
-  items.push({ nom: '', description: '' });
+  items.push({ nom: '', description: '', logo: '' });
   renderCMSPartenairesEditor(items);
 }
 function removePartenaireItem(i) {
@@ -7601,7 +7621,11 @@ function collectPartenaireItems() {
   const items = [];
   let i = 0;
   while (document.getElementById('part-nom-' + i)) {
-    items.push({ nom: document.getElementById('part-nom-'+i)?.value||'', description: document.getElementById('part-desc-'+i)?.value||'' });
+    items.push({
+      nom:         document.getElementById('part-nom-'+i)?.value  || '',
+      description: document.getElementById('part-desc-'+i)?.value || '',
+      logo:        document.getElementById('part-logo-'+i)?.value || ''
+    });
     i++;
   }
   return items;
