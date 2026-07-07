@@ -1581,6 +1581,14 @@ tr:hover td{background:var(--navy-l)}
           </div>
           <div class="fg"><label class="fl">Email du parent / tuteur</label><input id="adm-email-parent" class="fi" type="email" placeholder="parent.kouassi@email.com"></div>
           <div class="fg"><label class="fl">Message (facultatif)</label><textarea id="adm-message" class="fta" placeholder="Présentez-vous ou posez une question..."></textarea></div>
+          <div class="fg">
+            <label class="fl">Document (relevé de notes, attestation…) <span style="font-size:11px;color:var(--g400);font-weight:400">— facultatif · PDF, JPG, PNG · max 8 Mo</span></label>
+            <label id="adm-file-label" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:6px;cursor:pointer;background:var(--off);transition:border-color .2s" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='var(--border)'">
+              <svg width="20" height="20" fill="none" stroke="var(--navy)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              <span id="adm-file-name" style="font-size:13px;color:var(--g400)">Cliquez pour joindre un fichier</span>
+              <input type="file" id="adm-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleAdmFile(this)">
+            </label>
+          </div>
           <button class="btn-submit" onclick="submitCandidature()">Envoyer ma candidature</button>
         </div>
       </div>
@@ -6007,6 +6015,18 @@ function exportFormationInscrits(fid) {
 function exportRegistrations(filename) { exportFormationInscrits(1); }
 
 // ── Candidature publique (formulaire Admissions → page d'accueil) ────────────
+function handleAdmFile(input) {
+  const file = input.files[0];
+  const label = document.getElementById('adm-file-name');
+  if (!file) { if (label) label.textContent = 'Cliquez pour joindre un fichier'; return; }
+  if (file.size > 8 * 1024 * 1024) {
+    toast('Fichier trop volumineux (max 8 Mo)', '#CC1A27');
+    input.value = '';
+    return;
+  }
+  if (label) label.textContent = '📎 ' + file.name;
+}
+
 async function submitCandidature() {
   const prenom      = document.getElementById('adm-prenom')?.value?.trim();
   const nom         = document.getElementById('adm-nom')?.value?.trim();
@@ -6018,13 +6038,27 @@ async function submitCandidature() {
   if (!prenom || !nom || !email) { toast('Prénom, nom et email sont obligatoires (*)', '#CC1A27'); return; }
   if (!filiere) { toast('Veuillez sélectionner une filière souhaitée', '#CC1A27'); return; }
 
+  // Lecture du fichier en base64 si présent
+  let fichier = '', fichier_nom = '';
+  const fileInput = document.getElementById('adm-file');
+  if (fileInput && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    fichier_nom = file.name;
+    fichier = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   // Persistance Railway via table SQL (sans auth — fonctionne pour tous les visiteurs)
   let sqlId = null;
   try {
     const res = await fetch('/api/candidatures', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, prenom, email, telephone, filiere, email_parent: emailParent, message: message || '(pas de message)' }),
+      body: JSON.stringify({ nom, prenom, email, telephone, filiere, email_parent: emailParent, message: message || '(pas de message)', fichier, fichier_nom }),
     });
     if (res.ok) {
       const json = await res.json();
@@ -6044,6 +6078,7 @@ async function submitCandidature() {
     id: sqlId, nom, prenom, email, telephone, filiere,
     email_parent: emailParent,
     message: message || '(pas de message)',
+    fichier, fichier_nom,
     date: new Date().toISOString().split('T')[0],
     statut: 'nouveau'
   });
@@ -6054,6 +6089,8 @@ async function submitCandidature() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const sel = document.getElementById('adm-filiere'); if (sel) sel.value = '';
+  if (fileInput) { fileInput.value = ''; }
+  const fn = document.getElementById('adm-file-name'); if (fn) fn.textContent = 'Cliquez pour joindre un fichier';
   toast('Candidature envoyée ! Notre équipe vous contactera sous 48h ✓', '#0A3D2D');
 }
 
@@ -6073,10 +6110,11 @@ function renderContacts(filter) {
       <td>${c.filiere || '—'}</td>
       <td>${fmtDate(c.date)}</td>
       <td><span class="${c.statut === 'nouveau' ? 'contacts-badge-new' : 'contacts-badge-done'}">${c.statut}</span></td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap">
+      <td style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         <button onclick="viewContactMsg(${c.id})" style="padding:4px 10px;background:none;border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--g600)">Lire</button>
         <button onclick="relanceContact(${c.id})" style="padding:4px 10px;background:var(--b600);color:white;border:none;font-size:12px;cursor:pointer">Relancer</button>
         <button onclick="markContactDone(${c.id})" style="padding:4px 10px;background:none;border:1px solid var(--g200);font-size:12px;cursor:pointer;color:var(--g600)">✓ Traité</button>
+        ${c.fichier ? `<button onclick="downloadContactFile(${c.id})" title="${escHtml(c.fichier_nom||'fichier')}" style="padding:4px 10px;background:#0A3D2D;color:white;border:none;font-size:12px;cursor:pointer;border-radius:2px">📎 Fichier</button>` : ''}
       </td>
     </tr>`).join('')
   : `<tr><td colspan="7" style="text-align:center;color:var(--g400);padding:20px">Aucun contact correspondant</td></tr>`;
@@ -6127,18 +6165,28 @@ function markContactDone(cid) {
   }).catch(e => console.warn('markContactDone API:', e.message));
 }
 
+function downloadContactFile(cid) {
+  const c = DB.contact_submissions.find(x => x.id === cid);
+  if (!c || !c.fichier) return;
+  const a = document.createElement('a');
+  a.href = c.fichier;
+  a.download = c.fichier_nom || 'document';
+  a.click();
+}
+
 function exportContactsExcel() {
   const contacts = (DB.contact_submissions || []);
   if (!contacts.length) { alert('Aucune candidature à exporter.'); return; }
-  const cols = ['Nom','Prénom','Email','Téléphone','Filière','Email parent','Message','Date','Statut'];
+  const cols = ['Nom','Prénom','Email','Téléphone','Filière','Email parent','Message','Date','Statut','Fichier joint'];
   const rows = contacts.map(c => [
     c.nom || '', c.prenom || '', c.email || '', c.telephone || '',
     c.filiere || '', c.email_parent || '', (c.message || '').replace(/"/g,'""'),
     c.date ? new Date(c.date).toLocaleDateString('fr-FR') : '',
-    c.statut || ''
+    c.statut || '',
+    c.fichier_nom || ''
   ]);
   const csv = [cols, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\r\n');
-  const bom = '﻿'; // BOM pour Excel (accents)
+  const bom = '﻿';
   const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

@@ -220,6 +220,9 @@ async function ensureTables() {
         created_at   TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    // Migration : ajout colonnes fichier si absentes
+    await pool.query(`ALTER TABLE contact_submissions ADD COLUMN IF NOT EXISTS fichier TEXT DEFAULT ''`);
+    await pool.query(`ALTER TABLE contact_submissions ADD COLUMN IF NOT EXISTS fichier_nom TEXT DEFAULT ''`);
     // Formations publiées par l'admin
     await pool.query(`
       CREATE TABLE IF NOT EXISTS formations (
@@ -785,6 +788,7 @@ async function getFullData() {
       telephone: r.telephone || '', filiere: r.filiere || '',
       email_parent: r.email_parent || '', message: r.message || '',
       date: r.date, statut: r.statut,
+      fichier: r.fichier || '', fichier_nom: r.fichier_nom || '',
     }));
   } catch (e) {
     console.error('[getFullData] contact_submissions not available yet:', e.message);
@@ -1680,15 +1684,15 @@ app.post('/api/formations/:id/inscriptions', async (req, res) => {
 
 // ── POST /api/candidatures — soumettre une candidature (public, sans auth) ───
 app.post('/api/candidatures', async (req, res) => {
-  const { nom, prenom, email, telephone, filiere, email_parent, message } = req.body || {};
+  const { nom, prenom, email, telephone, filiere, email_parent, message, fichier, fichier_nom } = req.body || {};
   if (!nom || !prenom || !email) return res.status(400).json({ error: 'Nom, prénom et email sont requis' });
   if (!filiere) return res.status(400).json({ error: 'Filière requise' });
   try {
     const { rows } = await pool.query(
-      `INSERT INTO contact_submissions (nom, prenom, email, telephone, filiere, email_parent, message, date, statut)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau')
+      `INSERT INTO contact_submissions (nom, prenom, email, telephone, filiere, email_parent, message, date, statut, fichier, fichier_nom)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'nouveau', $9, $10)
        RETURNING *`,
-      [nom, prenom, email, telephone || '', filiere, email_parent || '', message || '', new Date().toISOString().split('T')[0]]
+      [nom, prenom, email, telephone || '', filiere, email_parent || '', message || '', new Date().toISOString().split('T')[0], fichier || '', fichier_nom || '']
     );
     res.json({ ok: true, id: rows[0].id });
   } catch (err) {
