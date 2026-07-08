@@ -1163,6 +1163,9 @@ tr:hover td{background:var(--navy-l)}
 .dir-placeholder{width:100%;min-height:380px;background:var(--g20);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--g300);border:2px dashed var(--g100)}
 .dir-placeholder svg{opacity:.18;width:72px;height:72px;stroke:var(--navy-d)}
 .dir-placeholder p{font-size:13px;text-align:center;color:var(--g300);line-height:1.6;margin:0}
+.dir-photo-img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center 12%;border-radius:12px;box-shadow:0 12px 40px rgba(8,15,42,.18);display:block}
+.dir-photo-frame{position:relative}
+.dir-photo-frame::before{content:'';position:absolute;inset:-6px;border:2px solid var(--red);border-radius:16px;opacity:.35;pointer-events:none}
 .dir-name-block{text-align:center}
 .dir-name-block strong{display:block;font-size:15px;color:var(--navy-d);font-weight:700;margin-bottom:3px}
 .dir-name-block span{font-size:13px;color:var(--g400)}
@@ -1504,13 +1507,10 @@ tr:hover td{background:var(--navy-l)}
     <div class="dir-grid reveal">
       <!-- Colonne gauche : photo + nom -->
       <div class="dir-photo-side">
-        <div class="dir-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-          </svg>
-          <p>Photo du Directeur<br>à venir</p>
+        <div class="dir-photo-frame">
+          <img src="photos/directeur/directeur.jpg" alt="M. James Nicaise YAO, Directeur de IHBI" class="dir-photo-img">
         </div>
-        <div class="dir-name-block">
+        <div class="dir-name-block" style="margin-top:18px">
           <strong>M. James Nicaise YAO</strong>
           <span>Directeur de IHBI</span>
         </div>
