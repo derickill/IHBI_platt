@@ -181,6 +181,13 @@ async function ensureTables() {
       ON CONFLICT (email) DO NOTHING
     `);
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_data (
+        key        VARCHAR(50) PRIMARY KEY,
+        value      JSONB       NOT NULL DEFAULT '{}',
+        updated_at TIMESTAMP   DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS annonces (
         id           SERIAL PRIMARY KEY,
         titre        TEXT NOT NULL,
