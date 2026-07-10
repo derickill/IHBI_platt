@@ -11,9 +11,12 @@ app.use(express.static(path.join(__dirname)));
 
 // ── Base de données PostgreSQL ──────────────────────────────────────────────
 // En prod : DATABASE_URL fourni automatiquement par Railway
+const _dbUrl = process.env.DATABASE_URL || '';
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString: _dbUrl,
+  ssl: (_dbUrl.includes('localhost') || _dbUrl.includes('127.0.0.1'))
+       ? false
+       : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ihbi-dev-secret-changez-en-prod';
