@@ -2146,6 +2146,17 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// ── Debug endpoint ───────────────────────────────────────────────────────────
+app.get('/api/debug', async (req, res) => {
+  const info = { node: process.version, db_url: (process.env.DATABASE_URL||'').replace(/:([^:@]+)@/, ':***@'), ssl_disabled: (_dbUrl.includes('localhost')||_dbUrl.includes('127.0.0.1')) };
+  try {
+    const r = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name");
+    info.tables = r.rows.map(x=>x.table_name);
+    info.db_ok = true;
+  } catch(e) { info.db_ok = false; info.db_error = e.message; }
+  res.json(info);
+});
+
 // ── Démarrage ────────────────────────────────────────────────────────────────
 // ensureTables() est ATTENDU avant app.listen() pour éviter la race condition :
 // sans await, une requête /api/data arrivant avant la création des tables renvoyait 500
