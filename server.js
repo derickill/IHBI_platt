@@ -154,6 +154,33 @@ app.post('/api/auth/login', async (req, res) => {
 async function ensureTables() {
   try {
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id           SERIAL PRIMARY KEY,
+        role         VARCHAR(20)  NOT NULL CHECK (role IN ('student','teacher','admin')),
+        nom          VARCHAR(100) NOT NULL,
+        prenom       VARCHAR(100) NOT NULL,
+        email        VARCHAR(255) UNIQUE NOT NULL,
+        pwd_hash     VARCHAR(64)  NOT NULL,
+        classe_id    VARCHAR(20)  DEFAULT '',
+        status       VARCHAR(20)  DEFAULT 'active',
+        is_delegue   BOOLEAN      DEFAULT false,
+        email_parent VARCHAR(255) DEFAULT '',
+        matieres     JSONB        DEFAULT '[]',
+        classes      JSONB        DEFAULT '[]',
+        poste        VARCHAR(100) DEFAULT '',
+        parent_of    INTEGER      DEFAULT NULL,
+        matiere      VARCHAR(100) DEFAULT '',
+        profile_complete BOOLEAN  DEFAULT false,
+        created_at   TIMESTAMP    DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      INSERT INTO users (role, nom, prenom, email, pwd_hash, status)
+      VALUES ('admin', 'Administrateur', 'IHBI', 'admin@ihbi.ci',
+              'dc8c74284295f0de799587a295878c4f7d8e7b19070f37077fc407d1bddbeef4', 'active')
+      ON CONFLICT (email) DO NOTHING
+    `);
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS annonces (
         id           SERIAL PRIMARY KEY,
         titre        TEXT NOT NULL,
