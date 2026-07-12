@@ -337,6 +337,22 @@ img{display:block;max-width:100%}
 }
 .f-item:hover .f-arrow{opacity:1;transform:translateX(0)}
 
+/* ── Cartes filières avec photo de fond ── */
+.f-item[style*="--bg"]{
+  background:
+    linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.88)),
+    var(--bg) center/cover no-repeat;
+}
+.f-item[style*="--bg"]:hover{
+  background:
+    linear-gradient(160deg,rgba(8,15,40,.76),rgba(26,44,107,.84)),
+    var(--bg) center/cover no-repeat;
+}
+.f-item[style*="--bg"]:hover .f-idx{color:rgba(255,255,255,.15)}
+.f-item[style*="--bg"]:hover .f-title{color:#fff}
+.f-item[style*="--bg"]:hover .f-code-tag{color:var(--red)}
+.f-item[style*="--bg"]:hover .f-arrow{color:#fff;opacity:1;transform:translateX(0)}
+
 /* ── Filières actives (avec fiche détaillée) ── */
 .f-item.f-active::after{
   content:'';position:absolute;
@@ -1366,17 +1382,17 @@ tr:hover td{background:var(--navy-l)}
       <p class="section-sub">Des formations Brevet de Technicien Supérieur couvrant les secteurs tertiaires et industriels.</p>
     </div>
     <div class="f-grid reveal">
-      <div class="f-item f-active" onclick="openFiliereModal('2MA')"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('FCGE')"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('GEC')"><div class="f-idx">03</div><span class="f-code-tag">GEC</span><div class="f-title">Gestion Commerciale</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('IDA')"><div class="f-idx">04</div><span class="f-code-tag">IDA</span><div class="f-title">Informatique et Développeur d'Applications</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('MSP')"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('RHC')"><div class="f-idx">06</div><span class="f-code-tag">RHC</span><div class="f-title">Ressources Humaines et Communication</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('RIT')"><div class="f-idx">07</div><span class="f-code-tag">RIT</span><div class="f-title">Réseaux Informatique et Télécommunication</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('ELT')"><div class="f-idx">08</div><span class="f-code-tag">ELT</span><div class="f-title">Electrotechnique</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('TH')"><div class="f-idx">09</div><span class="f-code-tag">TH</span><div class="f-title">Tourisme et Hôtellerie</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('ATA')"><div class="f-idx">10</div><span class="f-code-tag">ATA</span><div class="f-title">Agriculture Tropicale option Animale</div><div class="f-arrow">Découvrir →</div></div>
-      <div class="f-item f-active" onclick="openFiliereModal('ATV')"><div class="f-idx">11</div><span class="f-code-tag">ATV</span><div class="f-title">Agriculture Tropicale option Végétale</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/2ma.jpg')" onclick="openFiliereModal('2MA')"><div class="f-idx">01</div><span class="f-code-tag">2MA · Pionnier en CI</span><div class="f-title">Moteur et Mécanique Automobile</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/fcge.jpg')" onclick="openFiliereModal('FCGE')"><div class="f-idx">02</div><span class="f-code-tag">FCGE</span><div class="f-title">Finances Comptabilité Gestion des Entreprises</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/gec.jpg')" onclick="openFiliereModal('GEC')"><div class="f-idx">03</div><span class="f-code-tag">GEC</span><div class="f-title">Gestion Commerciale</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/ida.jpg')" onclick="openFiliereModal('IDA')"><div class="f-idx">04</div><span class="f-code-tag">IDA</span><div class="f-title">Informatique et Développeur d'Applications</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/msp.jpg')" onclick="openFiliereModal('MSP')"><div class="f-idx">05</div><span class="f-code-tag">MSP</span><div class="f-title">Maintenance des Systèmes de Production</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/rhc.jpg')" onclick="openFiliereModal('RHC')"><div class="f-idx">06</div><span class="f-code-tag">RHC</span><div class="f-title">Ressources Humaines et Communication</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/rit.jpg')" onclick="openFiliereModal('RIT')"><div class="f-idx">07</div><span class="f-code-tag">RIT</span><div class="f-title">Réseaux Informatique et Télécommunication</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/elt.jpg')" onclick="openFiliereModal('ELT')"><div class="f-idx">08</div><span class="f-code-tag">ELT</span><div class="f-title">Electrotechnique</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/th.jpg')" onclick="openFiliereModal('TH')"><div class="f-idx">09</div><span class="f-code-tag">TH</span><div class="f-title">Tourisme et Hôtellerie</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/ata.jpg')" onclick="openFiliereModal('ATA')"><div class="f-idx">10</div><span class="f-code-tag">ATA</span><div class="f-title">Agriculture Tropicale option Animale</div><div class="f-arrow">Découvrir →</div></div>
+      <div class="f-item f-active" style="--bg:url('img/filieres/atv.jpg')" onclick="openFiliereModal('ATV')"><div class="f-idx">11</div><span class="f-code-tag">ATV</span><div class="f-title">Agriculture Tropicale option Végétale</div><div class="f-arrow">Découvrir →</div></div>
     </div>
   </div>
 </section>
