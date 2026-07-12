@@ -286,6 +286,61 @@ img{display:block;max-width:100%}
 }
 .sec-head.center .section-sub{margin:0 auto}
 
+/* ── Bloc devise / motto ── */
+.motto-block{
+  position:relative;
+  background:linear-gradient(135deg,#1a2c6b 0%,#0d1835 100%);
+  padding:52px 64px;
+  margin:0 auto 52px;
+  max-width:740px;
+  border-radius:3px;
+  overflow:hidden;
+  text-align:center;
+}
+.motto-block::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(-45deg,transparent,transparent 28px,rgba(255,255,255,.03) 28px,rgba(255,255,255,.03) 29px);
+  pointer-events:none;
+}
+.motto-block::after{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent 0%,#C8973A 25%,#C8973A 75%,transparent 100%);
+}
+.motto-quote{
+  position:absolute;
+  top:-10px;left:24px;
+  font-size:200px;
+  color:rgba(255,255,255,.05);
+  font-family:Georgia,serif;
+  line-height:1;
+  pointer-events:none;
+  user-select:none;
+}
+.motto-fr{
+  position:relative;z-index:1;
+  font-style:italic;
+  color:#fff;
+  font-size:19px;line-height:1.7;
+  margin:0 0 14px;
+  letter-spacing:.2px;
+}
+.motto-en{
+  position:relative;z-index:1;
+  font-style:italic;
+  color:rgba(200,151,58,.88);
+  font-size:13.5px;letter-spacing:.5px;
+  margin:0;
+}
+.motto-line{
+  position:relative;z-index:1;
+  display:block;
+  width:40px;height:1px;
+  background:#C8973A;
+  margin:18px auto 0;
+  opacity:.6;
+}
+
 /* Cards filières */
 .f-grid{
   display:grid;grid-template-columns:repeat(3,1fr);
@@ -1564,8 +1619,12 @@ tr:hover td{background:var(--navy-l)}
     <div class="why-head reveal" style="text-align:center;margin-bottom:52px">
       <div class="section-label">Mot du Directeur Général</div>
       <h2 class="section-title">Bienvenue au pôle de la valeur absolue</h2>
-      <p class="section-sub" style="font-style:italic;color:var(--g400)">Nous transformons les potentiels inexploités en valeurs absolues<br>
-      <em style="font-size:.92em;color:var(--g300)">We convert untapped potential into absolute value</em></p>
+      <div class="motto-block">
+        <span class="motto-quote">"</span>
+        <p class="motto-fr">Nous transformons les potentiels inexploités en valeurs absolues</p>
+        <p class="motto-en">We convert untapped potential into absolute value</p>
+        <span class="motto-line"></span>
+      </div>
     </div>
     <div class="dir-grid reveal">
       <!-- Colonne gauche : photo + nom -->
