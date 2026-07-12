@@ -286,59 +286,35 @@ img{display:block;max-width:100%}
 }
 .sec-head.center .section-sub{margin:0 auto}
 
-/* ── Bloc devise / motto ── */
-.motto-block{
+/* ── Wrapper devise / motto ── */
+.motto-wrap{
   position:relative;
-  background:linear-gradient(135deg,#1a2c6b 0%,#0d1835 100%);
-  padding:52px 64px;
-  margin:0 auto 52px;
-  max-width:740px;
-  border-radius:3px;
+  display:inline-block;
+  padding:24px 48px;
+  margin:0 auto;
   overflow:hidden;
-  text-align:center;
+  border-radius:2px;
 }
-.motto-block::before{
+.motto-wrap::before{
   content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(-45deg,transparent,transparent 28px,rgba(255,255,255,.03) 28px,rgba(255,255,255,.03) 29px);
-  pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(26,44,107,.07) 0%,rgba(13,24,53,.12) 100%),
+    repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(26,44,107,.04) 10px,rgba(26,44,107,.04) 11px);
+  border:1px solid rgba(26,44,107,.1);
+  border-radius:2px;
 }
-.motto-block::after{
+.motto-wrap::after{
   content:'';position:absolute;
-  top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,transparent 0%,#C8973A 25%,#C8973A 75%,transparent 100%);
+  top:0;left:50%;transform:translateX(-50%);
+  width:60px;height:2px;
+  background:linear-gradient(90deg,transparent,#C8973A,transparent);
 }
-.motto-quote{
-  position:absolute;
-  top:-10px;left:24px;
-  font-size:200px;
-  color:rgba(255,255,255,.05);
-  font-family:Georgia,serif;
-  line-height:1;
-  pointer-events:none;
-  user-select:none;
-}
-.motto-fr{
+.motto-wrap .section-sub{
   position:relative;z-index:1;
-  font-style:italic;
-  color:#fff;
-  font-size:19px;line-height:1.7;
-  margin:0 0 14px;
-  letter-spacing:.2px;
+  color:var(--b900) !important;
 }
-.motto-en{
-  position:relative;z-index:1;
-  font-style:italic;
-  color:rgba(200,151,58,.88);
-  font-size:13.5px;letter-spacing:.5px;
-  margin:0;
-}
-.motto-line{
-  position:relative;z-index:1;
-  display:block;
-  width:40px;height:1px;
-  background:#C8973A;
-  margin:18px auto 0;
-  opacity:.6;
+.motto-wrap em{
+  color:var(--g600) !important;
 }
 
 /* Cards filières */
@@ -1619,11 +1595,9 @@ tr:hover td{background:var(--navy-l)}
     <div class="why-head reveal" style="text-align:center;margin-bottom:52px">
       <div class="section-label">Mot du Directeur Général</div>
       <h2 class="section-title">Bienvenue au pôle de la valeur absolue</h2>
-      <div class="motto-block">
-        <span class="motto-quote">"</span>
-        <p class="motto-fr">Nous transformons les potentiels inexploités en valeurs absolues</p>
-        <p class="motto-en">We convert untapped potential into absolute value</p>
-        <span class="motto-line"></span>
+      <div class="motto-wrap">
+        <p class="section-sub" style="font-style:italic">Nous transformons les potentiels inexploités en valeurs absolues<br>
+        <em style="font-size:.92em">We convert untapped potential into absolute value</em></p>
       </div>
     </div>
     <div class="dir-grid reveal">
