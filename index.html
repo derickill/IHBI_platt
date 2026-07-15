@@ -289,32 +289,80 @@ img{display:block;max-width:100%}
 /* ── Wrapper devise / motto ── */
 .motto-wrap{
   position:relative;
-  display:inline-block;
-  padding:24px 48px;
-  margin:0 auto;
-  overflow:hidden;
-  border-radius:2px;
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  padding:36px 72px 32px;
+  margin:28px auto 0;
+  text-align:center;
 }
 .motto-wrap::before{
-  content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(135deg,rgba(26,44,107,.07) 0%,rgba(13,24,53,.12) 100%),
-    repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(26,44,107,.04) 10px,rgba(26,44,107,.04) 11px);
-  border:1px solid rgba(26,44,107,.1);
-  border-radius:2px;
+  content:'';
+  position:absolute;
+  top:14px;bottom:14px;left:0;
+  width:2px;
+  background:linear-gradient(180deg,transparent,#C8973A 30%,#C8973A 70%,transparent);
 }
 .motto-wrap::after{
-  content:'';position:absolute;
-  top:0;left:50%;transform:translateX(-50%);
-  width:60px;height:2px;
-  background:linear-gradient(90deg,transparent,#C8973A,transparent);
+  content:'';
+  position:absolute;
+  top:14px;bottom:14px;right:0;
+  width:2px;
+  background:linear-gradient(180deg,transparent,#C8973A 30%,#C8973A 70%,transparent);
 }
-.motto-wrap .section-sub{
-  position:relative;z-index:1;
-  color:var(--b900) !important;
+.motto-quote{
+  display:block;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:88px;
+  line-height:.7;
+  color:#C8973A;
+  opacity:.22;
+  margin-bottom:10px;
+  align-self:flex-start;
+  margin-left:-8px;
+  user-select:none;
 }
-.motto-wrap em{
-  color:var(--g600) !important;
+.motto-fr{
+  font-size:21px;
+  font-weight:700;
+  font-style:italic;
+  color:var(--b900);
+  letter-spacing:.25px;
+  line-height:1.5;
+  margin:0;
+  max-width:560px;
+}
+.motto-divider{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  margin:16px 0 14px;
+  color:#C8973A;
+  font-size:8px;
+}
+.motto-divider::before,
+.motto-divider::after{
+  content:'';
+  display:block;
+  flex:1;
+  max-width:64px;
+  height:1px;
+}
+.motto-divider::before{
+  background:linear-gradient(90deg,transparent,#C8973A);
+}
+.motto-divider::after{
+  background:linear-gradient(270deg,transparent,#C8973A);
+}
+.motto-en{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:#8a9bb5;
+  margin:0;
 }
 
 /* Cards filières */
@@ -1609,8 +1657,10 @@ tr:hover td{background:var(--navy-l)}
       <div class="section-label">Mot du Directeur Général</div>
       <h2 class="section-title">Bienvenue au pôle de la valeur absolue</h2>
       <div class="motto-wrap">
-        <p class="section-sub" style="font-style:italic">Nous transformons les potentiels inexploités en valeurs absolues<br>
-        <em style="font-size:.92em">We convert untapped potential into absolute value</em></p>
+        <span class="motto-quote">&#x201C;</span>
+        <p class="motto-fr">Nous transformons les potentiels inexploités en valeurs absolues</p>
+        <span class="motto-divider">◆</span>
+        <p class="motto-en">We convert untapped potential into absolute value</p>
       </div>
     </div>
     <div class="dir-grid reveal">
