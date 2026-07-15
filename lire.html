@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programme de la filière — IHBI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #c0392b;
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      flex-shrink: 0;
+    }
+
+    header a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      opacity: .85;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity .15s;
+    }
+    header a:hover { opacity: 1; }
+
+    header .sep { opacity: .4; }
+
+    header .title {
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .viewer-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      min-height: calc(100vh - 56px);
+    }
+
+    .error-box {
+      display: none;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      color: #555;
+      padding: 40px;
+      text-align: center;
+    }
+    .error-box h2 { font-size: 20px; color: #c0392b; }
+    .error-box p { font-size: 14px; max-width: 420px; line-height: 1.6; }
+    .error-box a {
+      background: #c0392b;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html">
+      ← Retour
+    </a>
+    <span class="sep">|</span>
+    <span class="title" id="hdr-title">Programme de la filière</span>
+  </header>
+
+  <div class="viewer-wrap">
+    <iframe id="viewer" src="" title="Programme de la filière" allowfullscreen></iframe>
+    <div class="error-box" id="err-box">
+      <h2>Document non disponible</h2>
+      <p>Le document de cette filière ne peut pas être affiché pour le moment. Vous pouvez le télécharger directement.</p>
+      <a id="dl-link" href="#">Télécharger le document</a>
+    </div>
+  </div>
+
+  <script>
+    const TITRES = {
+      '2MA':  'Moteur et Mécanique Automobile (2MA)',
+      'ATA':  'Agriculture Tropicale — Production Animale (ATPA)',
+      'ATV':  'Agriculture Tropicale — Production Végétale (ATPV)',
+      'GEC':  'Gestion Commerciale (GEC)',
+      'ELT':  'Électrotechnique (ELT)',
+      'RHC':  'Ressources Humaines et Communication (RHC)',
+      'RIT':  'Réseaux Informatiques et Télécommunications (RIT)',
+      'TH':   'Tourisme et Hôtellerie (TH)',
+      'FCGE': 'Finances Comptabilité Gestion des Entreprises (FCGE)',
+      'IDA':  'Informatique Développeur d\'Applications (IDA)',
+      'MSP':  'Maintenance des Systèmes de Production (MSP)',
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const code = (params.get('doc') || '').toUpperCase();
+
+    if (code && TITRES[code]) {
+      const titre = TITRES[code];
+      document.title = titre + ' — IHBI';
+      document.getElementById('hdr-title').textContent = titre;
+
+      const docUrl = window.location.origin + '/docs/' + code + '.docx';
+      const viewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(docUrl);
+
+      const iframe = document.getElementById('viewer');
+      iframe.src = viewerUrl;
+
+      document.getElementById('dl-link').href = docUrl;
+
+      // Si l'iframe échoue à charger, afficher la boîte d'erreur
+      iframe.addEventListener('error', function () {
+        iframe.style.display = 'none';
+        document.getElementById('err-box').style.display = 'flex';
+      });
+    } else {
+      // Pas de code valide → rediriger vers l'accueil
+      window.location.replace('index.html');
+    }
+  </script>
+</body>
+</html>

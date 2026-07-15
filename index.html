@@ -527,6 +527,14 @@ img{display:block;max-width:100%}
   transition:background .2s;
 }
 .fm-cta-btn:hover{background:#a01420}
+.fm-doc-link{
+  display:block;text-align:center;
+  margin-top:12px;
+  color:#c0392b;font-size:13px;font-weight:600;
+  text-decoration:none;letter-spacing:.2px;
+  transition:color .15s;
+}
+.fm-doc-link:hover{color:#a01420;text-decoration:underline;}
 
 @media(max-width:640px){
   .fm-hero{padding:28px 24px 26px}
@@ -8672,6 +8680,9 @@ function openFiliereModal(code) {
         Candidater à cette filière →
       </button>
     </div>
+    <a class="fm-doc-link" href="lire.html?doc=${d.code}" target="_blank">
+      📄 Consulter le programme complet de la filière
+    </a>
   `;
 
   document.getElementById('filiere-modal').classList.add('open');
