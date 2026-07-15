@@ -8243,216 +8243,90 @@ async function deleteMatiere(id, nom, filiere) {
 const _FILIERES_DATA = {
   '2MA': {
     titre: "Moteur et Mécanique Automobile",
-    code: '2MA',
+    code: "2MA",
     duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8zM8 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>',
-    intro: "IHBI est le premier établissement en Côte d'Ivoire autorisé à former des techniciens supérieurs en Moteur et Mécanique Automobile (arrêté N° 257/MESRS du 21 novembre 2014). Face à l'essor du parc automobile ivoirien et à l'évolution rapide des technologies embarquées (injection électronique, systèmes de freinage assisté, moteurs électriques), la filière prépare des mécaniciens hautement qualifiés capables d'assurer la maintenance et le suivi des véhicules légers, camions et engins modernes.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
+    icon: "<svg viewBox=\"0 0 24 24\"><rect x=\"1\" y=\"3\" width=\"15\" height=\"13\" rx=\"2\"/><path d=\"M16 8h4l3 5v3h-7V8zM8 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm11 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z\"/></svg>",
+    intro: "IHBI est le premier établissement en Côte d'Ivoire autorisé à former des techniciens supérieurs en Moteur et Mécanique Automobile (arrêté N° 257/MESRS du 21 novembre 2014). Face à l'essor du parc automobile ivoirien et à l'évolution rapide des technologies embarquées (injection électronique, freinage assisté, motorisations hybrides et électriques), la filière forme des mécaniciens hautement qualifiés capables d'assurer la maintenance, le diagnostic et le suivi technique des véhicules légers, des camions et des engins.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F1",
+      "BAC F2",
+      "BAC F3",
+      "Brevet de Technicien de la spécialité",
+      "Diplôme équivalent"
+    ],
     competences: [
-      "Effectuer un diagnostic complexe des systèmes électroniques et mécaniques d'un véhicule",
-      "Réaliser des opérations de maintenance et réparations complexes (moteur, transmission, suspension)",
-      "Intervenir sur les organes d'injection, d'électricité, d'hydraulique et de pneumatique",
-      "Organiser et superviser les activités d'un service de maintenance automobile",
-      "Assurer la relation client : réception, restitution et suivi technique du véhicule",
-      "Maîtriser les outils de diagnostic embarqués et les équipements modernes d'atelier"
+      "Effectuer un diagnostic complet sur un véhicule ou un engin (mécanique, électrique, électronique)",
+      "Réaliser des opérations de maintenance préventive et corrective",
+      "Intervenir sur les moteurs thermiques, hybrides ou électriques",
+      "Intervenir sur les systèmes de transmission, freinage, suspension et direction",
+      "Intervenir sur les circuits électriques et électroniques embarqués",
+      "Organiser et superviser les activités d'un atelier de maintenance automobile",
+      "Assurer la relation client : réception, diagnostic, restitution du véhicule"
     ],
     activites: [
-      "Mécanicien chez un concessionnaire ou responsable d'atelier de maintenance",
-      "Responsable du service de maintenance d'un parc de véhicules ou d'engins",
-      "Expert ou inspecteur automobile",
-      "Gérant de PME de maintenance automobile (auto-emploi)",
-      "Aviseur technique pour concessionnaire ou centre spécialisé",
-      "Conseiller technique dans les entreprises de transport et de logistique"
+      "Mécanicien automobile ou Technicien en maintenance automobile",
+      "Technicien diagnostic automobile ou Électromécanicien automobile",
+      "Réceptionnaire d'atelier ou Aviseur technique chez un concessionnaire",
+      "Gestionnaire de parc automobile",
+      "Expert ou Inspecteur automobile (après spécialisation)",
+      "Gérant de PME de maintenance automobile (auto-emploi)"
     ],
-    orientation: "IHBI est l'établissement pionnier du BTS 2MA en Côte d'Ivoire. La formation alterne cours magistraux et travaux pratiques intensifs en atelier : TP moteur (montage, démontage, calage), TP transmission (embrayage, boîtes de vitesse), TP injection, TP électricité, TP climatisation, TP diagnostic automobile, etc. Des séminaires professionnels et voyages d'étude en entreprise jalonnent la 1ère année. Un stage d'immersion clôture cette première année en garage partenaire, suivi d'un stage de validation de 3 mois minimum après admissibilité."
+    orientation: "IHBI est l'établissement pionnier du BTS 2MA en Côte d'Ivoire. La formation alterne cours théoriques et travaux pratiques intensifs en atelier (TP moteur, transmission, injection, électricité automobile, climatisation, diagnostic). Des séminaires professionnels, visites techniques et voyages d'étude jalonnent la 1ère année. Un stage d'immersion en garage partenaire clôture la 1ère année, suivi d'un stage de validation de 3 mois minimum après admissibilité et d'un stage de perfectionnement post-soutenance."
   },
   FCGE: {
     titre: "Finances Comptabilité Gestion des Entreprises",
-    code: 'FCGE',
+    code: "FCGE",
     duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-    intro: "La filière FCGE forme des techniciens supérieurs aux fondamentaux de la gestion financière, comptable et administrative des organisations. Elle prépare les apprenants à comprendre, analyser et piloter les performances d'une entreprise, en leur apportant des compétences immédiatement opérationnelles pour intégrer les structures économiques et financières dès l'obtention de leur diplôme.",
-    acces: ['BAC A1', 'BAC B', 'BAC C', 'BAC D', 'BAC G2', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
+    icon: "<svg viewBox=\"0 0 24 24\"><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"/></svg>",
+    intro: "La filière BTS FCGE forme des techniciens supérieurs spécialisés dans la gestion comptable, financière, fiscale et administrative des organisations. Dans un contexte de croissance des PME et d'exigences de bonne gestion, elle prépare des professionnels capables de tenir une comptabilité fiable, de produire des états financiers, de suivre les obligations fiscales et sociales, et d'accompagner les dirigeants dans le pilotage de leurs activités.",
+    acces: [
+      "BAC A1",
+      "BAC B",
+      "BAC C",
+      "BAC D",
+      "BAC G2",
+      "Brevet de Technicien de la spécialité",
+      "Diplôme équivalent"
+    ],
     competences: [
-      "Produire l'ensemble des états financiers d'une entreprise (bilan, compte de résultat, analyse financière)",
-      "Maîtriser les logiciels de gestion comptable : Excel, Sage Comptabilité, Sage Paie",
-      "Effectuer les déclarations fiscales et sociales de l'entreprise (Impôts et CNPS)",
-      "Élaborer des outils de suivi et de contrôle de gestion",
-      "Contribuer aux stratégies financières et à la prise de décision",
-      "Comprendre l'environnement économique, juridique et numérique des entreprises"
+      "Enregistrer les opérations comptables et produire les états financiers (bilan, compte de résultat)",
+      "Maîtriser les logiciels professionnels : Excel, Sage Comptabilité, Sage Paie",
+      "Effectuer les déclarations fiscales et sociales (Impôts, CNPS)",
+      "Élaborer des budgets, tableaux de bord et outils de contrôle de gestion",
+      "Analyser la situation financière d'une entreprise et contribuer à la prise de décision",
+      "Assister le chef d'entreprise dans la gestion quotidienne administrative et financière"
     ],
     activites: [
       "Assistant Comptable, Comptable ou Chef Comptable",
-      "Contrôleur de Gestion ou Auditeur en cabinet d'expertise comptable",
+      "Contrôleur de Gestion ou Auditeur junior en cabinet d'expertise comptable",
       "Gestionnaire administratif et financier en entreprise industrielle ou commerciale",
-      "Chef du Service Approvisionnement ou Administrateur des ventes",
-      "Assistant de gestion de PME/PMI",
+      "Gestionnaire de paie ou Agent de recouvrement",
+      "Assistant de gestion PME/PMI",
       "Entrepreneur : création et gestion de sa propre entreprise"
     ],
-    orientation: "À IHBI, la formation vise à produire des comptables immédiatement opérationnels. Dès la 1ère année, les étudiants maîtrisent les logiciels professionnels utilisés en entreprise et en cabinet (Sage, Excel avancé). Un stage d'immersion en fin de 1ère année permet de confronter les acquis aux réalités du terrain. Une initiation au marketing digital complète le profil. Après admissibilité, stage de validation d'au moins 3 mois en structure partenaire ; stage de perfectionnement disponible après soutenance."
-  },
-  MSP: {
-    titre: "Maintenance des Systèmes de Production",
-    code: 'MSP',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    intro: "Face à l'installation croissante d'entreprises industrielles en Côte d'Ivoire, la filière MSP forme des techniciens supérieurs spécialisés dans l'acquisition, l'installation, la maintenance et l'amélioration des performances des équipements de production. Alliant mécanique, électricité industrielle, électronique et automatisme, elle prépare des professionnels capables de garantir la continuité de la production dans tout type d'environnement industriel.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Brevet de Technicien de la spécialité', 'Diplôme équivalent'],
-    competences: [
-      "Diagnostiquer et réparer les pannes d'équipements industriels électriques, électroniques et mécaniques",
-      "Conduire une politique de maintenance préventive et curative",
-      "Établir des programmes de maintenance et améliorer les performances des équipements",
-      "Maîtriser l'électricité domestique et industrielle, l'électronique et l'automatisme",
-      "Réaliser des travaux de construction métallique, d'usinage et de dessin industriel (AUTOCAD)",
-      "Diriger une équipe, gérer les commandes d'équipements et rédiger des rapports techniques"
-    ],
-    activites: [
-      "Technicien de Maintenance dans l'industrie mécanique, chimique ou agroalimentaire",
-      "Responsable de Maintenance ou Responsable des systèmes automatisés",
-      "Chef d'équipe ou Superviseur électromécaniciens",
-      "Responsable de bureau d'étude technique",
-      "Technicien de Production dans l'industrie des transports ou de l'aéronautique",
-      "Technicien en équipements industriels dans les secteurs miniers ou sucriers"
-    ],
-    orientation: "L'approche pédagogique d'IHBI repose sur l'alternance de cours théoriques et de travaux pratiques intensifs en atelier : TP de mesure, d'électricité domestique et industrielle, de construction métallique, d'usinage, d'automatisme, d'hydraulique, de pneumatique et de dessin industriel sur AUTOCAD. Des séminaires de formation et des voyages d'étude en entreprise sont organisés en 1ère année. Chaque étudiant effectue un stage d'immersion en structure industrielle partenaire à la fin de la 1ère année, puis un stage de validation de 3 mois minimum après admissibilité."
-  },
-  IDA: {
-    titre: "Informatique Développeur d'Applications",
-    code: 'IDA',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-    intro: "De l'agriculture à l'industrie, en passant par les transports et le commerce, l'informatique est présente dans tous les domaines d'activité. Ce secteur en perpétuelle évolution a fait apparaître de nombreux e-services comme le commerce en ligne, le paiement électronique et les réservations en ligne. La filière IDA offre l'opportunité aux étudiants d'acquérir toutes les connaissances nécessaires pour exercer dans le domaine de la conception des applications.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Diplôme équivalent'],
-    competences: [
-      "Analyser les cahiers de charge et concevoir des bases de données",
-      "Réaliser et administrer des bases de données (MySQL, SQL Server, Oracle, HFSQL)",
-      "Concevoir les designs d'applications desktop, web et mobile (Photoshop)",
-      "Développer des applications desktop (Windev, .Net, Java)",
-      "Développer des applications web et mobile (HTML/CSS, JavaScript, PHP, Python, Java)",
-      "Maîtriser les frameworks modernes : Bootstrap, AngularJS, Laravel, Symfony, Springboot"
-    ],
-    activites: [
-      "Développement de services USSD et solutions fintech chez un opérateur télécom",
-      "Déploiement de progiciels (ERP) et développement d'applications métiers en industrie",
-      "Administration de bases de données dans une banque ou administration publique",
-      "Conception d'affiches et sites web dans une entreprise de communication",
-      "Consultant informatique indépendant"
-    ],
-    orientation: "La 1ère année pose les bases de l'algorithmique, de la programmation et de la conception des systèmes d'information. Un stage en entreprise aboutit à un projet présenté devant jury. En 2ème année, les cours pratiques approfondissent le projet initial, complétés par des séminaires animés par des professionnels en sécurité informatique, marketing digital et frameworks d'actualité."
-  },
-  ELT: {
-    titre: "Électrotechnique",
-    code: 'ELT',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    intro: "La filière Électrotechnique prépare des techniciens supérieurs capables de concevoir, installer, exploiter, contrôler et assurer la maintenance des systèmes électriques et électromécaniques. Elle couvre l'ensemble des applications liées à la production, au transport, à la distribution et à l'utilisation de l'énergie électrique dans les secteurs industriel, tertiaire et résidentiel.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Brevet de Technicien de la spécialité'],
-    competences: [
-      "Électricité générale et industrielle",
-      "Électronique de puissance",
-      "Machines électriques (moteurs, transformateurs, générateurs)",
-      "Automatisme et informatique industrielle",
-      "Installation et maintenance des équipements électriques",
-      "Sécurité électrique et réglementation en vigueur",
-      "Gestion de projets techniques et efficacité énergétique"
-    ],
-    activites: [
-      "Technicien ou Responsable de maintenance électrique",
-      "Technicien en automatismes industriels",
-      "Conducteur de travaux électriques / Chef d'équipe d'installation",
-      "Chargé d'études électriques en bureau d'ingénierie",
-      "Technicien en énergie solaire et énergies renouvelables",
-      "Technico-commercial en équipements électriques"
-    ],
-    orientation: "La formation met l'accent sur les compétences pratiques à travers travaux dirigés, travaux pratiques en laboratoires, projets techniques et stages en entreprise. Les candidats sans baccalauréat doivent effectuer une année préparatoire de mise à niveau avant la 1ère année de BTS."
-  },
-  RIT: {
-    titre: "Réseaux Informatiques et Télécommunications",
-    code: 'RIT',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><path d="M12 6v4M8.5 18.5l-2.5-1M15.5 18.5l2.5-1M10 10l-4 8M14 10l4 8"/></svg>',
-    intro: "Le secteur des TIC est en plein essor partout dans le monde et particulièrement en Côte d'Ivoire. Tous les secteurs d'activités sont impactés positivement par ce développement, faisant naître la notion d'économie numérique. La formation en RIT — Réseaux Informatiques et Télécoms — offre de grandes opportunités d'insertion professionnelle dans de nombreux secteurs d'activités.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F1', 'BAC F2', 'BAC F3', 'BAC F4', 'Diplôme équivalent'],
-    competences: [
-      "Installer et configurer les systèmes d'exploitation Windows et Linux",
-      "Concevoir et réaliser un réseau informatique complet (câblage, switches, routeurs, WiFi)",
-      "Administrer des services réseaux en entreprise (comptes, sécurité, sauvegarde, pare-feux)",
-      "Interconnecter des sites par faisceaux hertziens (FH) ou Fibre Optique (FO)",
-      "Réaliser un réseau téléphonique d'entreprise (PABX, IPBX, VoIP)",
-      "Installer et configurer des équipements de réseaux GSM"
-    ],
-    activites: [
-      "Technicien réseaux chez un opérateur de télécommunications",
-      "Réalisation de liaisons FH/FO, déploiement FTTH et solutions VoIP",
-      "Infogérance de systèmes informatiques en banque, industrie ou administration",
-      "Conception, administration et maintenance d'une infrastructure réseau",
-      "Supervision de réseaux avec des outils opensource"
-    ],
-    orientation: "La 1ère année couvre les bases de l'électronique, l'informatique et des télécoms, puis la maintenance informatique, le câblage et la configuration réseau pour faciliter les stages d'immersion. La 2ème année approfondit l'administration système Windows/Linux, le câblage RTC et Fibre Optique, avec un projet final sur des solutions de supervision réseau."
-  },
-  ATA: {
-    titre: "Agriculture Tropicale — option Production Animale",
-    code: 'ATA',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><path d="M20 7c0 3.9-3.1 7-7 7s-7-3.1-7-7c0-2.5 3.5-5 7-5s7 2.5 7 5z"/><circle cx="9.5" cy="6.5" r="1"/><circle cx="14.5" cy="6.5" r="1"/><path d="M9 11v2m6-2v2M9 22v-5m6 5v-5M7 17h10"/></svg>',
-    intro: "L'évolution de la population crée des besoins importants en protéines animales, obligeant l'État à accroître ses importations. Pour pallier cette dépendance extérieure, il faut créer et vulgariser un nouveau type d'élevage piloté par des techniciens qualifiés. La filière BTS Agriculture Tropicale, option Production Animale forme ces spécialistes capables de concevoir, gérer et optimiser des fermes de production animale.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F7', 'Brevet de Technicien Agricole (BTA)', 'Diplôme équivalent'],
-    competences: [
-      "Concevoir l'implantation d'un élevage et planifier sa production",
-      "Gérer une ferme de production animale au quotidien",
-      "Conseiller les éleveurs sur les meilleures pratiques",
-      "Fabriquer et contrôler des aliments pour les animaux",
-      "Réaliser une analyse technique et économique d'un projet d'élevage",
-      "Contrôler la qualité des produits d'origine animale et halieutiques"
-    ],
-    activites: [
-      "Chef de ferme ou Responsable de couvoirs",
-      "Responsable des services de production d'aliments pour bétail",
-      "Contrôleur des produits halieutiques",
-      "Conseiller spécialiste en production animale",
-      "Assistant vétérinaire",
-      "Chef d'exploitation agricole indépendant"
-    ],
-    orientation: "La formation s'articule autour de cours magistraux, travaux pratiques, visites de sites de fermes, dossiers d'étude, exposés, études de cas concrets et stages en entreprise pour une immersion professionnelle complète."
-  },
-  ATV: {
-    titre: "Agriculture Tropicale — option Production Végétale",
-    code: 'ATV',
-    duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><path d="M12 22V10"/><path d="M5 3c0 7 3 10 7 10s7-3 7-10"/><path d="M5 10c2 3 4.5 4 7 4"/></svg>',
-    intro: "Le BTS Agriculture Tropicale, option Production Végétale répond à la nécessité de former des techniciens supérieurs capables de relever le défi de l'autosuffisance alimentaire. L'économie de la Côte d'Ivoire reposant en grande partie sur l'agriculture, la formation de ces spécialistes est indispensable pour l'accroissement des performances agricoles nationales.",
-    acces: ['BAC C', 'BAC D', 'BAC E', 'BAC F7', 'Brevet de Technicien Agricole (BTA)', 'Diplôme équivalent'],
-    competences: [
-      "Maîtriser les techniques culturales tropicales",
-      "Diagnostiquer les maladies des plantes et proposer des méthodes de lutte",
-      "Encadrer et accompagner les populations rurales",
-      "Gérer une exploitation agricole (analyse technique et économique)",
-      "Travailler en amont et en aval de la chaîne de production végétale"
-    ],
-    activites: [
-      "Chef d'exploitation ou Contrôleur d'exploitation",
-      "Responsable de production végétale",
-      "Conseiller agricole auprès des exploitants",
-      "Agrochimiste",
-      "Agent technico-commercial en agrofournitures",
-      "Gestionnaire d'organisations économiques agricoles"
-    ],
-    orientation: "La formation s'articule autour de cours magistraux, travaux pratiques sur parcelle expérimentale, visites de sites d'exploitation et de laboratoires de recherche, dossiers d'étude, exposés, études de cas concrets et stages en entreprise."
+    orientation: "À IHBI, la formation met l'accent sur la pratique comptable et l'utilisation des outils numériques dès la 1ère année : Word, Excel, Sage Comptabilité, Sage Paie. Un stage d'immersion en cabinet comptable ou service financier clôture la 1ère année. Une initiation au marketing digital complète le profil. Après admissibilité, stage de validation de 3 mois minimum en structure partenaire ; stage de perfectionnement disponible après soutenance."
   },
   GEC: {
     titre: "Gestion Commerciale",
-    code: 'GEC',
+    code: "GEC",
     duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
-    intro: "Avec le développement des entreprises commerciales, des PME, des grandes surfaces, des banques, des assurances et des plateformes de vente en ligne, le secteur commercial est au cœur de la croissance économique. La filière BTS Gestion Commerciale (GEC) forme des techniciens supérieurs polyvalents, capables d'intervenir efficacement dans les activités de vente, marketing, négociation et relation client d'une entreprise, prêts à intégrer le marché de l'emploi dès l'obtention de leur diplôme.",
-    acces: ['BAC toutes séries', 'Brevet de Technicien', 'Diplôme équivalent reconnu par le Ministère de tutelle'],
+    icon: "<svg viewBox=\"0 0 24 24\"><path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"/><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"/><path d=\"M16 10a4 4 0 0 1-8 0\"/></svg>",
+    intro: "Avec le développement des entreprises commerciales, des PME, des grandes surfaces, des banques et des plateformes de vente en ligne, le secteur commercial est au cœur de la croissance économique. La filière BTS Gestion Commerciale (GEC) forme des techniciens supérieurs polyvalents, capables de vendre, négocier, gérer la clientèle et contribuer au développement commercial d'une entreprise, prêts à intégrer le marché de l'emploi dès l'obtention de leur diplôme.",
+    acces: [
+      "BAC toutes séries",
+      "Brevet de Technicien",
+      "Diplôme équivalent reconnu par le Ministère de tutelle"
+    ],
     competences: [
-      "Prospecter, accueillir, conseiller et fidéliser la clientèle",
+      "Prospecter de nouveaux clients, accueillir, conseiller et fidéliser la clientèle",
       "Présenter, négocier et conclure des ventes de produits et services",
-      "Gérer les commandes, les livraisons, les réclamations et les stocks",
-      "Analyser les ventes, les résultats commerciaux et réaliser des études de marché",
+      "Gérer les commandes, livraisons, réclamations et stocks",
+      "Analyser les ventes et réaliser des études de marché",
       "Participer à la mise en œuvre d'actions marketing et de communication commerciale",
-      "Utiliser les outils numériques et les réseaux sociaux pour développer les ventes"
+      "Utiliser les outils numériques et réseaux sociaux pour développer les ventes"
     ],
     activites: [
       "Commercial, Conseiller ou Attaché commercial en entreprise",
@@ -8462,43 +8336,192 @@ const _FILIERES_DATA = {
       "Assistant chef de produit ou Community manager commercial",
       "Entrepreneur ou promoteur d'activité commerciale"
     ],
-    orientation: "À IHBI, la formation met un accent particulier sur la pratique commerciale : simulations de vente, jeux de rôle, études de cas, enquêtes commerciales et prospection terrain. Dès la 1ère année, les étudiants maîtrisent les outils bureautiques et numériques de gestion commerciale, ainsi qu'une initiation au marketing digital. Un stage d'immersion en fin de 1ère année permet de confronter les acquis aux réalités du terrain. Après admissibilité, stage de validation de 3 mois minimum en entreprise partenaire ; stage de perfectionnement disponible après soutenance."
+    orientation: "À IHBI, la formation met l'accent sur la pratique commerciale : simulations de vente, jeux de rôle, études de cas, enquêtes et prospection terrain. Les outils bureautiques et numériques de gestion commerciale ainsi qu'une initiation au marketing digital sont intégrés dès la 1ère année. Un stage d'immersion clôture la 1ère année. Après admissibilité, stage de validation de 3 mois minimum en entreprise partenaire ; stage de perfectionnement disponible après soutenance."
+  },
+  IDA: {
+    titre: "Informatique Développeur d'Applications",
+    code: "IDA",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><polyline points=\"16 18 22 12 16 6\"/><polyline points=\"8 6 2 12 8 18\"/></svg>",
+    intro: "Aujourd'hui, l'informatique est présente dans tous les secteurs d'activité. La conception et la maintenance d'applications nécessitent des professionnels qualifiés. La filière BTS IDA forme des techniciens supérieurs capables d'analyser les besoins des utilisateurs, de concevoir des bases de données et de développer des applications desktop, web et mobiles pour les entreprises, administrations et le grand public.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F1",
+      "BAC F2",
+      "BAC F3",
+      "BAC F4",
+      "Diplôme équivalent"
+    ],
+    competences: [
+      "Analyser les besoins et concevoir des systèmes d'information (cahier des charges)",
+      "Modéliser, créer et administrer des bases de données (MySQL, SQL Server, Oracle, HFSQL)",
+      "Concevoir les interfaces graphiques d'applications (Photoshop)",
+      "Développer des applications desktop (WinDev, .NET, Java)",
+      "Développer des applications web et mobile (HTML/CSS, JavaScript, PHP, Python, Java)",
+      "Maîtriser les frameworks modernes : Bootstrap, AngularJS, Laravel, Symfony, Spring Boot"
+    ],
+    activites: [
+      "Développeur d'applications, Développeur web ou Développeur mobile junior",
+      "Analyste-programmeur ou Concepteur d'applications",
+      "Administrateur de bases de données junior",
+      "Intégrateur web ou Webmaster",
+      "Assistant chef de projet informatique",
+      "Consultant informatique ou Entrepreneur en services numériques"
+    ],
+    orientation: "La formation alterne cours théoriques, travaux pratiques et projets informatiques concrets. La 1ère année pose les bases (algorithmique, bases de données, développement web) puis un stage d'immersion aboutit à un projet présenté devant jury. En 2ème année, la formation approfondit la programmation, les frameworks et la sécurité informatique. Des séminaires animés par des professionnels complètent la formation (IA, marketing digital, gestion de projet). Après admissibilité, stage de validation de 3 mois pour préparer le mémoire."
+  },
+  MSP: {
+    titre: "Maintenance des Systèmes de Production",
+    code: "MSP",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg>",
+    intro: "Face à l'installation croissante d'entreprises industrielles en Côte d'Ivoire, la filière MSP forme des techniciens supérieurs polyvalents, capables d'intervenir sur des équipements mécaniques, électriques, électroniques, hydrauliques, pneumatiques et automatisés. Elle prépare des professionnels capables de garantir la disponibilité des machines et la continuité de la production dans tout type d'environnement industriel.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F1",
+      "BAC F2",
+      "BAC F3",
+      "BAC F4",
+      "Brevet de Technicien de la spécialité",
+      "Diplôme équivalent"
+    ],
+    competences: [
+      "Installer des équipements et systèmes de production industriels",
+      "Assurer la maintenance préventive et corrective des machines industrielles",
+      "Diagnostiquer et réparer les pannes mécaniques, électriques, électroniques, hydrauliques et pneumatiques",
+      "Lire et interpréter des plans, schémas électriques et mécaniques",
+      "Comprendre le fonctionnement des systèmes automatisés",
+      "Élaborer et suivre un programme de maintenance ; encadrer une équipe technique"
+    ],
+    activites: [
+      "Technicien de Maintenance industrielle ou Technicien électromécanicien",
+      "Technicien en automatisme ou Technicien d'installation industrielle",
+      "Responsable Maintenance ou Chef d'équipe électromécanique",
+      "Conducteur de ligne de production",
+      "Agent de méthodes maintenance ou Agent de contrôle des équipements",
+      "Entrepreneur dans la maintenance, l'électricité ou les services industriels"
+    ],
+    orientation: "L'approche pédagogique d'IHBI repose sur l'alternance de cours théoriques et de travaux pratiques intensifs en atelier : électricité domestique et industrielle, construction métallique, usinage, automatisme, hydraulique, mécanique et dessin industriel sur AUTOCAD. Des séminaires et voyages d'étude en entreprise industrielle sont organisés en 1ère année. Un stage d'immersion clôture la 1ère année, suivi d'un stage de validation de 3 mois minimum après admissibilité."
   },
   RHC: {
     titre: "Ressources Humaines et Communication",
-    code: 'RHC',
+    code: "RHC",
     duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    intro: "Avec l'essor des PME, des établissements privés, des banques, des compagnies d'assurance et des ONG, les organisations recherchent des professionnels capables de gérer efficacement leurs ressources humaines tout en assurant une communication performante. La filière BTS RHC forme des techniciens supérieurs à double compétence : gestion administrative du personnel (recrutement, paie, contrats, GPEC) et communication interne et externe (relations publiques, événementiel, marketing, création audiovisuelle). Elle prépare à une insertion rapide dans les entreprises privées, administrations, cabinets de conseil et structures de communication.",
-    acces: ['BAC toutes séries', 'Brevet de Technicien', 'Diplôme équivalent reconnu par le Ministère de tutelle'],
+    icon: "<svg viewBox=\"0 0 24 24\"><path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>",
+    intro: "Avec l'essor des PME, des établissements privés, des banques et des ONG, les organisations recherchent des professionnels capables de gérer efficacement leurs ressources humaines et d'assurer une communication performante. La filière BTS RHC forme des techniciens supérieurs à double compétence : gestion administrative du personnel (recrutement, paie, contrats, formation) et communication professionnelle (interne, externe, relations publiques, événementiel).",
+    acces: [
+      "BAC toutes séries",
+      "Brevet de Technicien",
+      "Diplôme équivalent reconnu par le Ministère de tutelle"
+    ],
     competences: [
       "Gérer les dossiers administratifs du personnel (contrats, absences, congés, paie, CNPS)",
-      "Participer au recrutement, à l'intégration et à la formation du personnel",
+      "Participer au recrutement, à l'intégration et aux actions de formation du personnel",
       "Concevoir et mettre en œuvre des actions de communication interne et externe",
       "Rédiger courriers, notes de service, comptes rendus et rapports professionnels",
       "Organiser des événements internes ou externes et gérer les relations publiques",
       "Utiliser les logiciels professionnels : Word, Excel, Sage Paie, Sphinx"
     ],
     activites: [
-      "Assistant Ressources Humaines ou Assistant de direction",
-      "Assistant Recrutement, Formation ou Gestion du personnel",
-      "Assistant Communication, Relations publiques ou Chargé d'accueil",
-      "Secrétaire RH ou Agent administratif",
+      "Assistant Ressources Humaines ou Assistant administratif",
+      "Assistant Recrutement, Formation ou Gestionnaire de personnel",
+      "Assistant Communication ou Chargé d'accueil",
+      "Assistant relations publiques ou Secrétaire RH",
       "Assistant événementiel ou Community manager junior",
       "Conseiller emploi junior dans certaines structures"
     ],
-    orientation: "IHBI s'est doté d'une radio-école, véritable atelier pédagogique permettant aux étudiants de développer leurs aptitudes en animation radio, production d'émissions et réalisation vidéo. Dès la 1ère année, ils sont initiés à Sage Paie, Sphinx, Word et Excel. Une initiation au marketing digital complète le profil. Un stage d'immersion en fin de 1ère année (organes de communication, services RH) précède le stage de validation de 3 mois minimum après admissibilité. Un stage de perfectionnement est disponible après soutenance."
+    orientation: "IHBI s'est doté d'une radio-école, atelier pédagogique permettant aux étudiants de développer leurs aptitudes en animation radio, production d'émissions et réalisation vidéo. Dès la 1ère année, ils maîtrisent Sage Paie, Sphinx, Word et Excel. Une initiation au marketing digital complète le profil. Un stage d'immersion en fin de 1ère année (organes de communication, services RH partenaires) précède le stage de validation de 3 mois minimum après admissibilité."
+  },
+  RIT: {
+    titre: "Réseaux Informatiques et Télécommunications",
+    code: "RIT",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"4\" r=\"2\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/><circle cx=\"20\" cy=\"20\" r=\"2\"/><path d=\"M12 6v4M8.5 18.5l-2.5-1M15.5 18.5l2.5-1M10 10l-4 8M14 10l4 8\"/></svg>",
+    intro: "Le secteur des TIC est en plein essor en Côte d'Ivoire. Entreprises, administrations, banques, industries et établissements de santé ont besoin de techniciens capables d'installer, configurer, administrer et sécuriser leurs infrastructures réseau. La filière BTS RIT forme des professionnels compétents en réseaux informatiques, télécommunications, fibre optique, téléphonie IP et cybersécurité.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F1",
+      "BAC F2",
+      "BAC F3",
+      "BAC F4",
+      "Diplôme équivalent"
+    ],
+    competences: [
+      "Installer et configurer des systèmes d'exploitation Windows et Linux (postes et serveurs)",
+      "Concevoir, câbler et administrer un réseau informatique d'entreprise",
+      "Configurer des équipements réseau (switches, routeurs, Wi-Fi, pare-feu)",
+      "Assurer la sécurité, la sauvegarde et la disponibilité des données",
+      "Déployer des solutions de fibre optique (FTTH) et de téléphonie IP (PABX/IPBX, VoIP)",
+      "Diagnostiquer et résoudre les pannes informatiques et réseau ; superviser les infrastructures"
+    ],
+    activites: [
+      "Technicien réseau ou Technicien télécoms",
+      "Technicien support informatique ou Technicien helpdesk",
+      "Administrateur réseau junior ou Assistant administrateur système",
+      "Technicien fibre optique ou Technicien VoIP",
+      "Technicien en sécurité informatique junior",
+      "Entrepreneur dans les services informatiques, réseaux et télécommunications"
+    ],
+    orientation: "La formation alterne cours théoriques, travaux pratiques sur équipements réels et projets techniques open source. La 1ère année couvre la maintenance informatique, le câblage et la configuration réseau. La 2ème année approfondit l'administration système, la fibre optique, la téléphonie IP, la supervision et la cybersécurité. Des séminaires animés par des professionnels complètent la formation. Après admissibilité, stage de validation de 3 mois pour préparer le mémoire de fin de cycle."
+  },
+  ELT: {
+    titre: "Électrotechnique",
+    code: "ELT",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/></svg>",
+    intro: "L'électrotechnique est au cœur du développement industriel. En Côte d'Ivoire, la croissance industrielle, l'électrification nationale, le développement des énergies renouvelables et la modernisation des entreprises créent une demande croissante en techniciens spécialisés. La filière BTS ELT forme des spécialistes de l'installation électrique, de la maintenance industrielle, des automatismes, des machines électriques et des systèmes énergétiques.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F1",
+      "BAC F2",
+      "BAC F3",
+      "BAC F4",
+      "Brevet de Technicien de la spécialité"
+    ],
+    competences: [
+      "Concevoir, réaliser et mettre en service des installations électriques industrielles et tertiaires",
+      "Réaliser le câblage d'armoires électriques et programmer des automates (API)",
+      "Configurer des interfaces homme-machine (IHM) et exploiter les réseaux industriels",
+      "Assurer la maintenance préventive, corrective et prédictive des équipements électriques",
+      "Intervenir sur les moteurs, alternateurs, transformateurs et variateurs de vitesse",
+      "Exploiter des systèmes photovoltaïques et optimiser la consommation énergétique"
+    ],
+    activites: [
+      "Électrotechnicien ou Technicien en maintenance électrique industrielle",
+      "Automaticien ou Technicien en électronique de puissance",
+      "Technicien de production ou de distribution d'énergie électrique",
+      "Chef de chantier électrique ou Conducteur de travaux",
+      "Technicien en énergies renouvelables / Installateur de systèmes photovoltaïques",
+      "Entrepreneur en génie électrique ou Responsable d'exploitation électrique"
+    ],
+    orientation: "À IHBI, la formation combine cours magistraux, travaux dirigés et travaux pratiques intensifs : installations électriques, moteurs, transformateurs, automates (API), IHM, variateurs de vitesse, systèmes photovoltaïques, hydraulique industrielle et électronique de puissance. Des séminaires professionnels et visites industrielles (usines, centrales, postes de transformation) enrichissent la 1ère année. Après admissibilité, stage de validation de 3 mois minimum pour préparer le mémoire ; stage de perfectionnement disponible après soutenance."
   },
   TH: {
     titre: "Tourisme et Hôtellerie",
-    code: 'TH',
+    code: "TH",
     duree: '2 ans',
-    icon: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-    intro: "Dans un pays comme la Côte d'Ivoire, où le tourisme, l'hôtellerie, la restauration, l'événementiel et les services d'accueil connaissent un développement progressif, les structures professionnelles recherchent des techniciens supérieurs capables d'offrir un service de qualité et de contribuer à la valorisation des produits touristiques et hôteliers. La filière BTS Tourisme et Hôtellerie forme des professionnels de l'accueil, de l'hébergement, de la restauration, de l'organisation des voyages et de la relation client, immédiatement opérationnels à leur sortie de formation.",
-    acces: ['BAC A', 'BAC B', 'BAC D', 'BAC G1', 'BAC G2', 'Brevet de Technicien en Hôtellerie', 'Diplôme équivalent'],
+    icon: "<svg viewBox=\"0 0 24 24\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/></svg>",
+    intro: "Dans un pays comme la Côte d'Ivoire, où le tourisme, l'hôtellerie, la restauration, l'événementiel et les services d'accueil connaissent un développement progressif, les structures professionnelles recherchent des techniciens supérieurs capables d'offrir un service de qualité. La filière BTS Tourisme et Hôtellerie forme des professionnels de l'accueil, de l'hébergement, de la restauration et de l'organisation des voyages, immédiatement opérationnels.",
+    acces: [
+      "BAC A",
+      "BAC B",
+      "BAC D",
+      "BAC G1",
+      "BAC G2",
+      "Brevet de Technicien en Hôtellerie",
+      "Diplôme équivalent"
+    ],
     competences: [
-      "Accueillir, informer, orienter les clients et assurer les opérations de réception hôtelière",
-      "Gérer les réservations, les arrivées, les départs et les réclamations clients",
+      "Accueillir, informer et orienter les clients avec professionnalisme",
+      "Assurer les opérations de réception hôtelière (réservations, arrivées, départs)",
       "Participer à la gestion de l'hébergement, des étages et du service de restauration",
       "Conseiller sur les offres touristiques, concevoir et promouvoir des produits touristiques",
       "Organiser des événements touristiques, culturels ou professionnels",
@@ -8512,8 +8535,71 @@ const _FILIERES_DATA = {
       "Chargé de protocole, Animateur ou Assistant événementiel",
       "Gestionnaire de structure touristique ou Entrepreneur dans l'hôtellerie"
     ],
-    orientation: "À IHBI, la formation met l'accent sur les techniques d'accueil, la relation client, la gestion hôtelière et la promotion touristique, renforcées par des mises en situation, simulations d'accueil, études de cas, visites d'établissements hôteliers et enquêtes touristiques. Une initiation au marketing digital permet de maîtriser les outils numériques de promotion. Un stage d'immersion en hôtel, restaurant ou agence de voyage clôture la 1ère année. Après admissibilité, stage de validation de 3 mois minimum en structure partenaire ; stage de perfectionnement disponible après soutenance."
-  }
+    orientation: "À IHBI, la formation met l'accent sur les techniques d'accueil, la relation client, la gestion hôtelière et la promotion touristique, renforcées par des mises en situation, simulations d'accueil, études de cas et visites d'établissements hôteliers. Une initiation au marketing digital est intégrée à la formation. Un stage d'immersion (hôtel, restaurant, agence de voyage) clôture la 1ère année. Après admissibilité, stage de validation de 3 mois minimum en structure partenaire ; stage de perfectionnement disponible après soutenance."
+  },
+  ATA: {
+    titre: "Agriculture Tropicale — option Production Animale",
+    code: "ATA",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><path d=\"M20 7c0 3.9-3.1 7-7 7s-7-3.1-7-7c0-2.5 3.5-5 7-5s7 2.5 7 5z\"/><circle cx=\"9.5\" cy=\"6.5\" r=\"1\"/><circle cx=\"14.5\" cy=\"6.5\" r=\"1\"/><path d=\"M9 11v2m6-2v2M9 22v-5m6 5v-5M7 17h10\"/></svg>",
+    intro: "L'élevage constitue un secteur essentiel au développement économique et alimentaire de la Côte d'Ivoire. La croissance démographique et l'urbanisation augmentent la demande en produits animaux. La filière BTS Agriculture Tropicale, option Production Animale forme des techniciens supérieurs spécialisés dans la conduite des élevages (avicole, bovin, porcin, ovin, cunicole, piscicole, apicole), la nutrition animale, la santé et la gestion des exploitations.",
+    acces: [
+      "BAC scientifique",
+      "BAC technique agricole",
+      "Brevet de Technicien Agricole (BTA)",
+      "Diplôme professionnel agricole reconnu",
+      "Diplôme équivalent"
+    ],
+    competences: [
+      "Concevoir et conduire des élevages variés (avicole, bovin, porcin, ovin, caprin, cunicole, apicole, piscicole)",
+      "Formuler des rations alimentaires, produire et gérer les stocks d'aliments",
+      "Organiser la reproduction des animaux et assurer le suivi zootechnique",
+      "Appliquer les mesures de biosécurité, d'hygiène et les programmes de vaccination",
+      "Valoriser, transformer et commercialiser les produits d'origine animale",
+      "Gérer une exploitation d'élevage (budget, coûts, rentabilité) et créer une entreprise"
+    ],
+    activites: [
+      "Technicien supérieur en production animale ou Chef de ferme",
+      "Responsable d'élevage (avicole, bovin, porcin, cunicole…)",
+      "Technicien en alimentation animale ou en reproduction",
+      "Agent d'encadrement des éleveurs ou Animateur de développement rural",
+      "Assistant vétérinaire ou Agent de biosécurité",
+      "Entrepreneur en production animale ou Créateur de ferme intégrée"
+    ],
+    orientation: "La formation combine cours théoriques, travaux pratiques et visites de fermes variées (avicoles, porcines, bovines, piscicoles, apicoles). Les TP couvrent la conduite de tous types d'élevages, la nutrition, la reproduction, la santé animale, la transformation des produits et la gestion de ferme. Un stage d'immersion en exploitation partenaire clôture la 1ère année. Après admissibilité, stage de validation de 3 mois pour préparer le mémoire ; stage de perfectionnement post-soutenance disponible."
+  },
+  ATV: {
+    titre: "Agriculture Tropicale — option Production Végétale",
+    code: "ATV",
+    duree: '2 ans',
+    icon: "<svg viewBox=\"0 0 24 24\"><path d=\"M12 22V10\"/><path d=\"M5 3c0 7 3 10 7 10s7-3 7-10\"/><path d=\"M5 10c2 3 4.5 4 7 4\"/></svg>",
+    intro: "L'agriculture constitue l'un des piliers du développement de la Côte d'Ivoire, avec des cultures d'exportation (cacao, café, anacarde, hévéa, palmier à huile) et des cultures vivrières, maraîchères et fruitières. La filière BTS Agriculture Tropicale, option Production Végétale forme des techniciens supérieurs spécialisés dans la conduite des cultures, la gestion des exploitations, la protection des végétaux et la commercialisation des productions.",
+    acces: [
+      "BAC C",
+      "BAC D",
+      "BAC E",
+      "BAC F7",
+      "Brevet de Technicien Agricole (BTA)",
+      "Diplôme agricole reconnu équivalent"
+    ],
+    competences: [
+      "Analyser un milieu agronomique et choisir les cultures adaptées aux conditions locales",
+      "Préparer les parcelles, produire des plants et conduire semis et plantations",
+      "Assurer la fertilisation organique et minérale, l'irrigation et l'entretien des cultures",
+      "Conduire des cultures maraîchères, vivrières, fruitières, céréalières et industrielles",
+      "Identifier et lutter contre les ravageurs, maladies et adventices (lutte intégrée)",
+      "Organiser la récolte, le stockage, la transformation et la commercialisation des produits"
+    ],
+    activites: [
+      "Technicien en production végétale ou Chef de culture / Chef de plantation",
+      "Conseiller agricole ou Agent d'encadrement agricole",
+      "Technicien en protection des végétaux ou Agent phytosanitaire",
+      "Pépiniériste ou Technicien en production de semences",
+      "Responsable d'exploitation agricole ou Gestionnaire de coopérative",
+      "Entrepreneur agricole ou Créateur d'entreprise de services agricoles"
+    ],
+    orientation: "IHBI met l'accent sur l'apprentissage par la pratique avec des parcelles expérimentales (cultures hors-sol, irrigation goutte à goutte). Les TP couvrent la préparation du sol, la production de plants, la fertilisation, l'irrigation, la protection des cultures et la gestion de ferme. Des visites d'exploitations, pépinières et plantations industrielles enrichissent la 1ère année. Après admissibilité, stage de validation de 3 mois pour préparer le mémoire ; stage de perfectionnement post-soutenance disponible."
+  },
 };
 
 const _FILIERE_IMGS = {
