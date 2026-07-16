@@ -15,18 +15,21 @@
       flex-direction: column;
     }
 
+    /* ── Barre de navigation ── */
     header {
       background: #c0392b;
       color: #fff;
-      padding: 0 24px;
-      height: 56px;
+      padding: 0 20px;
+      height: 52px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,.2);
       flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-
     header a {
       color: #fff;
       text-decoration: none;
@@ -35,75 +38,127 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
       transition: opacity .15s;
     }
     header a:hover { opacity: 1; }
-
-    header .sep { opacity: .4; }
-
+    header .sep { opacity: .35; font-size: 16px; }
     header .title {
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .viewer-wrap {
+    /* ── Contenu principal ── */
+    main {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 0;
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 36px 24px 64px;
     }
 
-    iframe {
-      flex: 1;
-      border: none;
-      width: 100%;
-      min-height: calc(100vh - 56px);
+    /* Injecté depuis le fichier HTML généré */
+    #doc-content h2 {
+      font-size: 19px; font-weight: 800;
+      margin: 28px 0 10px; color: #1a2c6b;
+      border-bottom: 2px solid #C8973A;
+      padding-bottom: 6px;
     }
+    #doc-content h3 {
+      font-size: 16px; font-weight: 700;
+      margin: 22px 0 8px; color: #1a2c6b;
+    }
+    #doc-content h4 {
+      font-size: 14.5px; font-weight: 700;
+      margin: 16px 0 6px; color: #1a2c6b;
+    }
+    #doc-content p {
+      font-size: 15px; line-height: 1.75;
+      color: #2d3748; margin: 8px 0;
+    }
+    #doc-content ul {
+      margin: 10px 0 10px 20px; color: #2d3748;
+    }
+    #doc-content li {
+      font-size: 15px; line-height: 1.7;
+      margin: 5px 0; padding-left: 4px;
+    }
+    #doc-content strong { font-weight: 700; color: #1a2c6b; }
+    #doc-content em { color: #555; font-style: italic; }
+    #doc-content table {
+      width: 100%; border-collapse: collapse;
+      margin: 16px 0; font-size: 14px;
+      overflow-x: auto; display: block;
+    }
+    #doc-content th {
+      background: #1a2c6b; color: #fff;
+      padding: 9px 12px; text-align: left; font-weight: 600;
+    }
+    #doc-content td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0; vertical-align: top;
+    }
+    #doc-content tr:nth-child(even) td { background: #f8f9fc; }
+
+    /* ── États ── */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px;
+      padding: 80px 0; color: #8a9bb5;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #c0392b;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-box {
       display: none;
-      flex: 1;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-      color: #555;
-      padding: 40px;
       text-align: center;
+      padding: 60px 20px;
+      color: #555;
     }
-    .error-box h2 { font-size: 20px; color: #c0392b; }
-    .error-box p { font-size: 14px; max-width: 420px; line-height: 1.6; }
-    .error-box a {
-      background: #c0392b;
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
+    .error-box h2 { font-size: 18px; color: #c0392b; margin-bottom: 10px; }
+    .error-box p  { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .error-box a  {
+      background: #c0392b; color: #fff;
+      padding: 10px 24px; border-radius: 6px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      main { padding: 24px 16px 48px; }
+      #doc-content h2 { font-size: 17px; }
+      #doc-content p, #doc-content li { font-size: 14px; }
     }
   </style>
 </head>
 <body>
+
   <header>
-    <a href="index.html">
-      ← Retour
-    </a>
+    <a href="index.html">← Retour</a>
     <span class="sep">|</span>
     <span class="title" id="hdr-title">Programme de la filière</span>
   </header>
 
-  <div class="viewer-wrap">
-    <iframe id="viewer" src="" title="Programme de la filière" allowfullscreen></iframe>
+  <main>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>Chargement du document…</span>
+    </div>
+    <div id="doc-content"></div>
     <div class="error-box" id="err-box">
       <h2>Document non disponible</h2>
-      <p>Le document de cette filière ne peut pas être affiché pour le moment. Vous pouvez le télécharger directement.</p>
-      <a id="dl-link" href="#">Télécharger le document</a>
+      <p>Impossible de charger ce document pour le moment.<br>Vous pouvez le télécharger directement.</p>
+      <a id="dl-link" href="#">Télécharger le document (.docx)</a>
     </div>
-  </div>
+  </main>
 
   <script>
     const TITRES = {
@@ -116,34 +171,40 @@
       'RIT':  'Réseaux Informatiques et Télécommunications (RIT)',
       'TH':   'Tourisme et Hôtellerie (TH)',
       'FCGE': 'Finances Comptabilité Gestion des Entreprises (FCGE)',
-      'IDA':  'Informatique Développeur d\'Applications (IDA)',
+      'IDA':  "Informatique Développeur d'Applications (IDA)",
       'MSP':  'Maintenance des Systèmes de Production (MSP)',
     };
 
     const params = new URLSearchParams(window.location.search);
-    const code = (params.get('doc') || '').toUpperCase();
+    const code   = (params.get('doc') || '').toUpperCase();
 
-    if (code && TITRES[code]) {
-      const titre = TITRES[code];
+    if (!code || !TITRES[code]) {
+      window.location.replace('index.html');
+    } else {
+      const titre   = TITRES[code];
       document.title = titre + ' — IHBI';
       document.getElementById('hdr-title').textContent = titre;
+      document.getElementById('dl-link').href = 'docs/' + code + '.docx';
 
-      const docUrl = window.location.origin + '/docs/' + code + '.docx';
-      const viewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(docUrl);
+      fetch('docs/html/' + code + '.html')
+        .then(r => {
+          if (!r.ok) throw new Error('not found');
+          return r.text();
+        })
+        .then(html => {
+          // Extraire uniquement le <body> du HTML généré
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          const body = tmp.querySelector('body');
+          const content = body ? body.innerHTML : html;
 
-      const iframe = document.getElementById('viewer');
-      iframe.src = viewerUrl;
-
-      document.getElementById('dl-link').href = docUrl;
-
-      // Si l'iframe échoue à charger, afficher la boîte d'erreur
-      iframe.addEventListener('error', function () {
-        iframe.style.display = 'none';
-        document.getElementById('err-box').style.display = 'flex';
-      });
-    } else {
-      // Pas de code valide → rediriger vers l'accueil
-      window.location.replace('index.html');
+          document.getElementById('loading').style.display  = 'none';
+          document.getElementById('doc-content').innerHTML  = content;
+        })
+        .catch(() => {
+          document.getElementById('loading').style.display  = 'none';
+          document.getElementById('err-box').style.display  = 'block';
+        });
     }
   </script>
 </body>
