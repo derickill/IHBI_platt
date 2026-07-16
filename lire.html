@@ -192,14 +192,10 @@
           return r.text();
         })
         .then(html => {
-          // Extraire uniquement le <body> du HTML généré
-          const tmp = document.createElement('div');
-          tmp.innerHTML = html;
-          const body = tmp.querySelector('body');
-          const content = body ? body.innerHTML : html;
-
+          // DOMParser isole correctement head/body, évite l'injection du <style>
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
           document.getElementById('loading').style.display  = 'none';
-          document.getElementById('doc-content').innerHTML  = content;
+          document.getElementById('doc-content').innerHTML  = parsed.body.innerHTML;
         })
         .catch(() => {
           document.getElementById('loading').style.display  = 'none';
