@@ -1,13 +1,18 @@
 require('dotenv').config();
-const express = require('express');
-const { Pool } = require('pg');
-const jwt     = require('jsonwebtoken');
-const crypto  = require('crypto');
-const path    = require('path');
+const express     = require('express');
+const compression = require('compression');
+const { Pool }    = require('pg');
+const jwt         = require('jsonwebtoken');
+const crypto      = require('crypto');
+const path        = require('path');
 
 const app = express();
+app.use(compression());
 app.use(express.json({ limit: '15mb' }));
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname), {
+  maxAge: '1d',
+  etag: true,
+}));
 
 // ── Base de données PostgreSQL ──────────────────────────────────────────────
 // En prod : DATABASE_URL fourni automatiquement par Railway
